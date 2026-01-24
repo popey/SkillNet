@@ -1,6 +1,10 @@
+import ast
 import json
 import logging
 import os
+import shlex
+import subprocess
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from typing import Dict, Any, List, Optional
@@ -8,8 +12,8 @@ from typing import Dict, Any, List, Optional
 from openai import OpenAI
 from tqdm import tqdm
 
-from skillnet_ai.downloader import SkillDownloader
-from skillnet_ai.prompts import SKILL_EVALUATION_PROMPT
+from downloader import SkillDownloader
+from prompts import SKILL_EVALUATION_PROMPT
 
 logger = logging.getLogger(__name__)
 
@@ -22,11 +26,17 @@ logger = logging.getLogger(__name__)
 class EvaluatorConfig:
     """Configuration for the skill evaluator."""
     api_key: str
-    base_url: str = "https://api.openai.com/v1"
-    model: str = "gpt-4o"
-    cache_dir: str = ".skill_cache"
+    base_url: str
+    model: str
+    cache_dir: str
     max_workers: int = 5
     temperature: float = 0.3
+    run_scripts: bool = False
+    script_timeout_sec: int = 8
+    max_script_runs: int = 5
+    script_python: str = "python"
+    include_script_results: bool = False
+    max_script_output_chars: int = 400
 
 
 @dataclass
@@ -85,6 +95,375 @@ class Skill:
             return url.replace("/blob/", "/tree/")
         if "/tree/" in url:
             return url
+        return None
+
+
+@dataclass
+class ScriptExecutionResult:
+    """Result of executing a single script."""
+    path: str
+    status: str  # success | compiled_only | failed | timeout | skipped
+    command: str
+    exit_code: Optional[int] = None
+    error: Optional[str] = None
+    duration_sec: Optional[float] = None
+    note: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "path": self.path,
+            "status": self.status,
+            "command": self.command,
+            "exit_code": self.exit_code,
+            "error": self.error,
+            "duration_sec": self.duration_sec,
+            "note": self.note,
+        }
+
+
+class ScriptRunner:
+    """Execute python scripts under scripts/ with safe defaults."""
+
+    def __init__(self, python_bin: str, timeout_sec: int, max_runs: int,
+                 max_output_chars: int):
+        self.python_bin = python_bin
+        self.timeout_sec = timeout_sec
+        self.max_runs = max_runs
+        self.max_output_chars = max_output_chars
+
+    def run_for_skill(self, skill_dir: str) -> List[ScriptExecutionResult]:
+        scripts = self._discover_py_scripts(skill_dir)
+        results: List[ScriptExecutionResult] = []
+
+        for script_path in scripts[: self.max_runs]:
+            results.append(self._run_script(skill_dir, script_path))
+
+        if len(scripts) > self.max_runs:
+            logger.info(
+                "Found %s scripts, truncated to %s for execution",
+                len(scripts),
+                self.max_runs
+            )
+
+        return results
+
+    def _discover_py_scripts(self, skill_dir: str) -> List[str]:
+        paths: List[str] = []
+        for root, _, files in os.walk(skill_dir):
+            if "scripts" not in root.split(os.sep):
+                continue
+            for filename in files:
+                if filename.lower().endswith(".py"):
+                    paths.append(os.path.join(root, filename))
+        return sorted(paths)
+
+    def _run_script(self, skill_dir: str, script_path: str) -> ScriptExecutionResult:
+        rel_path = os.path.relpath(script_path, skill_dir)
+        usage_cmd = self._build_usage_command(script_path, rel_path)
+        if usage_cmd:
+            missing_inputs = self._detect_missing_inputs(usage_cmd, skill_dir)
+            if missing_inputs:
+                compile_result = self._run_command(
+                    [self.python_bin, "-m", "py_compile", rel_path],
+                    skill_dir
+                )
+                if compile_result["timed_out"]:
+                    return ScriptExecutionResult(
+                        path=rel_path,
+                        status="timeout",
+                        command=compile_result["command"],
+                        exit_code=None,
+                        error=compile_result.get("error"),
+                        duration_sec=compile_result["duration_sec"],
+                        note=f"missing inputs: {', '.join(missing_inputs)}"
+                    )
+                if compile_result["exit_code"] == 0:
+                    return ScriptExecutionResult(
+                        path=rel_path,
+                        status="compiled_only",
+                        command=compile_result["command"],
+                        exit_code=compile_result["exit_code"],
+                        error=self._pick_error(compile_result),
+                        duration_sec=compile_result["duration_sec"],
+                        note=f"missing inputs: {', '.join(missing_inputs)}"
+                    )
+                return ScriptExecutionResult(
+                    path=rel_path,
+                    status="failed",
+                    command=compile_result["command"],
+                    exit_code=compile_result["exit_code"],
+                    error=self._pick_error(compile_result),
+                    duration_sec=compile_result["duration_sec"],
+                    note=f"missing inputs: {', '.join(missing_inputs)}"
+                )
+            run_result = self._run_command(usage_cmd, skill_dir)
+            if run_result["timed_out"]:
+                return ScriptExecutionResult(
+                    path=rel_path,
+                    status="timeout",
+                    command=run_result["command"],
+                    exit_code=None,
+                    error=run_result.get("error"),
+                    duration_sec=run_result["duration_sec"],
+                    note="usage-derived command"
+                )
+            if run_result["exit_code"] == 0:
+                return ScriptExecutionResult(
+                    path=rel_path,
+                    status="success",
+                    command=run_result["command"],
+                    exit_code=run_result["exit_code"],
+                    duration_sec=run_result["duration_sec"],
+                    note="usage-derived command"
+                )
+            return ScriptExecutionResult(
+                path=rel_path,
+                status="failed",
+                command=run_result["command"],
+                exit_code=run_result["exit_code"],
+                error=self._pick_error(run_result),
+                duration_sec=run_result["duration_sec"],
+                note="usage-derived command"
+            )
+
+        compile_result = self._run_command(
+            [self.python_bin, "-m", "py_compile", rel_path],
+            skill_dir
+        )
+        if compile_result["timed_out"]:
+            return ScriptExecutionResult(
+                path=rel_path,
+                status="timeout",
+                command=compile_result["command"],
+                exit_code=None,
+                error=compile_result.get("error"),
+                duration_sec=compile_result["duration_sec"]
+            )
+        if compile_result["exit_code"] == 0:
+            return ScriptExecutionResult(
+                path=rel_path,
+                status="compiled_only",
+                command=compile_result["command"],
+                exit_code=compile_result["exit_code"],
+                error=self._pick_error(compile_result),
+                duration_sec=compile_result["duration_sec"],
+                note="no usage examples found; py_compile succeeded"
+            )
+
+        return ScriptExecutionResult(
+            path=rel_path,
+            status="failed",
+            command=compile_result["command"],
+            exit_code=compile_result["exit_code"],
+            error=self._pick_error(compile_result),
+            duration_sec=compile_result["duration_sec"],
+            note="no usage examples found"
+        )
+
+    def _build_usage_command(self, script_path: str,
+                             rel_path: str) -> Optional[List[str]]:
+        script_name = os.path.basename(script_path)
+        usage_lines = self._extract_usage_lines(script_path, script_name)
+        if not usage_lines:
+            return None
+
+        candidates: List[List[str]] = []
+        for line in usage_lines:
+            cmd = self._parse_usage_line(line, rel_path, script_name)
+            if cmd:
+                candidates.append(cmd)
+
+        if not candidates:
+            return None
+
+        for cmd in candidates:
+            if not self._is_help_command(cmd):
+                return cmd
+
+        return candidates[0]
+
+    def _extract_usage_lines(self, script_path: str,
+                             script_name: str) -> List[str]:
+        try:
+            with open(script_path, "r", encoding="utf-8", errors="ignore") as f:
+                source = f.read()
+        except Exception as e:
+            logger.warning("Failed to read %s: %s", script_path, e)
+            return []
+
+        try:
+            tree = ast.parse(source)
+            doc = ast.get_docstring(tree) or ""
+        except Exception:
+            doc = ""
+
+        if not doc:
+            return []
+
+        lines = doc.splitlines()
+        usage_lines: List[str] = []
+        for idx, line in enumerate(lines):
+            if line.strip().lower().startswith("usage:"):
+                for follow in lines[idx + 1:]:
+                    if not follow.strip():
+                        break
+                    usage_lines.append(follow.strip())
+
+        if usage_lines:
+            return usage_lines
+
+        for line in lines:
+            stripped = line.strip()
+            if not stripped:
+                continue
+            if stripped.startswith(("./", "python", "python3")):
+                usage_lines.append(stripped)
+                continue
+            if stripped.startswith(script_name):
+                usage_lines.append(stripped)
+
+        return usage_lines
+
+    def _parse_usage_line(self, line: str, rel_path: str,
+                          script_name: str) -> Optional[List[str]]:
+        try:
+            tokens = shlex.split(line)
+        except ValueError:
+            return None
+
+        if not tokens:
+            return None
+
+        python_prefix = tokens[0].startswith("python")
+        if python_prefix:
+            tokens = [self.python_bin] + tokens[1:]
+
+        script_idx = None
+        for idx, token in enumerate(tokens):
+            token_base = os.path.basename(token)
+            if token_base == script_name:
+                script_idx = idx
+                break
+
+        if script_idx is None:
+            return None
+
+        tokens[script_idx] = rel_path
+
+        if not python_prefix:
+            tokens = [self.python_bin] + tokens[script_idx:]
+
+        return tokens
+
+    def _is_help_command(self, cmd: List[str]) -> bool:
+        for token in cmd:
+            lowered = token.lower()
+            if lowered in {"--help", "-h", "help"}:
+                return True
+        return False
+
+    def _detect_missing_inputs(self, cmd: List[str], cwd: str) -> List[str]:
+        missing: List[str] = []
+        for token in cmd:
+            if not token or token.startswith("-"):
+                continue
+            if token == self.python_bin:
+                continue
+            if "<" in token or ">" in token:
+                continue
+            if not self._looks_like_path(token):
+                continue
+            path = token
+            if not os.path.isabs(path):
+                path = os.path.join(cwd, path)
+            if not os.path.exists(path):
+                missing.append(token)
+        return missing
+
+    def _looks_like_path(self, token: str) -> bool:
+        if "/" in token or token.startswith("."):
+            return True
+        _, ext = os.path.splitext(token)
+        return ext.lower() in {
+            ".xml",
+            ".json",
+            ".yaml",
+            ".yml",
+            ".csv",
+            ".tsv",
+            ".txt",
+            ".md",
+            ".ini",
+            ".toml",
+            ".coverage",
+            ".db",
+            ".sqlite",
+            ".sql",
+            ".parquet",
+        }
+
+    def _run_command(self, cmd: List[str], cwd: str) -> Dict[str, Any]:
+        command_str = shlex.join(cmd)
+        start = time.time()
+        try:
+            completed = subprocess.run(
+                cmd,
+                cwd=cwd,
+                text=True,
+                capture_output=True,
+                timeout=self.timeout_sec
+            )
+            duration = time.time() - start
+            return {
+                "command": command_str,
+                "exit_code": completed.returncode,
+                "stdout": self._truncate(completed.stdout),
+                "stderr": self._truncate(completed.stderr),
+                "duration_sec": round(duration, 3),
+                "timed_out": False
+            }
+        except subprocess.TimeoutExpired:
+            duration = time.time() - start
+            return {
+                "command": command_str,
+                "exit_code": None,
+                "stdout": "",
+                "stderr": "",
+                "duration_sec": round(duration, 3),
+                "timed_out": True,
+                "error": f"Timeout after {self.timeout_sec}s"
+            }
+        except FileNotFoundError as e:
+            duration = time.time() - start
+            return {
+                "command": command_str,
+                "exit_code": None,
+                "stdout": "",
+                "stderr": str(e),
+                "duration_sec": round(duration, 3),
+                "timed_out": False,
+                "error": str(e)
+            }
+
+    def _truncate(self, text: str) -> str:
+        if not text:
+            return ""
+        if len(text) <= self.max_output_chars:
+            return text
+        return text[: self.max_output_chars] + "...[truncated]"
+
+    def _pick_error(self, *results: Dict[str, Any]) -> Optional[str]:
+        for result in results:
+            if not result:
+                continue
+            stderr = result.get("stderr") or ""
+            stdout = result.get("stdout") or ""
+            if stderr.strip():
+                return stderr.strip()
+            if stdout.strip():
+                return stdout.strip()
+            if result.get("error"):
+                return str(result.get("error"))
         return None
 
 
@@ -155,8 +534,9 @@ class PromptBuilder:
     """Build prompts for skill evaluation."""
     
     @staticmethod
-    def build(skill: Skill, skill_md: Optional[str], 
-              scripts: List[Dict[str, str]]) -> str:
+    def build(skill: Skill, skill_md: Optional[str],
+              scripts: List[Dict[str, str]],
+              script_exec_results: Optional[List[ScriptExecutionResult]] = None) -> str:
         """Build the evaluation prompt for a given skill."""
         skill_md_block = skill_md or "[SKILL.md not found]"
         
@@ -166,6 +546,16 @@ class PromptBuilder:
             ])
         else:
             scripts_block = "[No scripts found]"
+
+        if script_exec_results is None:
+            script_exec_block = "[Scripts not executed]"
+        elif not script_exec_results:
+            script_exec_block = "[No runnable python scripts found]"
+        else:
+            script_exec_block = "\n".join(
+                PromptBuilder._format_exec_result(r)
+                for r in script_exec_results
+            )
         
         return SKILL_EVALUATION_PROMPT.format(
             skill_name=skill.name,
@@ -174,8 +564,22 @@ class PromptBuilder:
             repo_name="N/A",
             author="N/A",
             skill_md_block=skill_md_block,
-            scripts_block=scripts_block
+            scripts_block=scripts_block,
+            script_exec_block=script_exec_block
         )
+
+    @staticmethod
+    def _format_exec_result(result: ScriptExecutionResult) -> str:
+        base = f"- {result.path}: {result.status}"
+        if result.exit_code is not None:
+            base += f" (exit={result.exit_code})"
+        base += f" | cmd: {result.command}"
+        if result.note:
+            base += f" | note: {result.note}"
+        if result.error:
+            clean_error = " ".join(result.error.splitlines())
+            base += f" | error: {clean_error}"
+        return base
 
 
 # ==========================================================================
@@ -253,6 +657,12 @@ class SkillEvaluator:
         self.loader = SkillLoader()
         self.prompt_builder = PromptBuilder()
         self.llm_client = LLMClient(config)
+        self.script_runner = ScriptRunner(
+            python_bin=config.script_python,
+            timeout_sec=config.script_timeout_sec,
+            max_runs=config.max_script_runs,
+            max_output_chars=config.max_script_output_chars
+        )
     
     def evaluate(self, skill: Skill) -> Dict[str, Any]:
         """
@@ -268,12 +678,27 @@ class SkillEvaluator:
             # Load content
             skill_md = self.loader.load_skill_md(skill.path)
             scripts = self.loader.load_scripts(skill.path)
-            
+
+            # Optional script execution
+            script_exec_results: Optional[List[ScriptExecutionResult]] = None
+            if self.config.run_scripts:
+                script_exec_results = self.script_runner.run_for_skill(skill.path)
+
             # Build prompt
-            prompt = self.prompt_builder.build(skill, skill_md, scripts)
+            prompt = self.prompt_builder.build(
+                skill,
+                skill_md,
+                scripts,
+                script_exec_results=script_exec_results
+            )
             
             # Call LLM
-            return self.llm_client.evaluate(prompt)
+            result = self.llm_client.evaluate(prompt)
+            if self.config.include_script_results and script_exec_results is not None:
+                result["script_execution"] = [
+                    r.to_dict() for r in script_exec_results
+                ]
+            return result
             
         except Exception as e:
             logger.error(f"Evaluation failed for {skill.name}: {e}")
@@ -327,3 +752,92 @@ class SkillEvaluator:
             "modifiability": error_item,
             "cost_awareness": error_item
         }
+
+
+# ==========================================================================
+# CLI entry point
+# ==========================================================================
+
+if __name__ == '__main__':
+    """Command line entry point for batch evaluation from JSONL."""
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Evaluate AI Agent Skills')
+    parser.add_argument('--input', required=True, help='Input JSONL file')
+    parser.add_argument('--output', required=True, help='Output JSONL file')
+    parser.add_argument('--api-key', help='OpenAI API key')
+    parser.add_argument('--base-url', help='OpenAI API base URL')
+    parser.add_argument('--model', default='gpt-4o', help='Model name')
+    parser.add_argument('--max-workers', type=int, default=5, help='Max workers')
+    parser.add_argument('--cache-dir', default='skill_downloads', help='Cache directory')
+    parser.add_argument('--run-scripts', action='store_true',
+                        help='Execute python scripts under scripts/')
+    parser.add_argument('--script-timeout', type=int, default=8,
+                        help='Timeout seconds per script run')
+    parser.add_argument('--max-script-runs', type=int, default=5,
+                        help='Max python scripts to execute per skill')
+    parser.add_argument('--script-python', default='python',
+                        help='Python executable for running scripts')
+    parser.add_argument('--include-script-results', action='store_true',
+                        help='Attach script execution results to evaluation output')
+    parser.add_argument('--max-script-output-chars', type=int, default=400,
+                        help='Max chars of script stdout/stderr to keep')
+    
+    args = parser.parse_args()
+    
+    with open(args.input, 'r', encoding='utf-8') as f:
+        records = [json.loads(line) for line in f if line.strip()]
+    
+    config = EvaluatorConfig(
+        api_key=args.api_key or os.getenv('API_KEY'),
+        base_url=args.base_url or os.getenv('BASE_URL'),
+        model=args.model,
+        max_workers=args.max_workers,
+        cache_dir=args.cache_dir,
+        run_scripts=args.run_scripts,
+        script_timeout_sec=args.script_timeout,
+        max_script_runs=args.max_script_runs,
+        script_python=args.script_python,
+        include_script_results=args.include_script_results,
+        max_script_output_chars=args.max_script_output_chars
+    )
+    evaluator = SkillEvaluator(config)
+    
+    skills = []
+    for rec in records:
+        if 'skill_url' in rec:
+            skill = Skill.from_url(
+                rec['skill_url'],
+                evaluator.downloader,
+                config.cache_dir,
+                name=rec.get('skill_name'),
+                description=rec.get('skill_description'),
+                category=rec.get('category')
+            )
+        elif 'skill_path' in rec:
+            skill = Skill.from_path(
+                rec['skill_path'],
+                name=rec.get('skill_name'),
+                description=rec.get('skill_description'),
+                category=rec.get('category')
+            )
+        else:
+            raise ValueError("Record must have 'skill_url' or 'skill_path'")
+        skills.append(skill)
+    
+    results = evaluator.evaluate_batch(skills)
+    
+    for rec, result in zip(records, results):
+        rec['evaluation'] = result
+    
+    with open(args.output, 'w', encoding='utf-8') as f:
+        for rec in records:
+            f.write(json.dumps(rec, ensure_ascii=False) + '\n')
+    
+    json_path = args.output.replace('.jsonl', '.json')
+    with open(json_path, 'w', encoding='utf-8') as f:
+        json.dump({str(i): rec for i, rec in enumerate(records)}, 
+                 f, ensure_ascii=False, indent=2)
+    
+    print(f"✓ Evaluated {len(results)} skills")
+    print(f"✓ Results saved to {args.output} and {json_path}")

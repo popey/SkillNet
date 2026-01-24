@@ -146,6 +146,9 @@ SKILL_EVALUATION_PROMPT = """You will evaluate an AI Agent Skill using the metad
 === SCRIPTS/ ===
 {scripts_block}
 
+=== SCRIPT EXECUTION RESULTS ===
+{script_exec_block}
+
 Rating scale (3 levels only):
 - Good: Clear, safe-by-default, and practically usable as described; low ambiguity; low risk.
 - Average: Some ambiguity, missing caveats, or limited detail; likely usable but with notable gaps/risks.
@@ -179,10 +182,13 @@ Evaluation dimensions and how to judge them:
    Signals for Good:
    - Concrete actions and artifacts (commands, files, parameters); minimal ambiguity.
    - Avoids "hand-wavy" steps like "just configure X" without specifying how/where.
+   - If script execution results are provided, successful runs support a higher rating.
    Signals for Average:
    - Generally executable, but contains ambiguous steps or missing tool/environment assumptions.
    Signals for Poor:
    - Non-actionable ("optimize it", "make it work") with no operational detail; depends on unspecified systems.
+   - If script execution results show failures/timeouts/missing dependencies, reduce the rating accordingly.
+   - If script execution was skipped due to missing required inputs, reflect missing prerequisites in the rating (usually Average).
 
 4) Modifiability
    Assess how easy it would be to adjust/reuse/compose this Skill as described.
