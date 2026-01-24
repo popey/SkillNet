@@ -34,7 +34,7 @@ def search(
     """
     try:
         # Initialize Searcher (Ensure URL points to your actual API)
-        searcher = SkillNetSearcher(skillnet_url="http://127.0.0.1:8502")
+        searcher = SkillNetSearcher()
 
         # Visual feedback during API call
         with console.status(f"[bold green]Searching SkillNet ({mode} mode)..."):
