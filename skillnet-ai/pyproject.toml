@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "skillnet-ai"
+version = "0.1.0"
+description = "Official Python SDK for SkillNet: Search, Create, Evaluate and Share AI Agent Skills."
+readme = "README.md"
+authors = [{ name = "SkillNet Team", email = "liangyuannnnn@gmail.com" }]
+license = { text = "MIT" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "requests>=2.25.0",
+    "openai>=1.0.0",
+    "pydantic>=2.0.0",
+    "tqdm>=4.0.0"  # Added for progress bars during download
+]
+
+[project.urls]
+"Homepage" = "https://skillnet.openkg.cn"
+"Source" = "https://github.com/zjunlp/SkillNet"
+
+[project.scripts]
+skillnet = "skillnet_ai.cli:app"
