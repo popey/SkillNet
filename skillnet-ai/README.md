@@ -29,101 +29,89 @@ pip install skillnet-ai
 
 ## 🛠 Usage (Python SDK)
 
-### 1. Search for Skills
+The `SkillNetClient` provides a unified interface for searching, downloading, creating, and evaluating skills.
 
-You can search for skills using keywords or natural language (AI Search).
+### 1. Initialize the Client
+
+Initialize the client with your credentials. You can also set `API_KEY` and `GITHUB_TOKEN` in your environment variables.
 
 ```python
-from skillnet_ai import SkillNetSearcher
+from skillnet_ai import SkillNetClient
 
-searcher = SkillNetSearcher()
-
-# 1. Standard Keyword Search
-results = searcher.search(q="pdf")
-
-# 2. Semantic Search
-results = searcher.search(q="Help me analyze financial PDF reports", mode="vector")
-
-top_skill = results[0]
-print(f"Top Skill: {top_skill.skill_name} (Stars: {top_skill.stars})")
-print(f"Description: {top_skill.skill_description}")
-print(f"URL: {skill.skill_url}")
-
+# Initialize with optional credentials
+client = SkillNetClient(
+    api_key="sk-...",       # Required for AI Search, Creation, and Evaluation
+    base_url="...",         # Optional custom LLM base URL
+    github_token="ghp-..."  # Optional, for private repos or higher rate limits
+)
 ```
 
-### 2. Install a Skill
-
-Once you have a skill's URL (usually from the search results), you can download and install it into your agent's workspace.
+### 2. Search for Skills
+Perform keyword-based or semantic AI searches to find skills.
 
 ```python
-from skillnet_ai import SkillDownloader
+# 1. Standard Keyword Search
+results = client.search(q="pdf tool")
 
+# 2. Semantic AI Search (requires api_key)
+results = client.search(q="Help me analyze financial PDF reports", mode="vector")
+
+if results:
+    top_skill = results[0]
+    print(f"Found: {top_skill.skill_name} (Stars: {top_skill.stars})")
+    print(f"URL: {top_skill.skill_url}")
+```
+
+### 3. Install a Skill
+Download and install a skill directly from a URL (e.g., from search results) into your local workspace.
+
+```python
 skill_url = "https://github.com/anthropics/skills/tree/main/skills/skill-creator"
 
-# Downloads and extracts the skill to target_dir
-skilldownloader = SkillDownloader()
-local_path = skilldownloader.download(skill_url, target_dir="./my_agent_skills")
-
-if local_path:
+try:
+    # Downloads to ./my_agent_skills
+    local_path = client.download(url=skill_url, target_dir="./my_agent_skills")
     print(f"Skill successfully installed at: {local_path}")
+except Exception as e:
+    print(f"Download failed: {e}")
 ```
 
-### 3. Create a Skill from Trajectory
-
-Turn raw conversation logs or execution traces into a polished Skill Package (`SKILL.md`, scripts, etc.).
-
-> **Note:** This feature requires an LLM API Key.
+### 4. Create a Skill from Trajectory
+Turn conversation logs or execution traces into a polished Skill Package (SKILL.md, scripts, etc.).
 
 ```python
-import os
-from skillnet_ai import SkillCreator
-
-# 1. Prepare your trajectory (e.g., a conversation log)
+# 1. Prepare your trajectory (e.g., a conversation log string)
 trajectory_log = """
 User: I need to rename all .jpg files in this folder to .png.
 Agent: I will write a python script to iterate through the folder...
 Agent: Script executed. Renamed 5 files.
 """
 
-# Set your API key and url
-api_key="sk-...",       # Your API Key
-base_url="xxxxxx",      # Optional. Useful if using a proxy or compatible API
+# 2. Generate Skills
+# Returns a list of paths to the generated skill folders
+created_paths = client.create(
+    trajectory_content=trajectory_log, 
+    output_dir="./created_skills",
+    model="gpt-4o"
+)
 
-# 2. Initialize Creator
-creator = SkillCreator(api_key=api_key, base_url=base_url, model="gpt-4o")
-
-# 3. Create Skills
-output_dir = "./created_skills"
-created_paths = creator.create_from_trajectory(trajectory_log, output_dir=output_dir)
-
-print(f"Created {len(created_paths)} new skills in {output_dir}")
+print(f"Created {len(created_paths)} new skills.")
+for path in created_paths:
+    print(f"- {path}")
 ```
 
-### 4. Skill Evaluation
-
-Assess the Safety, Completeness, Excutability, Modifiability and Cost-Aware of a skill before using it. This tool generates a complete evaluation based on the skill's code and documentation.
-
-> **Note:** This feature requires an LLM API Key.
+### 5. Skill Evaluation
+Assess the Safety, Completeness, Executability, and Modifiability of a skill. Supports both remote GitHub URLs and local directories.
 
 ```python
-import os
-from skillnet_ai import SkillEvaluator, EvaluatorConfig
+# target_skill = "./my_skills/web_search"
+target_skill = "https://github.com/microsoft/autogen/tree/main/samples/tools/web_search"
 
-# 1. Configure the Evaluator
-config = EvaluatorConfig(
-    api_key="sk-...",             # Your API Key
-    base_url="xxxxxx",            # Optional. Useful if using a proxy or compatible API
-    model="gpt-4o"                # Model to use for evaluation
-)
-evaluator = SkillEvaluator(config)
+# Evaluates the skill using the client's API key
+result = client.evaluate(target=target_skill)
 
-# 2. Evaluate a Skill (from URL or Local Path)
-skill_url = "https://github.com/microsoft/autogen/tree/main/samples/tools/web_search"
-
-# You can also use evaluator.evaluate_from_path("./my_skills/web_search")
-result = evaluator.evaluate_from_url(skill_url)
-
-print(f"Evaluation: {result}")
+# Display results
+print(f"Evaluation Result: {result}")
 ```
 
 ---
@@ -157,7 +145,7 @@ skillnet search "visualization" --category "Data" --sort-by stars --limit 10
 
 --min-stars: Filter results by minimum star rating.
 
-### 2. Download Skills (download)
+### 2. Install Skills (download)
 
 Download and install a skill directly from a GitHub repository subdirectory.
 
@@ -186,7 +174,7 @@ skillnet create ./logs/trajectory.txt --output-dir ./generated_skills
 skillnet create ./logs/chat_history.txt --model gpt-4o
 ```
 
-### Evaluate Skills (evaluate)
+### 4. Evaluate Skills (evaluate)
 Generate a comprehensive quality report (Safety, Completeness, Executability, Modifiability, Cost Awareness) for a skill.
 
 Requirement: Ensure API_KEY is set in your environment variables.
