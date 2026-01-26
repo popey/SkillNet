@@ -11,8 +11,8 @@ class SkillNetSearcher:
     Skiil Searcher for interacting with the SkillNet Search API.
     """
     
-    def __init__(self, skillnet_url: str = "http://skillnet.openkg.cn"):
-        self.skillnet_url = skillnet_url.rstrip("/")
+    def __init__(self, skillnet_api_url: str = "http://api-skillnet.openkg.cn"):
+        self.skillnet_api_url = skillnet_api_url.rstrip("/")
         self.session = requests.Session()
         self.session.headers.update({
             "User-Agent": "SkillNet-Python-SDK/0.1.0"
@@ -51,7 +51,7 @@ class SkillNetSearcher:
         Returns:
             A list of skill dictionaries.
         """
-        endpoint = f"{self.skillnet_url}/api/v1/search"
+        endpoint = f"{self.skillnet_api_url}/v1/search"
         
         # 1. Construct base parameters
         params = {
