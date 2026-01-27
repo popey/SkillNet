@@ -281,7 +281,7 @@ class ScriptRunner:
                 return cmd
 
         return candidates[0]
-
+    
     def _extract_usage_lines(self, script_path: str,
                              script_name: str) -> List[str]:
         try:
@@ -472,7 +472,7 @@ class ScriptRunner:
 # ==========================================================================
 
 class SkillLoader:
-    """Load SKILL.md and script files for a skill."""
+    """Load SKILL.md, scripts, and reference files for a skill."""
     
     @staticmethod
     def load_skill_md(skill_dir: str, max_chars: int = 12000) -> Optional[str]:
@@ -517,6 +517,63 @@ class SkillLoader:
         return scripts
     
     @staticmethod
+    def load_references(
+        skill_dir: str,
+        max_files: int = 10,
+        max_chars: int = 4000,
+    ) -> List[Dict[str, str]]:
+        """
+        Load non-script reference files for a skill.
+
+        This is intended for files other than SKILL.md and scripts/,
+        e.g. README.md, references/, assets/, etc.
+        """
+        references: List[Dict[str, str]] = []
+
+        # text-like extensions we are willing to inline
+        allowed_exts = {
+            ".md",
+            ".txt",
+            ".json",
+            ".yaml",
+            ".yml",
+            ".ini",
+            ".toml",
+            ".cfg",
+            ".csv",
+            ".tsv",
+        }
+
+        for root, _, files in os.walk(skill_dir):
+            # skip anything under scripts/
+            if "scripts" in root.split(os.sep):
+                continue
+
+            for filename in files:
+                if len(references) >= max_files:
+                    return references
+
+                # skip SKILL.md itself (already handled separately)
+                if filename.lower() == "skill.md":
+                    continue
+
+                ext = os.path.splitext(filename)[1].lower()
+                if ext and ext not in allowed_exts:
+                    continue
+
+                filepath = os.path.join(root, filename)
+                rel_path = os.path.relpath(filepath, skill_dir)
+
+                try:
+                    with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+                        content = f.read(max_chars)
+                    references.append({"path": rel_path, "content": content})
+                except Exception as e:
+                    logger.warning(f"Skip reference {filepath}: {e}")
+
+        return references
+    
+    @staticmethod
     def _find_file(directory: str, filename: str) -> Optional[str]:
         """Recursively find a file in directory (case-insensitive)."""
         for root, _, files in os.walk(directory):
@@ -536,9 +593,17 @@ class PromptBuilder:
     @staticmethod
     def build(skill: Skill, skill_md: Optional[str],
               scripts: List[Dict[str, str]],
+              references: Optional[List[Dict[str, str]]] = None,
               script_exec_results: Optional[List[ScriptExecutionResult]] = None) -> str:
         """Build the evaluation prompt for a given skill."""
         skill_md_block = skill_md or "[SKILL.md not found]"
+
+        if references:
+            references_block = "\n".join(
+                f"# {r['path']}\n{r['content']}\n" for r in references
+            )
+        else:
+            references_block = "[No references or additional assets found]"
         
         if scripts:
             scripts_block = "\n".join([
@@ -564,6 +629,7 @@ class PromptBuilder:
             repo_name="N/A",
             author="N/A",
             skill_md_block=skill_md_block,
+            references_block=references_block,
             scripts_block=scripts_block,
             script_exec_block=script_exec_block
         )
@@ -602,7 +668,7 @@ class LLMClient:
                 "content": (
                     "You are an expert evaluator of AI Agent Skills. "
                     "Follow the JSON schema and constraints exactly. "
-                    "Use ONLY the provided metadata, SKILL.md, and scripts snippets."
+                    "Use ONLY the provided metadata, SKILL.md, reference files, and scripts snippets."
                 )
             },
             {"role": "user", "content": prompt}
@@ -678,6 +744,7 @@ class SkillEvaluator:
             # Load content
             skill_md = self.loader.load_skill_md(skill.path)
             scripts = self.loader.load_scripts(skill.path)
+            references = self.loader.load_references(skill.path)
 
             # Optional script execution
             script_exec_results: Optional[List[ScriptExecutionResult]] = None
@@ -689,6 +756,7 @@ class SkillEvaluator:
                 skill,
                 skill_md,
                 scripts,
+                references=references,
                 script_exec_results=script_exec_results
             )
             
