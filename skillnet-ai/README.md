@@ -14,7 +14,7 @@ SkillNet enables agents to evolve by learning from execution trajectories and sh
 
 - **🔍 Search**: Find skills using keywords or natural language queries.
 - **📦 One-Line Installation**: Download and install skill packages directly from GitHub repositories.
-- **✨ Skill Creation**: Automatically convert trajectories (agent execution logs, conversation logs ...) into structured, reusable `skill` packages using LLMs.
+- **✨ Skill Creation**: Automatically convert trajectories or GitHub repositories into structured, reusable `skill` packages using LLMs.
 - **📊 Evaluation**: Evaluate and score skills for quality assurance (Safety, Completeness, Excutability, Modifiability, Cost-Aware).
 
 ---
@@ -100,6 +100,18 @@ for path in created_paths:
     print(f"- {path}")
 ```
 
+### 4.1 Create a Skill from GitHub Repository
+Convert an existing GitHub repository into a skill package.
+
+```python
+# Create skill from a GitHub repository
+created_paths = client.create(
+    github_url="https://github.com/zjunlp/DeepKE",
+    output_dir="./created_skills",
+    model="gpt-4o"
+)
+```
+
 ### 5. Skill Evaluation
 Assess the Safety, Completeness, Executability, and Modifiability of a skill. Supports both remote GitHub URLs and local directories.
 
@@ -162,7 +174,7 @@ skillnet download <private_url> --token <your_github_token>
 
 ### 3. Create Skills (create)
 
-Analyze an execution trajectory (log file) and automatically generate a structured Skill Package using LLMs.
+Analyze an execution trajectory (log file) or GitHub repository and automatically generate a structured Skill Package using LLMs.
 
 Requirement: Ensure API_KEY is set in your environment variables.
 
@@ -172,6 +184,9 @@ skillnet create ./logs/trajectory.txt --output-dir ./generated_skills
 
 # Specify a specific LLM model
 skillnet create ./logs/chat_history.txt --model gpt-4o
+
+# Generate a skill from a GitHub repository
+skillnet create --github https://github.com/owner/repo --output-dir ./generated_skills
 ```
 
 ### 4. Evaluate Skills (evaluate)
@@ -200,6 +215,7 @@ If you are using the **Skill Creation** or **Skill Evaluation** feature, you mus
 | :--- | :--- | :--- |
 | `API_KEY` | Required for creating or evaluating skills. | `None` |
 | `BASE_URL` | Optional. Useful if using a proxy or compatible API. | `https://api.openai.com/v1` |
+| `GITHUB_TOKEN` | Optional. For private repos or higher API rate limits. | `None` |
 
 ---
 
@@ -222,6 +238,7 @@ skill-name/
 - [x] Search & AI Search
 - [x] Skill Installer
 - [x] Trajectory-to-Skill Creator
+- [x] GitHub-to-Skill Creator
 - [x] Skill Evaluation & Scoring
 
 ---
