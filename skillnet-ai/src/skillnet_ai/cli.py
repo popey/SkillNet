@@ -148,12 +148,18 @@ def download(
 
 @app.command()
 def create(
-    trajectory_file: Path = typer.Argument(..., exists=True, readable=True, help="Path to the text file containing the execution trajectory/logs."),
+    trajectory_file: Path = typer.Argument(None, exists=True, readable=True, help="Path to the text file containing the execution trajectory/logs. Not required if using --github."),
     output_dir: Path = typer.Option(Path("./generated_skills"), help="Directory where the new skills will be saved."),
     model: str = typer.Option("gpt-4o", help="The LLM model to use (e.g., gpt-4o, gpt-3.5-turbo)."),
+    github: str = typer.Option(None, "--github", "-g", help="GitHub repository URL to create skill from (e.g., https://github.com/owner/repo)."),
+    max_files: int = typer.Option(20, "--max-files", help="Maximum Python files to analyze when using --github."),
 ):
     """
-    Analyze a trajectory log and generate executable Skill packages using AI.
+    Create executable Skill packages using AI.
+    
+    Supports two modes:
+    - From trajectory: skillnet create trajectory.txt
+    - From GitHub: skillnet create --github https://github.com/owner/repo
     """
     # 1. Validate Environment
     if not API_KEY:
@@ -161,8 +167,25 @@ def create(
         console.print("Please export API_KEY or set it in your environment.")
         raise typer.Exit(code=1)
 
+    # 2. Determine mode: GitHub or Trajectory
+    if github:
+        # GitHub mode
+        _create_from_github(github, output_dir, model, max_files)
+    elif trajectory_file:
+        # Trajectory mode
+        _create_from_trajectory(trajectory_file, output_dir, model)
+    else:
+        console.print("[bold red]Error:[/bold red] Either provide a trajectory file or use --github option.")
+        console.print("\nUsage examples:")
+        console.print("  skillnet create trajectory.txt")
+        console.print("  skillnet create --github https://github.com/owner/repo")
+        raise typer.Exit(code=1)
+
+
+def _create_from_trajectory(trajectory_file: Path, output_dir: Path, model: str):
+    """Internal function to create skill from trajectory file."""
     try:
-        # 2. Read Trajectory Content
+        # Read Trajectory Content
         console.print(f"[dim]Reading trajectory from: {trajectory_file}[/dim]")
         with open(trajectory_file, "r", encoding="utf-8") as f:
             trajectory_content = f.read()
@@ -171,22 +194,21 @@ def create(
             console.print("[bold red]Error:[/bold red] Trajectory file is empty.")
             raise typer.Exit(code=1)
 
-        # 3. Initialize Creator
+        # Initialize Creator
         creator = SkillCreator(
             api_key=API_KEY, 
             base_url=BASE_URL, 
             model=model
         )
 
-        # 4. Run Generation with Spinner
-        # The creation process involves multiple LLM calls, so it may take time.
+        # Run Generation with Spinner
         with console.status("[bold green]AI is analyzing trajectory and generating skills...[/bold green]", spinner="dots"):
             created_paths = creator.create_from_trajectory(
                 trajectory=trajectory_content,
                 output_dir=str(output_dir)
             )
 
-        # 5. Report Results
+        # Report Results
         if created_paths:
             console.print(f"\n[bold green]Success! Generated {len(created_paths)} skill(s):[/bold green]")
             
@@ -195,7 +217,6 @@ def create(
             table.add_column("Location", style="white")
 
             for path in created_paths:
-                # Assuming path ends with the skill name
                 skill_name = os.path.basename(path)
                 table.add_row(skill_name, str(path))
             
@@ -206,9 +227,52 @@ def create(
 
     except Exception as e:
         console.print(f"\n[bold red]Creation Failed:[/bold red] {str(e)}")
-        # Optional: Print traceback if in debug mode
-        # console.print_exception()
         raise typer.Exit(code=1)
+
+
+def _create_from_github(github_url: str, output_dir: Path, model: str, max_files: int):
+    """Internal function to create skill from GitHub repository."""
+    try:
+        console.print(f"[dim]Creating skill from GitHub: {github_url}[/dim]")
+
+        # Initialize Creator
+        creator = SkillCreator(
+            api_key=API_KEY,
+            base_url=BASE_URL,
+            model=model
+        )
+
+        # Run Generation with Spinner
+        with console.status("[bold green]Fetching repository and generating skill...[/bold green]", spinner="dots"):
+            created_paths = creator.create_from_github(
+                github_url=github_url,
+                output_dir=str(output_dir),
+                api_token=os.getenv("GITHUB_TOKEN"),
+                max_files=max_files
+            )
+
+        # Report Results
+        if created_paths:
+            console.print(f"\n[bold green]Success! Generated {len(created_paths)} skill(s) from GitHub:[/bold green]")
+            
+            table = Table(show_header=True, header_style="bold magenta")
+            table.add_column("Skill Name", style="cyan")
+            table.add_column("Location", style="white")
+
+            for path in created_paths:
+                skill_name = os.path.basename(path)
+                table.add_row(skill_name, str(path))
+            
+            console.print(table)
+            console.print(f"\n[dim]Files saved to: {os.path.abspath(output_dir)}[/dim]")
+            console.print("\n[dim]Tip: Use 'skillnet evaluate <skill_path>' to evaluate the generated skill.[/dim]")
+        else:
+            console.print("\n[yellow]Failed to generate skill from the GitHub repository.[/yellow]")
+
+    except Exception as e:
+        console.print(f"\n[bold red]GitHub Skill Creation Failed:[/bold red] {str(e)}")
+        raise typer.Exit(code=1)
+
 
 @app.command()
 def evaluate(

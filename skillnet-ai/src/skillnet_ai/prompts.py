@@ -240,3 +240,273 @@ Return the evaluation results in JSON format exactly like this:
 }}
 
 Remember: STRICT JSON only."""
+
+
+# GitHub Repository to Skill Prompts
+
+GITHUB_SKILL_SYSTEM_PROMPT = """You are an expert Technical Writer specializing in creating Skills for AI agents.
+Your task is to analyze a GitHub repository and generate a comprehensive skill package that captures the repository's functionality and usage patterns.
+
+CRITICAL REQUIREMENTS:
+1. Generate COMPLETE content - do not truncate or abbreviate sections
+2. Include ALL installation steps with actual commands from README
+3. Extract CONCRETE code examples from README - copy them exactly, don't invent new ones
+4. List specific models, APIs, or tools mentioned in the repository
+5. For scripts/: Generate REAL, RUNNABLE Python code that demonstrates library usage
+6. For references/: Generate DETAILED API documentation with actual function signatures
+7. Follow the SkillNet skill structure standard exactly
+8. Output files in parseable format with ## FILE: markers
+
+SCRIPT QUALITY REQUIREMENTS:
+- Scripts must be self-contained and runnable (no os.system('conda activate'))
+- Scripts should demonstrate actual library API usage, not shell command wrappers
+- Include proper imports, error handling, and docstrings
+- If the library requires specific data, use placeholder paths with clear comments
+
+REFERENCE QUALITY REQUIREMENTS:
+- API references must include actual function signatures from code analysis
+- Include parameter types, return types, and brief descriptions
+- Organize by module/class hierarchy
+- Reference the source file locations
+
+Your output will be parsed by a script, so maintain strict formatting."""
+
+GITHUB_SKILL_USER_PROMPT_TEMPLATE = """
+Your task is to generate a complete skill package from the provided GitHub repository information.
+This includes the main `SKILL.md` orchestration file and any necessary bundled resources.
+
+# Input Data: GitHub Repository
+
+## Repository Info
+- **Name:** {repo_name}
+- **URL:** {repo_url}
+- **Description:** {repo_description}
+- **Primary Language:** {language}
+- **Languages Breakdown:** {languages_breakdown}
+- **Stars:** {stars}
+- **Topics:** {topics}
+
+## README Content
+{readme_content}
+
+## File Structure
+{file_tree}
+
+## Code Analysis Summary
+{code_summary}
+
+# Skill Structure Standard
+You must output the skill using the following directory structure:
+
+```text
+skill-name/
+├── SKILL.md (required)
+│   ├── YAML frontmatter metadata (required)
+│   │   ├── name: (required)
+│   │   └── description: (required)
+│   └── Markdown instructions (required)
+└── Bundled Resources (required)
+    ├── scripts/          - Executable Python code demonstrating library usage
+    └── references/       - API documentation with function signatures
+```
+
+# SKILL.md Content Requirements (MUST INCLUDE ALL)
+
+## 1. YAML Frontmatter (REQUIRED)
+```yaml
+---
+name: skill-name-in-kebab-case
+description: A when-to-use trigger statement explaining when this skill should be activated
+---
+```
+
+## 2. When to Use Section (REQUIRED)
+Clear description of scenarios where this skill should be activated. Include:
+- Primary use cases
+- Types of tasks it handles
+- Keywords that should trigger this skill
+
+## 3. Quick Reference Section (REQUIRED)
+- Official documentation links
+- Demo/playground URLs if available
+- Key resources and references
+
+## 4. Installation/Setup Section (REQUIRED - WITH ACTUAL COMMANDS)
+Include complete installation commands exactly as shown in README:
+- Prerequisites (Python version, system requirements)
+- pip install commands
+- Docker commands if available
+- Environment setup steps
+
+## 5. Core Features Section (REQUIRED)
+List the main features/capabilities:
+- Feature 1: Description
+- Feature 2: Description
+- Include any sub-modules or specialized tools
+
+## 6. Usage Examples Section (REQUIRED - EXTRACT FROM README)
+Include ACTUAL code examples from the README:
+- Quick start code
+- Common usage patterns
+- Command-line examples
+
+## 7. Key APIs/Models Section (REQUIRED)
+List specific models, classes, or APIs mentioned:
+- Model names (e.g., specific neural network architectures)
+- API endpoints or function signatures
+- Configuration options
+
+## 8. Common Patterns & Best Practices (OPTIONAL)
+Tips for effective usage
+
+# scripts/ File Requirements (CRITICAL - HIGH QUALITY)
+
+Generate Python scripts that ACTUALLY demonstrate how to use the library's API.
+
+GOOD SCRIPT EXAMPLE (demonstrates actual API usage):
+```python
+#!/usr/bin/env python3
+\"\"\"
+Example: Named Entity Recognition with DeepKE
+
+This script demonstrates how to use DeepKE's NER module for entity extraction.
+Requires: pip install deepke torch transformers
+\"\"\"
+
+from typing import List, Dict
+
+# NOTE: Adjust import based on actual DeepKE installation
+try:
+    from deepke.name_entity_re.standard import NERPredictor
+except ImportError:
+    print("Please install DeepKE: pip install deepke")
+    exit(1)
+
+
+def extract_entities(text: str, model_path: str = None) -> List[Dict]:
+    \"\"\"
+    Extract named entities from text using DeepKE.
+    
+    Args:
+        text: Input text to analyze
+        model_path: Path to trained model (optional, uses default if None)
+    
+    Returns:
+        List of entities with type, text, and position
+    \"\"\"
+    # Initialize predictor
+    predictor = NERPredictor(model_path=model_path)
+    
+    # Run prediction
+    entities = predictor.predict(text)
+    
+    return entities
+
+
+if __name__ == "__main__":
+    # Example usage
+    sample_text = "Barack Obama was born in Honolulu and served as the 44th president."
+    
+    print(f"Input: {{sample_text}}")
+    print("\\nExtracting entities...")
+    
+    results = extract_entities(sample_text)
+    
+    for entity in results:
+        print(f"  - {{entity['text']}} ({{entity['type']}})")
+```
+
+BAD SCRIPT EXAMPLE (DO NOT generate this style):
+```python
+# BAD - This is just shell command wrapper, NOT useful
+import os
+os.system('conda activate deepke')  # Won't work in script context
+os.system('python run.py')           # No actual API demonstration
+```
+
+# references/ File Requirements (CRITICAL - HIGH QUALITY)
+
+Generate detailed API documentation based on the code analysis provided.
+
+GOOD API REFERENCE EXAMPLE:
+```markdown
+# DeepKE API Reference
+
+## Module: deepke.name_entity_re.standard
+
+### Class: NERPredictor
+
+Entity recognition predictor using pretrained models.
+
+**Constructor:**
+```python
+NERPredictor(
+    model_path: str = None,
+    device: str = "cuda" if torch.cuda.is_available() else "cpu",
+    max_seq_length: int = 128
+)
+```
+
+**Parameters:**
+- `model_path` (str, optional): Path to trained model checkpoint. Uses default pretrained model if None.
+- `device` (str): Device to run inference on. Defaults to CUDA if available.
+- `max_seq_length` (int): Maximum sequence length for tokenization.
+
+**Methods:**
+
+#### predict(text: str) -> List[Dict]
+Run NER prediction on input text.
+
+**Parameters:**
+- `text` (str): Input text to analyze
+
+**Returns:**
+- List of dictionaries containing:
+  - `text` (str): The entity text
+  - `type` (str): Entity type (PERSON, LOCATION, ORG, etc.)
+  - `start` (int): Start character position
+  - `end` (int): End character position
+
+**Example:**
+```python
+predictor = NERPredictor()
+entities = predictor.predict("Apple was founded by Steve Jobs.")
+# Returns: [{{'text': 'Apple', 'type': 'ORG', ...}}, {{'text': 'Steve Jobs', 'type': 'PERSON', ...}}]
+```
+
+---
+
+## Module: deepke.relation_extraction.standard
+
+### Class: REPredictor
+...
+```
+
+BAD API REFERENCE EXAMPLE (DO NOT generate this style):
+```markdown
+# API Reference
+- Tokenizer: does tokenization
+- Encoder: encodes things
+- train(): trains the model
+```
+
+# Output Format (STRICT)
+You must output the files using the following strict format so that a script can parse and save them.
+For every file, use this exact pattern:
+
+## FILE: <skill-name>/<path_to_file>
+```<language_tag>
+<file_content_here>
+```
+
+IMPORTANT: 
+- Generate COMPLETE files, do not use "..." or "[content continues]"
+- SKILL.md should be comprehensive (at least 100+ lines)
+- scripts/: At least one RUNNABLE Python script with actual library API usage
+- references/: At least one DETAILED API reference with function signatures
+
+Now, generate the complete skill package based on the provided GitHub repository information.
+Focus on creating a practical, comprehensive skill that an AI agent can use to work with this repository.
+DO NOT truncate content - include all relevant information from the README.
+SCRIPTS must demonstrate actual Python API usage, not shell command wrappers.
+REFERENCES must include actual function signatures and parameters."""

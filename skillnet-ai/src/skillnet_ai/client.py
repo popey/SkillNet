@@ -152,6 +152,49 @@ class SkillNetClient:
         except Exception as e:
             raise SkillNetError(f"Creation failed: {str(e)}") from e
 
+    def create_from_github(
+        self,
+        github_url: str,
+        output_dir: Union[str, Path] = "./generated_skills",
+        model: str = "gpt-4o",
+        max_files: int = 20
+    ) -> List[str]:
+        """
+        Generate a skill package from a GitHub repository.
+
+        Args:
+            github_url: Full URL to GitHub repository (e.g., https://github.com/owner/repo).
+            output_dir: Directory where new skills will be saved.
+            model: The LLM model to use.
+            max_files: Maximum number of Python files to analyze for code signatures.
+
+        Returns:
+            List[str]: A list of paths to the generated skill folders.
+        """
+        if not self.api_key:
+            raise SkillNetError("API_KEY is required for skill creation from GitHub.")
+
+        if not github_url or not github_url.strip():
+            raise SkillNetError("GitHub URL is empty.")
+
+        try:
+            creator = SkillCreator(
+                api_key=self.api_key,
+                base_url=self.base_url,
+                model=model
+            )
+            
+            created_paths = creator.create_from_github(
+                github_url=github_url,
+                output_dir=str(output_dir),
+                api_token=self.github_token,
+                max_files=max_files
+            )
+            
+            return created_paths if created_paths else []
+        except Exception as e:
+            raise SkillNetError(f"GitHub skill creation failed: {str(e)}") from e
+
     def evaluate(
         self,
         target: str,
