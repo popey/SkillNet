@@ -12,8 +12,8 @@ from typing import Dict, Any, List, Optional
 from openai import OpenAI
 from tqdm import tqdm
 
-from downloader import SkillDownloader
-from prompts import SKILL_EVALUATION_PROMPT
+from skillnet_ai.downloader import SkillDownloader
+from skillnet_ai.prompts import SKILL_EVALUATION_PROMPT
 
 logger = logging.getLogger(__name__)
 

@@ -177,7 +177,8 @@ class SkillNetClient:
         category: Optional[str] = None,
         description: Optional[str] = None,
         model: str = "gpt-4o",
-        max_workers: int = 5
+        max_workers: int = 5,
+        cache_dir: Union[str, Path] = "./evaluate_cache_dir"
     ) -> Dict[str, Any]:
         """
         Evaluate a skill (local path or URL).
@@ -200,7 +201,8 @@ class SkillNetClient:
             api_key=self.api_key,
             base_url=self.base_url,
             model=model,
-            max_workers=max_workers
+            max_workers=max_workers,
+            cache_dir=cache_dir
         )
         evaluator = SkillEvaluator(config)
 
