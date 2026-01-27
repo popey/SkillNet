@@ -57,16 +57,27 @@ class SkillDownloader:
 
             # 3. Download files
             success_count = 0
+            failed_files = []
             for file_info in files_to_download:
                 if self._download_single_file(owner, repo, ref, dir_path, file_info, folder_name, target_dir):
                     success_count += 1
+                else:
+                    failed_files.append(file_info['path'])
 
             if success_count == 0:
-                logger.error("Failed to download any files.")
+                logger.error("❌ Failed to download any files. Please check your network settings and ensure connection to GitHub is working properly.")
                 return None
-
+            
             final_path = os.path.abspath(os.path.join(target_dir, folder_name))
-            logger.info(f"✅ Skill installed successfully at: {final_path}")
+
+            if failed_files:
+                logger.warning(f"⚠️ Successfully downloaded {success_count} files at {final_path}, but {len(failed_files)} failed.")
+                logger.warning("The following files could not be downloaded:")
+                for f in failed_files:
+                    logger.warning(f"  - {f}")
+                logger.warning("Please check your network settings and ensure connection to GitHub is working properly.")
+            else:
+                logger.info(f"✅ Skill installed successfully at: {final_path}")
             return final_path
 
         except Exception as e:
