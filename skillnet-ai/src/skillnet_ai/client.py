@@ -115,26 +115,36 @@ class SkillNetClient:
 
     def create(
         self,
-        trajectory_content: str,
+        trajectory_content: Optional[str] = None,
+        github_url: Optional[str] = None,
         output_dir: Union[str, Path] = "./generated_skills",
-        model: str = "gpt-4o"
+        model: str = "gpt-4o",
+        max_files: int = 20
     ) -> List[str]:
         """
-        Generate executable skills from a trajectory log.
+        Generate executable skills from a trajectory log or GitHub repository.
 
         Args:
             trajectory_content: The text content of the execution log/trajectory.
+            github_url: Full URL to GitHub repository (e.g., https://github.com/owner/repo).
             output_dir: Directory where new skills will be saved.
             model: The LLM model to use.
+            max_files: Maximum number of Python files to analyze (GitHub mode only).
 
         Returns:
             List[str]: A list of paths to the generated skill folders.
+        
+        Note:
+            Provide either trajectory_content OR github_url, not both.
         """
         if not self.api_key:
             raise SkillNetError("API_KEY is required for skill creation.")
 
-        if not trajectory_content.strip():
-            raise SkillNetError("Trajectory content is empty.")
+        if trajectory_content and github_url:
+            raise SkillNetError("Provide either trajectory_content OR github_url, not both.")
+        
+        if not trajectory_content and not github_url:
+            raise SkillNetError("Must provide trajectory_content or github_url.")
 
         try:
             creator = SkillCreator(
@@ -143,57 +153,22 @@ class SkillNetClient:
                 model=model
             )
             
-            created_paths = creator.create_from_trajectory(
-                trajectory=trajectory_content,
-                output_dir=str(output_dir)
-            )
+            if github_url:
+                created_paths = creator.create_from_github(
+                    github_url=github_url,
+                    output_dir=str(output_dir),
+                    api_token=self.github_token,
+                    max_files=max_files
+                )
+            else:
+                created_paths = creator.create_from_trajectory(
+                    trajectory=trajectory_content,
+                    output_dir=str(output_dir)
+                )
             
             return created_paths if created_paths else []
         except Exception as e:
             raise SkillNetError(f"Creation failed: {str(e)}") from e
-
-    def create_from_github(
-        self,
-        github_url: str,
-        output_dir: Union[str, Path] = "./generated_skills",
-        model: str = "gpt-4o",
-        max_files: int = 20
-    ) -> List[str]:
-        """
-        Generate a skill package from a GitHub repository.
-
-        Args:
-            github_url: Full URL to GitHub repository (e.g., https://github.com/owner/repo).
-            output_dir: Directory where new skills will be saved.
-            model: The LLM model to use.
-            max_files: Maximum number of Python files to analyze for code signatures.
-
-        Returns:
-            List[str]: A list of paths to the generated skill folders.
-        """
-        if not self.api_key:
-            raise SkillNetError("API_KEY is required for skill creation from GitHub.")
-
-        if not github_url or not github_url.strip():
-            raise SkillNetError("GitHub URL is empty.")
-
-        try:
-            creator = SkillCreator(
-                api_key=self.api_key,
-                base_url=self.base_url,
-                model=model
-            )
-            
-            created_paths = creator.create_from_github(
-                github_url=github_url,
-                output_dir=str(output_dir),
-                api_token=self.github_token,
-                max_files=max_files
-            )
-            
-            return created_paths if created_paths else []
-        except Exception as e:
-            raise SkillNetError(f"GitHub skill creation failed: {str(e)}") from e
 
     def evaluate(
         self,

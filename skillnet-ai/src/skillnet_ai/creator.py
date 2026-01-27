@@ -304,7 +304,7 @@ class SkillCreator:
         for attempt in range(max_retries + 1):
             try:
                 # Use higher max_tokens for complete response
-                response = self._get_llm_response(messages, max_tokens=8192)
+                response = self._get_llm_response(messages, max_tokens=16384)
                 
                 # Validate response has required content
                 if self._validate_skill_content(response):
