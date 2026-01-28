@@ -135,7 +135,7 @@ client = SkillNetClient(
 ```
 
 #### 2. Search for Skills
-Perform keywords match or semantic searches to find skills. (See Parameter Reference Above for configuration details.)
+Perform keywords match or semantic searches to find skills. (See [Parameter Reference](#-parameter-reference) for configuration details.)
 
 ```python
 # 1. Standard Keywords Match
