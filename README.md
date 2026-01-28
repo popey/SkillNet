@@ -311,10 +311,10 @@ skill-name/
 
 ## 🗺 Roadmap
 
-- [x] ✅ Keyword Match & Semantic Search
-- [x] ✅ Skill Installer
-- [x] ✅ Skill Creator (Local File & GitHub Repository)
-- [x] ✅ Skill Evaluation & Scoring
+- ✅ Keyword Match & Semantic Search
+- ✅ Skill Installer
+- ✅ Skill Creator (Local File & GitHub Repository)
+- ✅ Skill Evaluation & Scoring
 
 ## 🤝 Contributing
 
