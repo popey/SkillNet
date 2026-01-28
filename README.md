@@ -1,4 +1,7 @@
 <div align="center">
+<a href="http://skillnet.openkg.cn/">
+    <img src="images/skillnet.png" width="200" alt="SkillNet Logo">
+</a>
 
 # SkillNet: Create, Evaluate, and Connect AI Skills
 
