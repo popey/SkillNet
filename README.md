@@ -217,12 +217,75 @@ The CLI is powered by `Typer` and `Rich` for a beautiful terminal experience.
 | :--- | :--- | :--- |
 | **`search`** | Search skills | `skillnet search "data viz" --mode vector` |
 | **`download`** | Install skill | `skillnet download <github_url> -d ./skills` |
-| **`create`** | Generate skill | `skillnet create log.txt --model gpt-4o` |
-| **`evaluate`** | Audit skill | `skillnet evaluate ./my_tool` |
+| **`create`** | Create skill | `skillnet create log.txt --model gpt-4o` |
+| **`evaluate`** | Evaluate skill | `skillnet evaluate ./my_tool` |
 
 > **Tip:** Use `skillnet [command] --help` to see all available options (e.g., thresholds, sorting).
 
-#### Environment Configuration
+#### 1. Search Skills (`search`)
+
+Search the registry using keywords match or semantic search.
+
+```bash
+# Basic keywords match
+skillnet search "pdf extraction"
+
+# Semantic/Vector search (finds skills by meaning)
+skillnet search "tools for reading financial documents" --mode vector --threshold 0.85
+
+# Filter by category and sort results
+skillnet search "visualization" --category "Data" --sort-by stars --limit 10
+```
+
+#### 2. Install Skills (`download`)
+
+Download and install a skill directly from a GitHub repository subdirectory.
+
+```bash
+# Download to the current directory
+skillnet download https://github.com/owner/repo/tree/main/skills/math_solver
+
+# Download to a specific target directory
+skillnet download https://github.com/owner/repo/tree/main/skills/math_solver -d ./my_agent/skills
+
+# Download from a private repository
+skillnet download <private_url> --token <your_github_token>
+```
+
+#### 3. Create Skills (`create`)
+
+Analyze local file (execution trajectory, conversation log) or GitHub repository and automatically generate a structured Skill Package using LLMs.
+
+Requirement: Ensure API_KEY is set in your environment variables.
+
+```bash
+# Generate a skill from a trajectory file
+skillnet create ./logs/trajectory.txt --output-dir ./generated_skills
+
+# Specify a specific LLM model
+skillnet create ./logs/chat_history.txt --model gpt-4o
+
+# Generate a skill from a GitHub repository
+skillnet create --github https://github.com/owner/repo --output-dir ./generated_skills
+```
+
+#### 4. Evaluate Skills (`evaluate`)
+Generate a comprehensive quality report (Safety, Completeness, Executability, Modifiability, Cost Awareness) for a skill.
+
+Requirement: Ensure API_KEY is set in your environment variables.
+
+```bash
+# Evaluate a remote skill via GitHub URL
+skillnet evaluate https://github.com/owner/repo/tree/main/skills/web_search
+
+# Evaluate a local skill directory
+skillnet evaluate ./my_skills/web_search
+
+# Custom evaluation config
+skillnet evaluate ./my_skills/tool --category "DevOps" --model gpt-4o
+```
+
+### Environment Configuration
 To use **Creation** or **Evaluation** features, set your environment variables:
 
 ```bash
