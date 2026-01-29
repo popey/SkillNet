@@ -115,36 +115,59 @@ class SkillNetClient:
 
     def create(
         self,
+        input_type: str = "auto",
         trajectory_content: Optional[str] = None,
         github_url: Optional[str] = None,
+        office_file: Optional[str] = None,
+        prompt: Optional[str] = None,
         output_dir: Union[str, Path] = "./generated_skills",
         model: str = "gpt-4o",
         max_files: int = 20
     ) -> List[str]:
         """
-        Generate executable skills from a trajectory log or GitHub repository.
+        Generate executable skills from various input sources.
 
         Args:
+            input_type: Input source type. One of:
+                - "auto": Auto-detect based on provided parameters (default)
+                - "github": Create from GitHub repository
+                - "trajectory": Create from execution log/trajectory
+                - "office": Create from PDF/PPT/Word document
+                - "prompt": Create from user's direct description
             trajectory_content: The text content of the execution log/trajectory.
-            github_url: Full URL to GitHub repository (e.g., https://github.com/owner/repo).
+            github_url: Full URL to GitHub repository.
+            office_file: Path to office document (PDF, PPT, Word).
+            prompt: User's description for prompt-based skill creation.
             output_dir: Directory where new skills will be saved.
             model: The LLM model to use.
-            max_files: Maximum number of Python files to analyze (GitHub mode only).
+            max_files: Maximum Python files to analyze (GitHub mode only).
 
         Returns:
             List[str]: A list of paths to the generated skill folders.
-        
-        Note:
-            Provide either trajectory_content OR github_url, not both.
         """
         if not self.api_key:
             raise SkillNetError("API_KEY is required for skill creation.")
 
-        if trajectory_content and github_url:
-            raise SkillNetError("Provide either trajectory_content OR github_url, not both.")
-        
-        if not trajectory_content and not github_url:
-            raise SkillNetError("Must provide trajectory_content or github_url.")
+        # Auto-detect input type if not specified
+        if input_type == "auto":
+            if github_url:
+                input_type = "github"
+            elif trajectory_content:
+                input_type = "trajectory"
+            elif office_file:
+                input_type = "office"
+            elif prompt:
+                input_type = "prompt"
+            else:
+                raise SkillNetError(
+                    "Must provide one of: trajectory_content, github_url, "
+                    "office_file, or diy_prompt."
+                )
+
+        # Validate input_type
+        valid_types = {"github", "trajectory", "office", "prompt", "auto"}
+        if input_type not in valid_types:
+            raise SkillNetError(f"Invalid input_type: {input_type}. Must be one of {valid_types}")
 
         try:
             creator = SkillCreator(
@@ -153,18 +176,38 @@ class SkillNetClient:
                 model=model
             )
             
-            if github_url:
+            if input_type == "github":
+                if not github_url:
+                    raise SkillNetError("github_url is required for github input type.")
                 created_paths = creator.create_from_github(
                     github_url=github_url,
                     output_dir=str(output_dir),
                     api_token=self.github_token,
                     max_files=max_files
                 )
-            else:
+            elif input_type == "trajectory":
+                if not trajectory_content:
+                    raise SkillNetError("trajectory_content is required for trajectory input type.")
                 created_paths = creator.create_from_trajectory(
                     trajectory=trajectory_content,
                     output_dir=str(output_dir)
                 )
+            elif input_type == "office":
+                if not office_file:
+                    raise SkillNetError("office_file is required for office input type.")
+                created_paths = creator.create_from_office(
+                    file_path=office_file,
+                    output_dir=str(output_dir)
+                )
+            elif input_type == "prompt":
+                if not prompt:
+                    raise SkillNetError("prompt is required for prompt input type.")
+                created_paths = creator.create_from_prompt(
+                    user_input=prompt,
+                    output_dir=str(output_dir)
+                )
+            else:
+                raise SkillNetError(f"Unknown input_type: {input_type}")
             
             return created_paths if created_paths else []
         except Exception as e:
