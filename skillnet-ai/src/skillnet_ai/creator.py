@@ -13,7 +13,11 @@ from skillnet_ai.prompts import (
     SKILL_CONTENT_SYSTEM_PROMPT,
     SKILL_CONTENT_USER_PROMPT_TEMPLATE,
     GITHUB_SKILL_SYSTEM_PROMPT,
-    GITHUB_SKILL_USER_PROMPT_TEMPLATE
+    GITHUB_SKILL_USER_PROMPT_TEMPLATE,
+    OFFICE_SKILL_SYSTEM_PROMPT,
+    OFFICE_SKILL_USER_PROMPT_TEMPLATE,
+    PROMPT_SKILL_SYSTEM_PROMPT,
+    PROMPT_SKILL_USER_PROMPT_TEMPLATE
 )
 
 logger = logging.getLogger(__name__)
@@ -140,6 +144,118 @@ class SkillCreator:
                 logger.error(f"Failed to write {full_path}: {e}")
         
         return created_files
+
+    def create_from_office(
+        self,
+        file_path: str,
+        output_dir: str = "./generated_skills"
+    ) -> List[str]:
+        """
+        Create a skill package from an Office document (PDF, PPT, Word).
+        
+        Args:
+            file_path: Path to the office document
+            output_dir: Directory where new skills will be saved
+            
+        Returns:
+            List of paths to created skill directories
+        """
+        logger.info(f"Creating skill from office document: {file_path}")
+        
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"File not found: {file_path}")
+        
+        if not _OfficeReader.is_supported(file_path):
+            raise ValueError(
+                f"Unsupported file type. Supported: {_OfficeReader.SUPPORTED_EXTENSIONS}"
+            )
+        
+        # Extract text content
+        document_content = _OfficeReader.extract_text(file_path)
+        if not document_content.strip():
+            logger.warning("No text content extracted from document")
+            return []
+        
+        filename = os.path.basename(file_path)
+        file_type = _OfficeReader.get_file_type(file_path)
+        
+        # Generate skill using LLM
+        user_prompt = OFFICE_SKILL_USER_PROMPT_TEMPLATE.format(
+            filename=filename,
+            file_type=file_type,
+            document_content=document_content
+        )
+        
+        messages = [
+            {"role": "system", "content": OFFICE_SKILL_SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        try:
+            response = self._get_llm_response(messages, max_tokens=8192)
+            created_files = self._save_github_skill_files(response, output_dir)
+            
+            # Extract unique skill directories
+            skill_dirs = set()
+            for created_file in created_files:
+                rel_path = os.path.relpath(created_file, output_dir)
+                skill_dir = rel_path.split(os.sep)[0]
+                skill_dirs.add(os.path.join(output_dir, skill_dir))
+            
+            logger.info(f"Skill created from office document: {file_path}")
+            return list(skill_dirs)
+            
+        except Exception as e:
+            logger.error(f"Failed to create skill from office document: {e}")
+            return []
+
+    def create_from_prompt(
+        self,
+        user_input: str,
+        output_dir: str = "./generated_skills"
+    ) -> List[str]:
+        """
+        Create a skill package from user's direct description.
+        
+        Args:
+            user_input: User's description of the skill to create
+            output_dir: Directory where new skills will be saved
+            
+        Returns:
+            List of paths to created skill directories
+        """
+        logger.info("Creating skill from user prompt")
+        
+        if not user_input or not user_input.strip():
+            raise ValueError("User input cannot be empty")
+        
+        # Generate skill using LLM
+        user_prompt = PROMPT_SKILL_USER_PROMPT_TEMPLATE.format(
+            user_input=user_input
+        )
+        
+        messages = [
+            {"role": "system", "content": PROMPT_SKILL_SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        try:
+            response = self._get_llm_response(messages, max_tokens=8192)
+            created_files = self._save_github_skill_files(response, output_dir)
+            
+            # Extract unique skill directories
+            skill_dirs = set()
+            for created_file in created_files:
+                rel_path = os.path.relpath(created_file, output_dir)
+                skill_dir = rel_path.split(os.sep)[0]
+                skill_dirs.add(os.path.join(output_dir, skill_dir))
+            
+            logger.info("Skill created from user input")
+            return list(skill_dirs)
+            
+        except Exception as e:
+            logger.error(f"Failed to create skill from user input: {e}")
+            return []
 
     def create_from_github(
         self,
@@ -743,3 +859,168 @@ class _PythonCodeAnalyzer:
             "is_async": isinstance(node, ast.AsyncFunctionDef),
             "decorators": decorators
         }
+
+
+class _OfficeReader:
+    """Extract text content from Office documents (PDF, PPT, Word)."""
+
+    SUPPORTED_EXTENSIONS = {'.pdf', '.docx', '.doc', '.pptx', '.ppt'}
+
+    @staticmethod
+    def is_supported(file_path: str) -> bool:
+        """Check if file type is supported."""
+        ext = os.path.splitext(file_path)[1].lower()
+        return ext in _OfficeReader.SUPPORTED_EXTENSIONS
+
+    @staticmethod
+    def get_file_type(file_path: str) -> str:
+        """Get human-readable file type."""
+        ext = os.path.splitext(file_path)[1].lower()
+        type_map = {
+            '.pdf': 'PDF Document',
+            '.docx': 'Word Document',
+            '.doc': 'Word Document (Legacy)',
+            '.pptx': 'PowerPoint Presentation',
+            '.ppt': 'PowerPoint Presentation (Legacy)'
+        }
+        return type_map.get(ext, 'Unknown')
+
+    @staticmethod
+    def extract_text(file_path: str, max_chars: int = 50000) -> str:
+        """
+        Extract text content from supported office documents.
+        
+        Args:
+            file_path: Path to the office document
+            max_chars: Maximum characters to extract
+            
+        Returns:
+            Extracted text content
+            
+        Raises:
+            ValueError: If file type not supported
+            ImportError: If required library not installed
+        """
+        ext = os.path.splitext(file_path)[1].lower()
+        
+        if ext == '.pdf':
+            return _OfficeReader._extract_pdf(file_path, max_chars)
+        elif ext in ('.docx', '.doc'):
+            return _OfficeReader._extract_word(file_path, max_chars)
+        elif ext in ('.pptx', '.ppt'):
+            return _OfficeReader._extract_ppt(file_path, max_chars)
+        else:
+            raise ValueError(f"Unsupported file type: {ext}")
+
+    @staticmethod
+    def _extract_pdf(file_path: str, max_chars: int) -> str:
+        """Extract text from PDF file."""
+        try:
+            from PyPDF2 import PdfReader
+        except ImportError:
+            raise ImportError(
+                "PyPDF2 is required for PDF extraction. "
+                "Install with: pip install PyPDF2"
+            )
+        
+        try:
+            reader = PdfReader(file_path)
+            text_parts = []
+            total_chars = 0
+            
+            for page in reader.pages:
+                page_text = page.extract_text() or ""
+                if total_chars + len(page_text) > max_chars:
+                    remaining = max_chars - total_chars
+                    text_parts.append(page_text[:remaining])
+                    break
+                text_parts.append(page_text)
+                total_chars += len(page_text)
+            
+            return "\n\n".join(text_parts)
+        except Exception as e:
+            logger.error(f"Failed to extract PDF text: {e}")
+            raise
+
+    @staticmethod
+    def _extract_word(file_path: str, max_chars: int) -> str:
+        """Extract text from Word document."""
+        try:
+            from docx import Document
+        except ImportError:
+            raise ImportError(
+                "python-docx is required for Word extraction. "
+                "Install with: pip install python-docx"
+            )
+        
+        try:
+            doc = Document(file_path)
+            text_parts = []
+            total_chars = 0
+            
+            for para in doc.paragraphs:
+                para_text = para.text.strip()
+                if not para_text:
+                    continue
+                if total_chars + len(para_text) > max_chars:
+                    remaining = max_chars - total_chars
+                    text_parts.append(para_text[:remaining])
+                    break
+                text_parts.append(para_text)
+                total_chars += len(para_text)
+            
+            # Also extract text from tables
+            for table in doc.tables:
+                if total_chars >= max_chars:
+                    break
+                for row in table.rows:
+                    row_text = " | ".join(cell.text.strip() for cell in row.cells)
+                    if total_chars + len(row_text) > max_chars:
+                        break
+                    text_parts.append(row_text)
+                    total_chars += len(row_text)
+            
+            return "\n\n".join(text_parts)
+        except Exception as e:
+            logger.error(f"Failed to extract Word text: {e}")
+            raise
+
+    @staticmethod
+    def _extract_ppt(file_path: str, max_chars: int) -> str:
+        """Extract text from PowerPoint presentation."""
+        try:
+            from pptx import Presentation
+        except ImportError:
+            raise ImportError(
+                "python-pptx is required for PowerPoint extraction. "
+                "Install with: pip install python-pptx"
+            )
+        
+        try:
+            prs = Presentation(file_path)
+            text_parts = []
+            total_chars = 0
+            
+            for slide_num, slide in enumerate(prs.slides, 1):
+                slide_texts = [f"--- Slide {slide_num} ---"]
+                
+                for shape in slide.shapes:
+                    if not shape.has_text_frame:
+                        continue
+                    for paragraph in shape.text_frame.paragraphs:
+                        para_text = paragraph.text.strip()
+                        if para_text:
+                            slide_texts.append(para_text)
+                
+                slide_content = "\n".join(slide_texts)
+                if total_chars + len(slide_content) > max_chars:
+                    remaining = max_chars - total_chars
+                    text_parts.append(slide_content[:remaining])
+                    break
+                text_parts.append(slide_content)
+                total_chars += len(slide_content)
+            
+            return "\n\n".join(text_parts)
+        except Exception as e:
+            logger.error(f"Failed to extract PowerPoint text: {e}")
+            raise

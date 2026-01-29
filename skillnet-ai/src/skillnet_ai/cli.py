@@ -148,18 +148,25 @@ def download(
 
 @app.command()
 def create(
-    trajectory_file: Path = typer.Argument(None, exists=True, readable=True, help="Path to the text file containing the execution trajectory/logs. Not required if using --github."),
-    output_dir: Path = typer.Option(Path("./generated_skills"), help="Directory where the new skills will be saved."),
-    model: str = typer.Option("gpt-4o", help="The LLM model to use (e.g., gpt-4o, gpt-3.5-turbo)."),
-    github: str = typer.Option(None, "--github", "-g", help="GitHub repository URL to create skill from (e.g., https://github.com/owner/repo)."),
-    max_files: int = typer.Option(20, "--max-files", help="Maximum Python files to analyze when using --github."),
+    # Input sources (mutually exclusive)
+    trajectory_file: Path = typer.Argument(None, exists=True, readable=True, help="Path to trajectory/log file."),
+    github: str = typer.Option(None, "--github", "-g", help="GitHub repository URL (e.g., https://github.com/owner/repo)."),
+    office: Path = typer.Option(None, "--office", "-o", exists=True, readable=True, help="Path to office document (PDF, PPT, Word)."),
+    prompt: str = typer.Option(None, "--prompt", "-p", help="Direct description to generate skill from."),
+    # Output options
+    output_dir: Path = typer.Option(Path("./generated_skills"), "--output-dir", "-d", help="Directory to save generated skills."),
+    # Model options
+    model: str = typer.Option("gpt-4o", "--model", "-m", help="LLM model to use (e.g., gpt-4o, gpt-3.5-turbo)."),
+    max_files: int = typer.Option(20, "--max-files", help="Max Python files to analyze (--github only)."),
 ):
     """
     Create executable Skill packages using AI.
     
-    Supports two modes:
+    Supports four modes:
     - From trajectory: skillnet create trajectory.txt
     - From GitHub: skillnet create --github https://github.com/owner/repo
+    - From Office doc: skillnet create --office document.pdf
+    - From prompt: skillnet create --prompt "Create a skill for..."
     """
     # 1. Validate Environment
     if not API_KEY:
@@ -167,19 +174,36 @@ def create(
         console.print("Please export API_KEY or set it in your environment.")
         raise typer.Exit(code=1)
 
-    # 2. Determine mode: GitHub or Trajectory
-    if github:
-        # GitHub mode
-        _create_from_github(github, output_dir, model, max_files)
-    elif trajectory_file:
-        # Trajectory mode
-        _create_from_trajectory(trajectory_file, output_dir, model)
-    else:
-        console.print("[bold red]Error:[/bold red] Either provide a trajectory file or use --github option.")
+    # 2. Determine mode based on provided options
+    mode_count = sum([
+        bool(github),
+        bool(trajectory_file),
+        bool(office),
+        bool(prompt)
+    ])
+    
+    if mode_count == 0:
+        console.print("[bold red]Error:[/bold red] Must specify one input source.")
         console.print("\nUsage examples:")
         console.print("  skillnet create trajectory.txt")
         console.print("  skillnet create --github https://github.com/owner/repo")
+        console.print("  skillnet create --office document.pdf")
+        console.print('  skillnet create --prompt "Create a skill for web scraping"')
         raise typer.Exit(code=1)
+    
+    if mode_count > 1:
+        console.print("[bold red]Error:[/bold red] Only one input source can be specified at a time.")
+        raise typer.Exit(code=1)
+
+    # 3. Route to appropriate handler
+    if github:
+        _create_from_github(github, output_dir, model, max_files)
+    elif trajectory_file:
+        _create_from_trajectory(trajectory_file, output_dir, model)
+    elif office:
+        _create_from_office(office, output_dir, model)
+    elif prompt:
+        _create_from_prompt(prompt, output_dir, model)
 
 
 def _create_from_trajectory(trajectory_file: Path, output_dir: Path, model: str):
@@ -271,6 +295,95 @@ def _create_from_github(github_url: str, output_dir: Path, model: str, max_files
 
     except Exception as e:
         console.print(f"\n[bold red]GitHub Skill Creation Failed:[/bold red] {str(e)}")
+        raise typer.Exit(code=1)
+
+
+def _create_from_office(office_file: Path, output_dir: Path, model: str):
+    """Internal function to create skill from office document."""
+    try:
+        console.print(f"[dim]Creating skill from office document: {office_file}[/dim]")
+
+        # Initialize Creator
+        creator = SkillCreator(
+            api_key=API_KEY,
+            base_url=BASE_URL,
+            model=model
+        )
+
+        # Run Generation with Spinner
+        with console.status("[bold green]Extracting content and generating skill...[/bold green]", spinner="dots"):
+            created_paths = creator.create_from_office(
+                file_path=str(office_file),
+                output_dir=str(output_dir)
+            )
+
+        # Report Results
+        if created_paths:
+            console.print(f"\n[bold green]Success! Generated {len(created_paths)} skill(s) from document:[/bold green]")
+            
+            table = Table(show_header=True, header_style="bold magenta")
+            table.add_column("Skill Name", style="cyan")
+            table.add_column("Location", style="white")
+
+            for path in created_paths:
+                skill_name = os.path.basename(path)
+                table.add_row(skill_name, str(path))
+            
+            console.print(table)
+            console.print(f"\n[dim]Files saved to: {os.path.abspath(output_dir)}[/dim]")
+            console.print("\n[dim]Tip: Use 'skillnet evaluate <skill_path>' to evaluate the generated skill.[/dim]")
+        else:
+            console.print("\n[yellow]Failed to generate skill from the document.[/yellow]")
+
+    except ImportError as e:
+        console.print(f"\n[bold red]Missing Dependency:[/bold red] {str(e)}")
+        console.print("\n[dim]Install office document support with:[/dim]")
+        console.print("  pip install PyPDF2 python-docx python-pptx")
+        raise typer.Exit(code=1)
+    except Exception as e:
+        console.print(f"\n[bold red]Office Skill Creation Failed:[/bold red] {str(e)}")
+        raise typer.Exit(code=1)
+
+
+def _create_from_prompt(user_prompt: str, output_dir: Path, model: str):
+    """Internal function to create skill from user's prompt description."""
+    try:
+        console.print(f"[dim]Creating skill from user prompt...[/dim]")
+
+        # Initialize Creator
+        creator = SkillCreator(
+            api_key=API_KEY,
+            base_url=BASE_URL,
+            model=model
+        )
+
+        # Run Generation with Spinner
+        with console.status("[bold green]AI is generating your custom skill...[/bold green]", spinner="dots"):
+            created_paths = creator.create_from_prompt(
+                user_input=user_prompt,
+                output_dir=str(output_dir)
+            )
+
+        # Report Results
+        if created_paths:
+            console.print(f"\n[bold green]Success! Generated {len(created_paths)} skill(s) from your description:[/bold green]")
+            
+            table = Table(show_header=True, header_style="bold magenta")
+            table.add_column("Skill Name", style="cyan")
+            table.add_column("Location", style="white")
+
+            for path in created_paths:
+                skill_name = os.path.basename(path)
+                table.add_row(skill_name, str(path))
+            
+            console.print(table)
+            console.print(f"\n[dim]Files saved to: {os.path.abspath(output_dir)}[/dim]")
+            console.print("\n[dim]Tip: Use 'skillnet evaluate <skill_path>' to evaluate the generated skill.[/dim]")
+        else:
+            console.print("\n[yellow]Failed to generate skill from your description.[/yellow]")
+
+    except Exception as e:
+        console.print(f"\n[bold red]Prompt-based Skill Creation Failed:[/bold red] {str(e)}")
         raise typer.Exit(code=1)
 
 

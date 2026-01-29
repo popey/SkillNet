@@ -615,3 +615,164 @@ Focus on creating a practical, comprehensive skill that an AI agent can use to w
 DO NOT truncate content - include all relevant information from the README.
 SCRIPTS must demonstrate actual Python API usage, not shell command wrappers.
 REFERENCES must include actual function signatures and parameters."""
+
+
+# ==========================================================================
+# Office Document to Skill Prompts (PDF/PPT/Word)
+# ==========================================================================
+
+OFFICE_SKILL_SYSTEM_PROMPT = """You are an expert Technical Writer specializing in creating Skills for AI agents.
+Your task is to analyze text content extracted from an office document (PDF, PPT, or Word) and convert it into a structured skill package.
+
+CRITICAL REQUIREMENTS:
+1. Identify the core knowledge, procedures, or guidelines from the document
+2. Structure the content as a reusable AI skill
+3. Extract actionable instructions that an AI agent can follow
+4. Preserve key information while organizing it into the skill format
+5. Generate appropriate scripts if the document describes code procedures
+6. Create reference files for supplementary information
+
+Output files in parseable format with ## FILE: markers."""
+
+OFFICE_SKILL_USER_PROMPT_TEMPLATE = """
+Your task is to convert the following document content into a structured skill package.
+
+# Input: Document Content
+
+**Source File:** {filename}
+**File Type:** {file_type}
+
+## Extracted Text Content:
+{document_content}
+
+# Skill Structure Standard
+You must output the skill using the following directory structure:
+
+```text
+skill-name/
+├── SKILL.md (required)
+│   ├── YAML frontmatter metadata (required)
+│   │   ├── name: (required)
+│   │   └── description: (required)
+│   └── Markdown instructions (required)
+└── Bundled Resources (optional but recommended)
+    ├── scripts/          - Executable code if applicable
+    └── references/       - Additional documentation or data
+```
+
+# Content Analysis Guidelines
+
+1. **Identify the Skill Name**: Derive from document title or main topic
+2. **Create Description**: Write a "when-to-use" trigger statement
+3. **Extract Procedures**: Convert step-by-step instructions into actionable format
+4. **Identify Code/Commands**: If the document contains code, create scripts/
+5. **Supplementary Info**: Move detailed references to references/
+
+# SKILL.md Requirements
+
+## YAML Frontmatter (REQUIRED)
+```yaml
+---
+name: skill-name-in-kebab-case
+description: When-to-use trigger statement explaining when this skill should be activated
+---
+```
+
+## Content Sections to Include:
+- **Overview**: Brief summary of what this skill covers
+- **When to Use**: Clear triggers for skill activation
+- **Prerequisites**: Any required knowledge, tools, or setup
+- **Instructions/Procedures**: Main actionable content from document
+- **Examples**: Practical examples if available in source
+- **References**: Links to additional resources mentioned
+
+# Output Format (STRICT)
+For every file, use this exact pattern:
+
+## FILE: <skill-name>/<path_to_file>
+```<language_tag>
+<file_content_here>
+```
+
+Generate a complete, practical skill package from this document content.
+Focus on making the knowledge actionable for an AI agent."""
+
+
+# ==========================================================================
+# Prompt-based Skill Generation (Direct User Description)
+# ==========================================================================
+
+PROMPT_SKILL_SYSTEM_PROMPT = """You are an expert Technical Writer specializing in creating Skills for AI agents.
+Your task is to generate a complete skill package based on the user's description and requirements.
+
+CRITICAL REQUIREMENTS:
+1. Generate a comprehensive skill based on user's input
+2. Create practical, actionable instructions
+3. Include example scripts if the skill involves code
+4. Add reference documentation where helpful
+5. Make the skill reusable and well-structured
+
+Think creatively about what resources would make this skill most useful.
+Output files in parseable format with ## FILE: markers."""
+
+PROMPT_SKILL_USER_PROMPT_TEMPLATE = """
+Your task is to generate a complete skill package based on the following user description.
+
+# User's Skill Request:
+{user_input}
+
+# Skill Structure Standard
+You must output the skill using the following directory structure:
+
+```text
+skill-name/
+├── SKILL.md (required)
+│   ├── YAML frontmatter metadata (required)
+│   │   ├── name: (required)
+│   │   └── description: (required)
+│   └── Markdown instructions (required)
+└── Bundled Resources (optional but recommended)
+    ├── scripts/          - Executable code demonstrating the skill
+    └── references/       - API docs, templates, or reference material
+```
+
+# Generation Guidelines
+
+Based on the user's description, you should:
+
+1. **Determine Skill Name**: Create a kebab-case name reflecting the skill's purpose
+2. **Write Description**: Create a "when-to-use" trigger statement
+3. **Design Instructions**: Write clear, step-by-step procedures
+4. **Add Scripts**: If applicable, create Python scripts demonstrating the skill
+5. **Include References**: Add any helpful reference documentation
+
+# SKILL.md Requirements
+
+## YAML Frontmatter (REQUIRED)
+```yaml
+---
+name: skill-name-in-kebab-case
+description: When-to-use trigger statement explaining when this skill should be activated
+---
+```
+
+## Recommended Sections:
+- **Overview**: What this skill does
+- **When to Use**: Clear triggers for skill activation
+- **Prerequisites**: Required tools, libraries, or knowledge
+- **Quick Start**: Fastest way to use this skill
+- **Detailed Instructions**: Comprehensive step-by-step guide
+- **Examples**: Practical usage examples
+- **Tips & Best Practices**: Common pitfalls and recommendations
+- **Troubleshooting**: Common issues and solutions
+
+# Output Format (STRICT)
+For every file, use this exact pattern:
+
+## FILE: <skill-name>/<path_to_file>
+```<language_tag>
+<file_content_here>
+```
+
+Now, generate a complete, high-quality skill package based on the user's request.
+Be comprehensive and practical - create a skill that an AI agent would find genuinely useful."""

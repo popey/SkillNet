@@ -35,7 +35,11 @@ SkillNet is an open infrastructure for creating, evaluating, and organizing AI s
 
 - **🔍 Search**: Find skills using keywords match or semantic search.
 - **📦 One-Line Installation**: Download skill packages directly from GitHub repositories.
-- **✨ Skill Creation**: Automatically convert local files (agent execution logs, conversation logs ...) or GitHub repositories into structured, reusable `skill` packages using LLMs.
+- **✨ Skill Creation**: Automatically convert various sources into structured, reusable `skill` packages using LLMs:
+  - Execution trajectories / conversation logs
+  - GitHub repositories
+  - Office documents (PDF, PPT, Word)
+  - Direct text prompts
 - **📊 Evaluation**: Evaluate and score skills for quality assurance (Safety, Completeness, Excutability, Modifiability, Cost-Aware).
 
 

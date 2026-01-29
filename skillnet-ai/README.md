@@ -12,7 +12,11 @@
 
 - **🔍 Search**: Find skills using keywords match or semantic search.
 - **📦 One-Line Installation**: Download skill packages directly from GitHub repositories.
-- **✨ Skill Creation**: Automatically convert local files (agent execution logs, conversation logs ...) or GitHub repositories into structured, reusable `skill` packages using LLMs.
+- **✨ Skill Creation**: Automatically convert various sources into structured, reusable `skill` packages using LLMs:
+  - Execution trajectories / conversation logs
+  - GitHub repositories
+  - Office documents (PDF, PPT, Word)
+  - Direct text prompts
 - **📊 Evaluation**: Evaluate and score skills for quality assurance (Safety, Completeness, Excutability, Modifiability, Cost-Aware).
 
 ---
@@ -111,7 +115,7 @@ for path in created_paths:
     print(f"- {path}")
 ```
 
-### 4.1 Create from GitHub Repository
+#### 4.2 Create from GitHub Repository
 Convert an existing GitHub repository into a skill package.
 
 ```python
@@ -120,6 +124,28 @@ created_paths = client.create(
     github_url="https://github.com/zjunlp/DeepKE",
     output_dir="./created_skills",
     model="gpt-4o"
+)
+```
+
+#### 4.3 Create from Office Documents
+Convert PDF, PowerPoint, or Word documents into skill packages.
+
+```python
+# Create skill from a PDF document
+created_paths = client.create(
+    office_file="./docs/user_guide.pdf",
+    output_dir="./created_skills"
+)
+```
+
+#### 4.4 Create from Prompt
+Generate a skill directly from a text description.
+
+```python
+# Create skill from a prompt description
+created_paths = client.create(
+    prompt="Create a skill for web scraping that extracts article titles and content",
+    output_dir="./created_skills"
 )
 ```
 
@@ -193,19 +219,25 @@ skillnet download <private_url> --token <your_github_token>
 
 ### 3. Create Skills (`create`)
 
-Analyze local file (execution trajectory, conversation log) or GitHub repository and automatically generate a structured Skill Package using LLMs.
+Generate structured Skill Packages from various sources using LLMs.
 
 Requirement: Ensure API_KEY is set in your environment variables.
 
 ```bash
-# Generate a skill from a trajectory file
-skillnet create ./logs/trajectory.txt --output-dir ./generated_skills
+# From a trajectory file
+skillnet create ./logs/trajectory.txt -d ./generated_skills
 
-# Specify a specific LLM model
-skillnet create ./logs/chat_history.txt --model gpt-4o
+# From a GitHub repository
+skillnet create --github https://github.com/owner/repo
 
-# Generate a skill from a GitHub repository
-skillnet create --github https://github.com/owner/repo --output-dir ./generated_skills
+# From an office document (PDF, PPT, Word)
+skillnet create --office ./docs/guide.pdf
+
+# From a direct prompt
+skillnet create --prompt "Create a skill for extracting tables from images"
+
+# Specify a custom model
+skillnet create --office report.pdf --model gpt-4o
 ```
 
 ### 4. Evaluate Skills (`evaluate`)
