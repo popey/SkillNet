@@ -193,6 +193,7 @@ Evaluation dimensions and how to judge them (apply these rules even if the overa
    - Concrete actions and artifacts (commands, files, parameters); minimal ambiguity.
    - Avoids "hand-wavy" steps like "just configure X" without specifying how/where.
    - If script execution results are provided, successful runs support a higher rating.
+   - **Instruction-only skills**: When the skill is designed to be executed purely through text instructions (e.g., guidelines, policies, brainstorming, design workflows) and does NOT require code execution, the absence of runnable scripts is acceptable. If SKILL.md provides clear, actionable guidance that an agent can follow using typical LLM tools (read files, apply guidelines, reason about content), rate executability as Good.
    Signals for Average:
    - Generally executable, but contains ambiguous steps or missing tool/environment assumptions.
    Signals for Poor:
@@ -200,6 +201,8 @@ Evaluation dimensions and how to judge them (apply these rules even if the overa
    - If script execution results show failures/timeouts/missing dependencies, reduce the rating accordingly.
    - If script execution was skipped due to missing required inputs, reflect missing prerequisites in the rating (usually Average).
    Additional guidance for Executability:
+   - **Do NOT rate Poor solely because "No runnable python scripts found"**. Many skills (security guidelines, ideation, policies, design workflows) are instruction-only: the agent reads SKILL.md and follows the guidance with typical tools. For such skills, if the instructions are clear and actionable, executability should be Good.
+   - If script execution fails due to an obvious documentation placeholder in an example command (e.g., tokens like "[options]", "<file>", "<pattern>", "{{path}}") or an argument parsing error caused by such placeholders, do NOT automatically set executability to Poor. Prefer Average and explain that the script likely needs real inputs or a concrete runnable example; only use Poor if there is additional evidence the workflow is not realistically executable.
    - If you detect any CRITICAL CORRECTNESS ERROR in a core formula, algorithm, or code snippet (e.g., Python using "^" for exponentiation or other language-level mistakes that would produce wrong results or runtime failures), executability MUST be "Poor".
    - If allowed_tools grants broader permissions than what the Skill clearly needs (e.g., allows "bash" or other powerful tools but the described workflow and examples do not require them), reduce executability by at least one level due to environment/permission ambiguity.
    - When reading formulas and code snippets, audit them line-by-line in the context of their target language and typical runtime environment; if you find subtle traps or inconsistencies that would mislead an implementer or cause incorrect behavior, choose a lower (more conservative) executability rating.
@@ -284,7 +287,16 @@ Example 3: Well-scoped document summarizer Skill (mostly solid)
   - cost_awareness: "Good"
     - Reason: The Skill explicitly caps document size and describes a strategy (chunking) that avoids unbounded compute.
 
-Example 4: Overpowered deployment cleaner Skill (risky but technically executable)
+Example 4: Instruction-only guideline Skill (e.g., security standards)
+- Observations:
+  - SKILL.md provides guidance on how to handle global security when working on code. It points to an external standards document for details.
+  - There are no runnable Python scripts; script execution shows "No runnable python scripts found".
+  - The workflow is: agent reads SKILL.md, loads the referenced document, and applies the guidelines when editing code.
+- Expected ratings:
+  - executability: "Good"
+    - Reason: This is an instruction-only skill. The agent can execute the workflow by reading SKILL.md and the referenced file, then applying the guidelines with typical LLM tools. The absence of runnable scripts is acceptable because the skill does not require code execution.
+
+Example 5: Overpowered deployment cleaner Skill (risky but technically executable)
 - Observations:
   - SKILL.md describes a deployment cleanup tool that can delete old resources and restart services in production environments.
   - It grants broad permissions via allowed_tools (e.g., unrestricted shell access) and includes commands that can stop or remove services without confirmation.
