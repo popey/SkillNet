@@ -338,7 +338,7 @@ def _create_from_office(office_file: Path, output_dir: Path, model: str):
     except ImportError as e:
         console.print(f"\n[bold red]Missing Dependency:[/bold red] {str(e)}")
         console.print("\n[dim]Install office document support with:[/dim]")
-        console.print("  pip install PyPDF2 python-docx python-pptx")
+        console.print("  pip install PyPDF2 pycryptodome python-docx python-pptx")
         raise typer.Exit(code=1)
     except Exception as e:
         console.print(f"\n[bold red]Office Skill Creation Failed:[/bold red] {str(e)}")
