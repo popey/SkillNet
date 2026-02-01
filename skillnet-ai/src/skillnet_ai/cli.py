@@ -9,6 +9,7 @@ from skillnet_ai.creator import SkillCreator
 from skillnet_ai.downloader import SkillDownloader
 from skillnet_ai.evaluator import SkillEvaluator, EvaluatorConfig
 from skillnet_ai.searcher import SkillNetSearcher
+from skillnet_ai.analyzer import SkillRelationshipAnalyzer
 
 app = typer.Typer(help="SkillNet AI CLI Tool")
 console = Console()
@@ -338,7 +339,7 @@ def _create_from_office(office_file: Path, output_dir: Path, model: str):
     except ImportError as e:
         console.print(f"\n[bold red]Missing Dependency:[/bold red] {str(e)}")
         console.print("\n[dim]Install office document support with:[/dim]")
-        console.print("  pip install PyPDF2 python-docx python-pptx")
+        console.print("  pip install PyPDF2 pycryptodome python-docx python-pptx")
         raise typer.Exit(code=1)
     except Exception as e:
         console.print(f"\n[bold red]Office Skill Creation Failed:[/bold red] {str(e)}")
@@ -397,7 +398,7 @@ def evaluate(
     description: str = typer.Option(None, help="Short description of what the skill does."),
     
     # Config options
-    model: str = typer.Option("gpt-4o", help="The LLM model used for evaluation."),
+    model: str = typer.Option("gpt-4o", "--model", "-m", help="LLM model to use."),
     max_workers: int = typer.Option(5, help="Concurrency for batch operations (not used for single eval)."),
 ):
     """
@@ -486,6 +487,91 @@ def _display_evaluation_report(target_name: str, data: dict):
     summary = data.get("summary")
     if summary:
         console.print(Panel(summary, title="Executive Summary", border_style="cyan"))
+
+@app.command()
+def analyze(
+    skills_dir: Path = typer.Argument(..., exists=True, file_okay=False, help="Directory containing multiple skill folders to analyze."),
+    save: bool = typer.Option(True, "--save/--no-save", help="Save the result to relationships.json in the directory."),
+    model: str = typer.Option("gpt-4o", "--model", "-m", help="LLM model to use."),
+):
+    """
+    Analyze and map relationships (similar_to, belong_to, compose_with, depend_on) between local skills.
+    
+    This command scans all subdirectories in the target folder, reads their descriptions, 
+    and uses AI to build a knowledge graph of how the skills relate to each other.
+    """
+    # 1. Validate Environment
+    if not API_KEY:
+        console.print("[bold red]Error:[/bold red] API_KEY environment variable is not set.")
+        raise typer.Exit(code=1)
+
+    try:
+        # 2. Initialize Analyzer
+        analyzer = SkillRelationshipAnalyzer(
+            api_key=API_KEY,
+            base_url=BASE_URL,
+            model=model
+        )
+
+        # 3. Visual Feedback & Execution
+        console.print(f"[dim]Scanning directory: {os.path.abspath(skills_dir)}[/dim]")
+        
+        results = []
+        with console.status("[bold green]Reading skills and analyzing relationships...[/bold green]", spinner="earth"):
+            results = analyzer.analyze_local_skills(
+                skills_dir=str(skills_dir),
+                save_to_file=save
+            )
+
+        # 4. Handle Empty Results
+        if not results:
+            console.print("\n[yellow]No strong relationships detected among the skills found.[/yellow]")
+            console.print("[dim]Make sure the directory contains subfolders with valid SKILL.md or README.md files.[/dim]")
+            return
+
+        # 5. Render Results Table
+        console.print(f"\n[bold green]Analysis Complete! Found {len(results)} relationships:[/bold green]\n")
+
+        table = Table(show_header=True, header_style="bold magenta", title="Skill Relationship Graph")
+        table.add_column("Source Skill", style="cyan", no_wrap=True)
+        table.add_column("Relationship", style="bold white", justify="center")
+        table.add_column("Target Skill", style="cyan", no_wrap=True)
+        table.add_column("Reasoning", style="dim")
+
+        for edge in results:
+            # Color code the relationship types for better readability
+            rel_type = edge.get('type', 'unknown')
+            rel_style = "white"
+            arrow = "->"
+            
+            if rel_type == "depend_on":
+                rel_style = "red"  # Critical dependency
+                arrow = "DEPEND ON"
+            elif rel_type == "belong_to":
+                rel_style = "blue" # Hierarchy
+                arrow = "BELONG TO"
+            elif rel_type == "compose_with": # pairs_with
+                rel_style = "green" # Collaboration
+                arrow = "COMPOSE WITH"
+            elif rel_type == "similar_to":
+                rel_style = "yellow" # Alternative
+                arrow = "SIMILAR TO"
+
+            table.add_row(
+                edge.get('source', 'Unknown'),
+                f"[{rel_style}]{arrow}[/{rel_style}]", 
+                edge.get('target', 'Unknown'),
+                edge.get('reason', '')
+            )
+
+        console.print(table)
+
+        if save:
+            console.print(f"\n[dim]Relationship data saved to: {os.path.join(skills_dir, 'relationships.json')}[/dim]")
+
+    except Exception as e:
+        console.print(f"\n[bold red]Analysis Failed:[/bold red] {str(e)}")
+        raise typer.Exit(code=1)
 
 if __name__ == "__main__":
     app()

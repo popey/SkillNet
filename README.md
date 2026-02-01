@@ -35,12 +35,13 @@ SkillNet is an open infrastructure for creating, evaluating, and organizing AI s
 
 - **🔍 Search**: Find skills using keywords match or semantic search.
 - **📦 One-Line Installation**: Download skill packages directly from GitHub repositories.
-- **✨ Skill Creation**: Automatically convert various sources into structured, reusable `skill` packages using LLMs:
+- **✨ Skill Creation**: Automatically convert various sources into structured, reusable `skills` using LLMs:
   - Execution trajectories / conversation logs
   - GitHub repositories
   - Office documents (PDF, PPT, Word)
   - Direct text prompts
 - **📊 Evaluation**: Evaluate and score skills for quality assurance (Safety, Completeness, Excutability, Modifiability, Cost-Aware).
+- **🕸️ Relationship Analysis**: Automatically map the connections between skills in your local library, identifying structural relationships between skills (similar_to, belong_to, compose_with, depend_on).
 
 
 # 🌐 API Access
@@ -167,17 +168,16 @@ except Exception as e:
 ```
 
 #### 4. Create Skills
-Turn local Trajectory or GitHub repository into a polished Skill Package (SKILL.md, scripts, etc.).
+Turn local trajectory, gitHub repository, office documents or text description into a polished Skill Package (SKILL.md, scripts, etc.).
 
 ```python
-# 1. Create from Local Trajectory
+# 1. Create skill from Local Trajectory
 # Prepare your trajectory (e.g., a conversation log string)
 trajectory_log = """
 User: I need to rename all .jpg files in this folder to .png.
 Agent: I will write a python script to iterate through the folder...
 Agent: Script executed. Renamed 5 files.
 """
-
 # Generate Skill, Returns a list of paths to the generated skill folders
 created_paths = client.create(
     trajectory_content=trajectory_log, 
@@ -185,11 +185,23 @@ created_paths = client.create(
     model="gpt-4o"
 )
 
-# 2. Create from GitHub Repository
+# 2. Create skill from GitHub Repository
 created_paths = client.create(
     github_url="https://github.com/zjunlp/DeepKE",
     output_dir="./created_skills",
     model="gpt-4o"
+)
+
+# 3. Create skill from a office documents (PDF, Word, PPT)
+created_paths = client.create(
+    office_file="./docs/user_guide.pdf",
+    output_dir="./created_skills"
+)
+
+# 4. Create skill from a prompt description
+created_paths = client.create(
+    prompt="Create a skill for web scraping that extracts article titles and content",
+    output_dir="./created_skills"
 )
 
 print(f"Created {len(created_paths)} new skills.")
@@ -209,6 +221,23 @@ result = client.evaluate(target=target_skill)
 
 # Display results
 print(f"Evaluation Result: {result}")
+```
+
+#### 6. Skill Relationship Analysis
+Analyze a local directory containing multiple skills to infer a relationship graph. It identifies relationships like dependencies (depend_on), collaboration (compose_with), hierarchy (belong_to), and alternatives (similar_to).
+
+```python
+# Directory containing multiple skill folders
+skills_directory = "./my_agent_skills"
+
+# Analyze relationships between skills
+# This will also save a 'relationships.json' in the directory by default
+relationships = client.analyze(skills_dir=skills_directory)
+
+# Display the relationships
+for rel in relationships:
+    print(f"{rel['source']} --[{rel['type']}]--> {rel['target']}")
+    # Output: PDF_Parser --[compose_with]--> Text_Summarizer
 ```
 
 
@@ -259,19 +288,25 @@ skillnet download <private_url> --token <your_github_token>
 
 #### 3. Create Skills (`create`)
 
-Analyze local file (execution trajectory, conversation log) or GitHub repository and automatically generate a structured Skill Package using LLMs.
+Create structured Skill from various sources using LLMs.
 
 Requirement: Ensure API_KEY is set in your environment variables.
 
 ```bash
-# Generate a skill from a trajectory file
-skillnet create ./logs/trajectory.txt --output-dir ./generated_skills
+# From a trajectory file
+skillnet create ./logs/trajectory.txt -d ./generated_skills
 
-# Specify a specific LLM model
-skillnet create ./logs/chat_history.txt --model gpt-4o
+# From a GitHub repository
+skillnet create --github https://github.com/owner/repo
 
-# Generate a skill from a GitHub repository
-skillnet create --github https://github.com/owner/repo --output-dir ./generated_skills
+# From an office document (PDF, PPT, Word)
+skillnet create --office ./docs/guide.pdf
+
+# From a direct prompt
+skillnet create --prompt "Create a skill for extracting tables from images"
+
+# Specify a custom model
+skillnet create --office report.pdf --model gpt-4o
 ```
 
 #### 4. Evaluate Skills (`evaluate`)
@@ -290,8 +325,24 @@ skillnet evaluate ./my_skills/web_search
 skillnet evaluate ./my_skills/tool --category "DevOps" --model gpt-4o
 ```
 
+#### 5. Analyze Relationships (`analyze`)
+Scan a local directory of skills to analyze their connections using AI.
+
+Requirement: Ensure API_KEY is set in your environment variables.
+
+```bash
+# Analyze a directory containing multiple skill folders
+skillnet analyze ./my_agent_skills
+
+# Analyze without saving the result file (just print to console)
+skillnet analyze ./my_agent_skills --no-save
+
+# Specify a model for the analysis
+skillnet analyze ./my_agent_skills --model gpt-4o
+```
+
 ### Environment Configuration
-To use **Creation** or **Evaluation** features, set your environment variables:
+To use **Creation**, **Evaluation**, or **Analyze** features, set your environment variables:
 
 ```bash
 export API_KEY="your_api_key"
