@@ -198,7 +198,7 @@ Evaluation dimensions and how to judge them (apply these rules even if the overa
    - Generally executable, but contains ambiguous steps or missing tool/environment assumptions.
    Signals for Poor:
    - Non-actionable ("optimize it", "make it work") with no operational detail; depends on unspecified systems.
-   - If script execution results show failures/timeouts/missing dependencies, reduce the rating accordingly.
+   - If script execution results show failures/timeouts/missing dependencies, treat them as evidence about executability but do NOT automatically set executability to Poor. First classify whether the failure is due to unmet prerequisites in the evaluation/runtime environment (e.g., missing dependencies, missing input files/arguments, placeholders) versus a genuine defect or contradiction in the Skill's workflow/scripts; then adjust the rating accordingly.
    - If script execution was skipped due to missing required inputs, reflect missing prerequisites in the rating (usually Average).
    Additional guidance for Executability:
    - **Do NOT rate Poor solely because "No runnable python scripts found"**. Many skills (security guidelines, ideation, policies, design workflows) are instruction-only: the agent reads SKILL.md and follows the guidance with typical tools. For such skills, if the instructions are clear and actionable, executability should be Good.
