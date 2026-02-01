@@ -472,66 +472,51 @@ GOOD SCRIPT EXAMPLE (demonstrates actual API usage):
 ```python
 #!/usr/bin/env python3
 \"\"\"
-Usage Example: Building and Querying a VectorStoreIndex with LlamaIndex
+Usage Example: Interacting with OpenAI API to Generate Text Responses
 
-This script demonstrates how to build a VectorStoreIndex from documents and perform 
-queries using LlamaIndex's API. It showcases integration with OpenAI's API.
-Requires: pip install llama-index
+This script demonstrates how to use the OpenAI Python library to interact with
+OpenAI's language models for text generation tasks.
+Requires: pip install openai
 \"\"\"
 
 import os
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
+from openai import OpenAI
 
 def setup_api_key():
     \"\"\"
-    Setup the required API key for accessing the OpenAI services.
+    Configure the environment with the OpenAI API key.
     \"\"\"
-    os.environ["OPENAI_API_KEY"] = "YOUR_OPENAI_API_KEY"  # Replace with your API key
+    os.environ["OPENAI_API_KEY"] = "YOUR_OPENAI_API_KEY"  # Replace with your actual API key
 
-def build_index(data_directory: str) -> VectorStoreIndex:
+def generate_response(prompt: str, model: str = "gpt-4") -> str:
     \"\"\"
-    Load documents from a directory and build a VectorStoreIndex.
+    Generate a text response using OpenAI's model with a given prompt.
     
     Args:
-        data_directory: Path to the directory containing data files.
+        prompt: The text input to pass to the model.
+        model: The model identifier (e.g., "gpt-4", "gpt-3.5-turbo").
     
     Returns:
-        An instance of the built VectorStoreIndex.
+        The generated text from the model.
     \"\"\"
     try:
-        documents = SimpleDirectoryReader(data_directory).load_data()
-        index = VectorStoreIndex.from_documents(documents)
-        return index
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {{"role": "system", "content": "You are a helpful assistant."}},
+                {{"role": "user", "content": prompt}}
+            ]
+        )
+        return response.choices[0].message.content
     except Exception as e:
-        print(f"An error occurred while building the index: {{e}}")
-        return None
-
-def query_index(index: VectorStoreIndex, question: str) -> str:
-    \"\"\"
-    Query the VectorStoreIndex with a question.
-    
-    Args:
-        index: The index to query against.
-        question: Question to ask the engine.
-    
-    Returns:
-        Query result.
-    \"\"\"
-    try:
-        query_engine = index.as_query_engine()
-        response = query_engine.query(question)
-        return response
-    except Exception as e:
-        print(f"An error occurred during querying: {{e}}")
-        return None
+        print(f"An error occurred while generating a response: {{e}}")
+        return ""
 
 if __name__ == "__main__":
     setup_api_key()
-    index = build_index("YOUR_DATA_DIRECTORY")  # Replace with your data directory path
-    
-    if index:
-        result = query_index(index, "What is LlamaIndex?")
-        print(f"Query Result: {{result}}")
+    response_text = generate_response("Explain quantum computing in simple terms.")
+    print(f"Model Response: {{response_text}}")
 ```
 
 # references/ File Requirements (CRITICAL - HIGH QUALITY)
@@ -540,99 +525,92 @@ Generate detailed API documentation based on the code analysis provided.
 
 GOOD API REFERENCE EXAMPLE:
 ```markdown
-# LlamaIndex Core API Reference
+# OpenAI Python Client API Reference
 
-## Module: llama_index.core
-
-### Class: VectorStoreIndex
-
-Used to create a vector store index from a collection of documents.
-
-**Constructor:**
-```python
-VectorStoreIndex.from_documents(
-    documents: List[Document],
-    **kwargs
-) -> VectorStoreIndex
-```
-
-**Parameters:**
-- `documents` (List[Document]): A list of document instances to index.
-- `kwargs`: Additional keyword arguments for configuration.
-
-**Methods:**
-
-#### as_query_engine() -> QueryEngine
-Convert the index to a query engine for querying operations.
-
-**Returns:**
-- `QueryEngine`: The query engine instance for retrieving information.
-
-**Example:**
-```python
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
-
-documents = SimpleDirectoryReader("./data").load_data()
-index = VectorStoreIndex.from_documents(documents)
-query_engine = index.as_query_engine()
-response = query_engine.query("What is LlamaIndex?")
-```
-
----
-
-### Class: SimpleDirectoryReader
-
-A simple document loader that reads from a specified directory.
-
-**Methods:**
-
-#### load_data() -> List[Document]
-Loads and returns all documents from the specified directory.
-
-**Returns:**
-- `List[Document]`: A list of document objects loaded from the directory.
-
-**Example:**
-```python
-reader = SimpleDirectoryReader("./my_documents")
-documents = reader.load_data()
-```
-
----
-
-## Module: llama_index.llms.openai
+## Module: openai
 
 ### Class: OpenAI
 
-Represents integration with OpenAI's GPT models for language processing.
+Handles synchronous communications with OpenAI API for text generation, chat, and more.
 
 **Constructor:**
 ```python
 OpenAI(
-    api_key: str,
+    api_key: str = None,
+    base_url: str = None,
     **kwargs
 )
 ```
 
 **Parameters:**
-- `api_key` (str): API key for authenticating with OpenAI services.
-- `kwargs`: Additional configuration options for model behavior.
+- `api_key` (str, optional): The API key for authenticating requests. Defaults to OPENAI_API_KEY environment variable.
+- `base_url` (str, optional): Override the default API base URL.
+- `kwargs`: Additional configuration options.
 
 **Methods:**
 
-#### generate(prompt: str) -> str
-Generate a completion for the given prompt using OpenAI's language model.
+#### chat.completions.create(model: str, messages: List[dict], **kwargs) -> ChatCompletion
+Create a chat completion using the specified model.
 
 **Parameters:**
-- `prompt` (str): The prompt for the model to generate text from.
+- `model` (str): Model identifier (e.g., "gpt-4", "gpt-3.5-turbo").
+- `messages` (List[dict]): List of message dictionaries with 'role' and 'content'.
+- `temperature` (float, optional): Sampling temperature (0-2).
+- `max_tokens` (int, optional): Maximum tokens to generate.
 
 **Returns:**
-- `str`: The model-generated text response.
+- `ChatCompletion`: Response object containing generated text and metadata.
 
 **Example:**
 ```python
-openai_model = OpenAI(api_key="YOUR_API_KEY")
-generated_text = openai_model.generate("Tell me about LlamaIndex.")
+from openai import OpenAI
+
+client = OpenAI()
+response = client.chat.completions.create(
+    model="gpt-4",
+    messages=[
+        {{"role": "system", "content": "You are a helpful assistant."}},
+        {{"role": "user", "content": "Hello!"}}
+    ]
+)
+print(response.choices[0].message.content)
+```
+
+---
+
+### Class: AsyncOpenAI
+
+Handles asynchronous interactions with OpenAI's API for efficient concurrent operations.
+
+**Constructor:**
+```python
+AsyncOpenAI(
+    api_key: str = None,
+    **kwargs
+)
+```
+
+**Parameters:**
+- `api_key` (str, optional): The API key for authenticating requests.
+- `kwargs`: Additional configuration options including HTTP client setups.
+
+**Methods:**
+- Same as `OpenAI` but returns awaitable objects.
+
+**Example:**
+```python
+import asyncio
+from openai import AsyncOpenAI
+
+async def main():
+    client = AsyncOpenAI()
+    response = await client.chat.completions.create(
+        model="gpt-4",
+        messages=[{{"role": "user", "content": "Hello!"}}]
+    )
+    print(response.choices[0].message.content)
+
+asyncio.run(main())
 ```
 ```
 
@@ -640,12 +618,38 @@ generated_text = openai_model.generate("Tell me about LlamaIndex.")
 You must output the files using the following strict format so that a script can parse and save them.
 For every file, use this exact pattern:
 
-## FILE: <skill-name>/<path_to_file>
-```<language_tag>
-<file_content_here>
+## FILE: {{actual-skill-name}}/{{path_to_file}}
+```{{language_tag}}
+{{file_content_here}}
 ```
 
-IMPORTANT: 
+**CRITICAL PATH RULES:**
+- Replace `{{actual-skill-name}}` with the ACTUAL kebab-case skill name derived from the repository (e.g., "openai-python", "pandas", "requests")
+- DO NOT use placeholder text like "skill-name" literally
+- For repository "openai/openai-python" → use "openai-python"
+- For repository "psf/requests" → use "requests"
+
+**Example Output Pattern:**
+```
+## FILE: openai-python/SKILL.md
+```yaml
+---
+name: openai-python
+...
+```
+
+## FILE: openai-python/scripts/usage_example.py
+```python
+...
+```
+
+## FILE: openai-python/references/api_reference.md
+```markdown
+...
+```
+```
+
+**IMPORTANT:** 
 - Generate COMPLETE files, do not use "..." or "[content continues]"
 - SKILL.md should be comprehensive (at least 100+ lines)
 - scripts/: At least one RUNNABLE Python script with actual library API usage
