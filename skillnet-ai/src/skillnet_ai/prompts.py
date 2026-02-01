@@ -203,8 +203,6 @@ Evaluation dimensions and how to judge them (apply these rules even if the overa
    Additional guidance for Executability:
    - **Do NOT rate Poor solely because "No runnable python scripts found"**. Many skills (security guidelines, ideation, policies, design workflows) are instruction-only: the agent reads SKILL.md and follows the guidance with typical tools. For such skills, if the instructions are clear and actionable, executability should be Good.
    - If script execution fails due to an obvious documentation placeholder in an example command (e.g., tokens like "[options]", "<file>", "<pattern>", "{{path}}") or an argument parsing error caused by such placeholders, do NOT automatically set executability to Poor. Prefer Average and explain that the script likely needs real inputs or a concrete runnable example; only use Poor if there is additional evidence the workflow is not realistically executable.
-   - If script execution fails due to missing Python dependencies (e.g., errors like "ModuleNotFoundError" or "ImportError" such as "No module named 'X'"), treat this primarily as an unmet prerequisite in the evaluator/runtime environment (which may not support auto-installing dependencies) rather than a flaw in the Skill package itself. Prefer executability = Average and explicitly cite the missing dependency and the need to pre-install it. Do NOT speculate that the Skill's installation instructions are "incorrect" or contain "typos" based on guesswork; only call them incorrect if the provided content explicitly demonstrates a contradiction. Otherwise describe the gap as an environment/setup prerequisite.
-   - If script execution fails because required input files or arguments are not available in the evaluation environment (e.g., errors like "FileNotFoundError", "No such file or directory", missing required positional arguments, or example commands that use placeholders like "<file>" without concrete sample inputs), treat this primarily as an unmet runtime prerequisite rather than a flaw in the Skill package itself. Prefer executability = Average and state that the workflow is runnable once real inputs are provided; only set executability to Poor when there is additional evidence of script defects (e.g., truncated/incomplete implementation, syntax errors, or contradictions between instructions and code).
    - If you detect any CRITICAL CORRECTNESS ERROR in a core formula, algorithm, or code snippet (e.g., Python using "^" for exponentiation or other language-level mistakes that would produce wrong results or runtime failures), executability MUST be "Poor".
    - If allowed_tools grants broader permissions than what the Skill clearly needs (e.g., allows "bash" or other powerful tools but the described workflow and examples do not require them), reduce executability by at least one level due to environment/permission ambiguity.
    - When reading formulas and code snippets, audit them line-by-line in the context of their target language and typical runtime environment; if you find subtle traps or inconsistencies that would mislead an implementer or cause incorrect behavior, choose a lower (more conservative) executability rating.
@@ -474,61 +472,66 @@ GOOD SCRIPT EXAMPLE (demonstrates actual API usage):
 ```python
 #!/usr/bin/env python3
 \"\"\"
-Example: Named Entity Recognition with DeepKE
+Usage Example: Building and Querying a VectorStoreIndex with LlamaIndex
 
-This script demonstrates how to use DeepKE's NER module for entity extraction.
-Requires: pip install deepke torch transformers
+This script demonstrates how to build a VectorStoreIndex from documents and perform 
+queries using LlamaIndex's API. It showcases integration with OpenAI's API.
+Requires: pip install llama-index
 \"\"\"
 
-from typing import List, Dict
+import os
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 
-# NOTE: Adjust import based on actual DeepKE installation
-try:
-    from deepke.name_entity_re.standard import NERPredictor
-except ImportError:
-    print("Please install DeepKE: pip install deepke")
-    exit(1)
-
-
-def extract_entities(text: str, model_path: str = None) -> List[Dict]:
+def setup_api_key():
     \"\"\"
-    Extract named entities from text using DeepKE.
+    Setup the required API key for accessing the OpenAI services.
+    \"\"\"
+    os.environ["OPENAI_API_KEY"] = "YOUR_OPENAI_API_KEY"  # Replace with your API key
+
+def build_index(data_directory: str) -> VectorStoreIndex:
+    \"\"\"
+    Load documents from a directory and build a VectorStoreIndex.
     
     Args:
-        text: Input text to analyze
-        model_path: Path to trained model (optional, uses default if None)
+        data_directory: Path to the directory containing data files.
     
     Returns:
-        List of entities with type, text, and position
+        An instance of the built VectorStoreIndex.
     \"\"\"
-    # Initialize predictor
-    predictor = NERPredictor(model_path=model_path)
-    
-    # Run prediction
-    entities = predictor.predict(text)
-    
-    return entities
+    try:
+        documents = SimpleDirectoryReader(data_directory).load_data()
+        index = VectorStoreIndex.from_documents(documents)
+        return index
+    except Exception as e:
+        print(f"An error occurred while building the index: {{e}}")
+        return None
 
+def query_index(index: VectorStoreIndex, question: str) -> str:
+    \"\"\"
+    Query the VectorStoreIndex with a question.
+    
+    Args:
+        index: The index to query against.
+        question: Question to ask the engine.
+    
+    Returns:
+        Query result.
+    \"\"\"
+    try:
+        query_engine = index.as_query_engine()
+        response = query_engine.query(question)
+        return response
+    except Exception as e:
+        print(f"An error occurred during querying: {{e}}")
+        return None
 
 if __name__ == "__main__":
-    # Example usage
-    sample_text = "Barack Obama was born in Honolulu and served as the 44th president."
+    setup_api_key()
+    index = build_index("YOUR_DATA_DIRECTORY")  # Replace with your data directory path
     
-    print(f"Input: {{sample_text}}")
-    print("\\nExtracting entities...")
-    
-    results = extract_entities(sample_text)
-    
-    for entity in results:
-        print(f"  - {{entity['text']}} ({{entity['type']}})")
-```
-
-BAD SCRIPT EXAMPLE (DO NOT generate this style):
-```python
-# BAD - This is just shell command wrapper, NOT useful
-import os
-os.system('conda activate deepke')  # Won't work in script context
-os.system('python run.py')           # No actual API demonstration
+    if index:
+        result = query_index(index, "What is LlamaIndex?")
+        print(f"Query Result: {{result}}")
 ```
 
 # references/ File Requirements (CRITICAL - HIGH QUALITY)
@@ -537,64 +540,100 @@ Generate detailed API documentation based on the code analysis provided.
 
 GOOD API REFERENCE EXAMPLE:
 ```markdown
-# DeepKE API Reference
+# LlamaIndex Core API Reference
 
-## Module: deepke.name_entity_re.standard
+## Module: llama_index.core
 
-### Class: NERPredictor
+### Class: VectorStoreIndex
 
-Entity recognition predictor using pretrained models.
+Used to create a vector store index from a collection of documents.
 
 **Constructor:**
 ```python
-NERPredictor(
-    model_path: str = None,
-    device: str = "cuda" if torch.cuda.is_available() else "cpu",
-    max_seq_length: int = 128
-)
+VectorStoreIndex.from_documents(
+    documents: List[Document],
+    **kwargs
+) -> VectorStoreIndex
 ```
 
 **Parameters:**
-- `model_path` (str, optional): Path to trained model checkpoint. Uses default pretrained model if None.
-- `device` (str): Device to run inference on. Defaults to CUDA if available.
-- `max_seq_length` (int): Maximum sequence length for tokenization.
+- `documents` (List[Document]): A list of document instances to index.
+- `kwargs`: Additional keyword arguments for configuration.
 
 **Methods:**
 
-#### predict(text: str) -> List[Dict]
-Run NER prediction on input text.
-
-**Parameters:**
-- `text` (str): Input text to analyze
+#### as_query_engine() -> QueryEngine
+Convert the index to a query engine for querying operations.
 
 **Returns:**
-- List of dictionaries containing:
-  - `text` (str): The entity text
-  - `type` (str): Entity type (PERSON, LOCATION, ORG, etc.)
-  - `start` (int): Start character position
-  - `end` (int): End character position
+- `QueryEngine`: The query engine instance for retrieving information.
 
 **Example:**
 ```python
-predictor = NERPredictor()
-entities = predictor.predict("Apple was founded by Steve Jobs.")
-# Returns: [{{'text': 'Apple', 'type': 'ORG', ...}}, {{'text': 'Steve Jobs', 'type': 'PERSON', ...}}]
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
+
+documents = SimpleDirectoryReader("./data").load_data()
+index = VectorStoreIndex.from_documents(documents)
+query_engine = index.as_query_engine()
+response = query_engine.query("What is LlamaIndex?")
 ```
 
 ---
 
-## Module: deepke.relation_extraction.standard
+### Class: SimpleDirectoryReader
 
-### Class: REPredictor
-...
+A simple document loader that reads from a specified directory.
+
+**Methods:**
+
+#### load_data() -> List[Document]
+Loads and returns all documents from the specified directory.
+
+**Returns:**
+- `List[Document]`: A list of document objects loaded from the directory.
+
+**Example:**
+```python
+reader = SimpleDirectoryReader("./my_documents")
+documents = reader.load_data()
 ```
 
-BAD API REFERENCE EXAMPLE (DO NOT generate this style):
-```markdown
-# API Reference
-- Tokenizer: does tokenization
-- Encoder: encodes things
-- train(): trains the model
+---
+
+## Module: llama_index.llms.openai
+
+### Class: OpenAI
+
+Represents integration with OpenAI's GPT models for language processing.
+
+**Constructor:**
+```python
+OpenAI(
+    api_key: str,
+    **kwargs
+)
+```
+
+**Parameters:**
+- `api_key` (str): API key for authenticating with OpenAI services.
+- `kwargs`: Additional configuration options for model behavior.
+
+**Methods:**
+
+#### generate(prompt: str) -> str
+Generate a completion for the given prompt using OpenAI's language model.
+
+**Parameters:**
+- `prompt` (str): The prompt for the model to generate text from.
+
+**Returns:**
+- `str`: The model-generated text response.
+
+**Example:**
+```python
+openai_model = OpenAI(api_key="YOUR_API_KEY")
+generated_text = openai_model.generate("Tell me about LlamaIndex.")
+```
 ```
 
 # Output Format (STRICT)
