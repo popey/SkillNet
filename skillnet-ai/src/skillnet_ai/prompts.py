@@ -203,8 +203,6 @@ Evaluation dimensions and how to judge them (apply these rules even if the overa
    Additional guidance for Executability:
    - **Do NOT rate Poor solely because "No runnable python scripts found"**. Many skills (security guidelines, ideation, policies, design workflows) are instruction-only: the agent reads SKILL.md and follows the guidance with typical tools. For such skills, if the instructions are clear and actionable, executability should be Good.
    - If script execution fails due to an obvious documentation placeholder in an example command (e.g., tokens like "[options]", "<file>", "<pattern>", "{{path}}") or an argument parsing error caused by such placeholders, do NOT automatically set executability to Poor. Prefer Average and explain that the script likely needs real inputs or a concrete runnable example; only use Poor if there is additional evidence the workflow is not realistically executable.
-   - If script execution fails due to missing Python dependencies (e.g., errors like "ModuleNotFoundError" or "ImportError" such as "No module named 'X'"), treat this primarily as an unmet prerequisite in the evaluator/runtime environment (which may not support auto-installing dependencies) rather than a flaw in the Skill package itself. Prefer executability = Average and explicitly cite the missing dependency and the need to pre-install it. Do NOT speculate that the Skill's installation instructions are "incorrect" or contain "typos" based on guesswork; only call them incorrect if the provided content explicitly demonstrates a contradiction. Otherwise describe the gap as an environment/setup prerequisite.
-   - If script execution fails because required input files or arguments are not available in the evaluation environment (e.g., errors like "FileNotFoundError", "No such file or directory", missing required positional arguments, or example commands that use placeholders like "<file>" without concrete sample inputs), treat this primarily as an unmet runtime prerequisite rather than a flaw in the Skill package itself. Prefer executability = Average and state that the workflow is runnable once real inputs are provided; only set executability to Poor when there is additional evidence of script defects (e.g., truncated/incomplete implementation, syntax errors, or contradictions between instructions and code).
    - If you detect any CRITICAL CORRECTNESS ERROR in a core formula, algorithm, or code snippet (e.g., Python using "^" for exponentiation or other language-level mistakes that would produce wrong results or runtime failures), executability MUST be "Poor".
    - If allowed_tools grants broader permissions than what the Skill clearly needs (e.g., allows "bash" or other powerful tools but the described workflow and examples do not require them), reduce executability by at least one level due to environment/permission ambiguity.
    - When reading formulas and code snippets, audit them line-by-line in the context of their target language and typical runtime environment; if you find subtle traps or inconsistencies that would mislead an implementer or cause incorrect behavior, choose a lower (more conservative) executability rating.
@@ -474,61 +472,51 @@ GOOD SCRIPT EXAMPLE (demonstrates actual API usage):
 ```python
 #!/usr/bin/env python3
 \"\"\"
-Example: Named Entity Recognition with DeepKE
+Usage Example: Interacting with OpenAI API to Generate Text Responses
 
-This script demonstrates how to use DeepKE's NER module for entity extraction.
-Requires: pip install deepke torch transformers
+This script demonstrates how to use the OpenAI Python library to interact with
+OpenAI's language models for text generation tasks.
+Requires: pip install openai
 \"\"\"
 
-from typing import List, Dict
+import os
+from openai import OpenAI
 
-# NOTE: Adjust import based on actual DeepKE installation
-try:
-    from deepke.name_entity_re.standard import NERPredictor
-except ImportError:
-    print("Please install DeepKE: pip install deepke")
-    exit(1)
-
-
-def extract_entities(text: str, model_path: str = None) -> List[Dict]:
+def setup_api_key():
     \"\"\"
-    Extract named entities from text using DeepKE.
+    Configure the environment with the OpenAI API key.
+    \"\"\"
+    os.environ["OPENAI_API_KEY"] = "YOUR_OPENAI_API_KEY"  # Replace with your actual API key
+
+def generate_response(prompt: str, model: str = "gpt-4") -> str:
+    \"\"\"
+    Generate a text response using OpenAI's model with a given prompt.
     
     Args:
-        text: Input text to analyze
-        model_path: Path to trained model (optional, uses default if None)
+        prompt: The text input to pass to the model.
+        model: The model identifier (e.g., "gpt-4", "gpt-3.5-turbo").
     
     Returns:
-        List of entities with type, text, and position
+        The generated text from the model.
     \"\"\"
-    # Initialize predictor
-    predictor = NERPredictor(model_path=model_path)
-    
-    # Run prediction
-    entities = predictor.predict(text)
-    
-    return entities
-
+    try:
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {{"role": "system", "content": "You are a helpful assistant."}},
+                {{"role": "user", "content": prompt}}
+            ]
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        print(f"An error occurred while generating a response: {{e}}")
+        return ""
 
 if __name__ == "__main__":
-    # Example usage
-    sample_text = "Barack Obama was born in Honolulu and served as the 44th president."
-    
-    print(f"Input: {{sample_text}}")
-    print("\\nExtracting entities...")
-    
-    results = extract_entities(sample_text)
-    
-    for entity in results:
-        print(f"  - {{entity['text']}} ({{entity['type']}})")
-```
-
-BAD SCRIPT EXAMPLE (DO NOT generate this style):
-```python
-# BAD - This is just shell command wrapper, NOT useful
-import os
-os.system('conda activate deepke')  # Won't work in script context
-os.system('python run.py')           # No actual API demonstration
+    setup_api_key()
+    response_text = generate_response("Explain quantum computing in simple terms.")
+    print(f"Model Response: {{response_text}}")
 ```
 
 # references/ File Requirements (CRITICAL - HIGH QUALITY)
@@ -537,76 +525,131 @@ Generate detailed API documentation based on the code analysis provided.
 
 GOOD API REFERENCE EXAMPLE:
 ```markdown
-# DeepKE API Reference
+# OpenAI Python Client API Reference
 
-## Module: deepke.name_entity_re.standard
+## Module: openai
 
-### Class: NERPredictor
+### Class: OpenAI
 
-Entity recognition predictor using pretrained models.
+Handles synchronous communications with OpenAI API for text generation, chat, and more.
 
 **Constructor:**
 ```python
-NERPredictor(
-    model_path: str = None,
-    device: str = "cuda" if torch.cuda.is_available() else "cpu",
-    max_seq_length: int = 128
+OpenAI(
+    api_key: str = None,
+    base_url: str = None,
+    **kwargs
 )
 ```
 
 **Parameters:**
-- `model_path` (str, optional): Path to trained model checkpoint. Uses default pretrained model if None.
-- `device` (str): Device to run inference on. Defaults to CUDA if available.
-- `max_seq_length` (int): Maximum sequence length for tokenization.
+- `api_key` (str, optional): The API key for authenticating requests. Defaults to OPENAI_API_KEY environment variable.
+- `base_url` (str, optional): Override the default API base URL.
+- `kwargs`: Additional configuration options.
 
 **Methods:**
 
-#### predict(text: str) -> List[Dict]
-Run NER prediction on input text.
+#### chat.completions.create(model: str, messages: List[dict], **kwargs) -> ChatCompletion
+Create a chat completion using the specified model.
 
 **Parameters:**
-- `text` (str): Input text to analyze
+- `model` (str): Model identifier (e.g., "gpt-4", "gpt-3.5-turbo").
+- `messages` (List[dict]): List of message dictionaries with 'role' and 'content'.
+- `temperature` (float, optional): Sampling temperature (0-2).
+- `max_tokens` (int, optional): Maximum tokens to generate.
 
 **Returns:**
-- List of dictionaries containing:
-  - `text` (str): The entity text
-  - `type` (str): Entity type (PERSON, LOCATION, ORG, etc.)
-  - `start` (int): Start character position
-  - `end` (int): End character position
+- `ChatCompletion`: Response object containing generated text and metadata.
 
 **Example:**
 ```python
-predictor = NERPredictor()
-entities = predictor.predict("Apple was founded by Steve Jobs.")
-# Returns: [{{'text': 'Apple', 'type': 'ORG', ...}}, {{'text': 'Steve Jobs', 'type': 'PERSON', ...}}]
+from openai import OpenAI
+
+client = OpenAI()
+response = client.chat.completions.create(
+    model="gpt-4",
+    messages=[
+        {{"role": "system", "content": "You are a helpful assistant."}},
+        {{"role": "user", "content": "Hello!"}}
+    ]
+)
+print(response.choices[0].message.content)
 ```
 
 ---
 
-## Module: deepke.relation_extraction.standard
+### Class: AsyncOpenAI
 
-### Class: REPredictor
-...
+Handles asynchronous interactions with OpenAI's API for efficient concurrent operations.
+
+**Constructor:**
+```python
+AsyncOpenAI(
+    api_key: str = None,
+    **kwargs
+)
 ```
 
-BAD API REFERENCE EXAMPLE (DO NOT generate this style):
-```markdown
-# API Reference
-- Tokenizer: does tokenization
-- Encoder: encodes things
-- train(): trains the model
+**Parameters:**
+- `api_key` (str, optional): The API key for authenticating requests.
+- `kwargs`: Additional configuration options including HTTP client setups.
+
+**Methods:**
+- Same as `OpenAI` but returns awaitable objects.
+
+**Example:**
+```python
+import asyncio
+from openai import AsyncOpenAI
+
+async def main():
+    client = AsyncOpenAI()
+    response = await client.chat.completions.create(
+        model="gpt-4",
+        messages=[{{"role": "user", "content": "Hello!"}}]
+    )
+    print(response.choices[0].message.content)
+
+asyncio.run(main())
+```
 ```
 
 # Output Format (STRICT)
 You must output the files using the following strict format so that a script can parse and save them.
 For every file, use this exact pattern:
 
-## FILE: <skill-name>/<path_to_file>
-```<language_tag>
-<file_content_here>
+## FILE: {{actual-skill-name}}/{{path_to_file}}
+```{{language_tag}}
+{{file_content_here}}
 ```
 
-IMPORTANT: 
+**CRITICAL PATH RULES:**
+- Replace `{{actual-skill-name}}` with the ACTUAL kebab-case skill name derived from the repository (e.g., "openai-python", "pandas", "requests")
+- DO NOT use placeholder text like "skill-name" literally
+- For repository "openai/openai-python" → use "openai-python"
+- For repository "psf/requests" → use "requests"
+
+**Example Output Pattern:**
+```
+## FILE: openai-python/SKILL.md
+```yaml
+---
+name: openai-python
+...
+```
+
+## FILE: openai-python/scripts/usage_example.py
+```python
+...
+```
+
+## FILE: openai-python/references/api_reference.md
+```markdown
+...
+```
+```
+
+**IMPORTANT:** 
 - Generate COMPLETE files, do not use "..." or "[content continues]"
 - SKILL.md should be comprehensive (at least 100+ lines)
 - scripts/: At least one RUNNABLE Python script with actual library API usage
