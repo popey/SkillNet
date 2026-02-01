@@ -10,6 +10,7 @@ from skillnet_ai.creator import SkillCreator
 from skillnet_ai.downloader import SkillDownloader
 from skillnet_ai.evaluator import SkillEvaluator, EvaluatorConfig
 from skillnet_ai.searcher import SkillNetSearcher
+from skillnet_ai.analyzer import SkillRelationshipAnalyzer
 
 __all__ = [
     "SkillNetClient",
@@ -17,5 +18,6 @@ __all__ = [
     "SkillDownloader",
     "SkillEvaluator",
     "EvaluatorConfig",
-    "SkillNetSearcher"
+    "SkillNetSearcher",
+    "SkillRelationshipAnalyzer"
 ]

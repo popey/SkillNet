@@ -41,6 +41,7 @@ SkillNet is an open infrastructure for creating, evaluating, and organizing AI s
   - Office documents (PDF, PPT, Word)
   - Direct text prompts
 - **📊 Evaluation**: Evaluate and score skills for quality assurance (Safety, Completeness, Excutability, Modifiability, Cost-Aware).
+- **🕸️ Relationship Analysis**: Automatically map the connections between skills in your local library, identifying structural relationships between skills (similar_to, belong_to, compose_with, depend_on).
 
 
 # 🌐 API Access
@@ -222,6 +223,23 @@ result = client.evaluate(target=target_skill)
 print(f"Evaluation Result: {result}")
 ```
 
+#### 6. Skill Relationship Analysis
+Analyze a local directory containing multiple skills to infer a relationship graph. It identifies relationships like dependencies (depend_on), collaboration (compose_with), hierarchy (belong_to), and alternatives (similar_to).
+
+```python
+# Directory containing multiple skill folders
+skills_directory = "./my_agent_skills"
+
+# Analyze relationships between skills
+# This will also save a 'relationships.json' in the directory by default
+relationships = client.analyze(skills_dir=skills_directory)
+
+# Display the relationships
+for rel in relationships:
+    print(f"{rel['source']} --[{rel['type']}]--> {rel['target']}")
+    # Output: PDF_Parser --[compose_with]--> Text_Summarizer
+```
+
 
 ### 💻 CLI Usage
 
@@ -307,8 +325,24 @@ skillnet evaluate ./my_skills/web_search
 skillnet evaluate ./my_skills/tool --category "DevOps" --model gpt-4o
 ```
 
+#### 5. Analyze Relationships (`analyze`)
+Scan a local directory of skills to analyze their connections using AI.
+
+Requirement: Ensure API_KEY is set in your environment variables.
+
+```bash
+# Analyze a directory containing multiple skill folders
+skillnet analyze ./my_agent_skills
+
+# Analyze without saving the result file (just print to console)
+skillnet analyze ./my_agent_skills --no-save
+
+# Specify a model for the analysis
+skillnet analyze ./my_agent_skills --model gpt-4o
+```
+
 ### Environment Configuration
-To use **Creation** or **Evaluation** features, set your environment variables:
+To use **Creation**, **Evaluation**, or **Analyze** features, set your environment variables:
 
 ```bash
 export API_KEY="your_api_key"

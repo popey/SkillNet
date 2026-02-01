@@ -6,6 +6,7 @@ from skillnet_ai.creator import SkillCreator
 from skillnet_ai.downloader import SkillDownloader
 from skillnet_ai.evaluator import SkillEvaluator, EvaluatorConfig
 from skillnet_ai.searcher import SkillNetSearcher
+from skillnet_ai.analyzer import SkillRelationshipAnalyzer
 
 class SkillNetError(Exception):
     """Custom exception class for SkillNet Client errors."""
@@ -274,3 +275,41 @@ class SkillNetClient:
 
         except Exception as e:
             raise SkillNetError(f"Evaluation process failed: {str(e)}") from e
+
+    def analyze(
+        self,
+        skills_dir: Union[str, Path],
+        save_to_file: bool = True,
+        model: str = "gpt-4o"
+    ) -> List[Dict[str, Any]]:
+        """
+        Analyze a local directory containing multiple skills to infer relationships between them.
+        
+        This builds a knowledge graph (edges) between skills based on their names and descriptions.
+        Relationships detected: similar_to, belong_to, pairs_with (compose_with), depend_on.
+
+        Args:
+            skills_dir: Path to the directory containing skill folders.
+            save_to_file: If True, saves a 'relationships.json' file in the skills_dir.
+            model: The LLM model to use for analysis.
+
+        Returns:
+            List[Dict[str, Any]]: A list of relationship edges (source, target, type, reason).
+        """
+        if not self.api_key:
+            raise SkillNetError("API_KEY is required for relationship analysis.")
+
+        try:
+            analyzer = SkillRelationshipAnalyzer(
+                api_key=self.api_key,
+                base_url=self.base_url,
+                model=model
+            )
+            
+            results = analyzer.analyze_local_skills(
+                skills_dir=str(skills_dir),
+                save_to_file=save_to_file
+            )
+            return results
+        except Exception as e:
+            raise SkillNetError(f"Relationship analysis failed: {str(e)}") from e
