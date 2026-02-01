@@ -816,27 +816,25 @@ Remember:
 - Do not hallucinate skills not in the list.
 
 Output Format:
-Return a JSON object with a single key "relationships", which is a list of objects.
-Each object must have: "source", "target", "type", and "reason" (short explanation).
+Return a JSON array where each element represents a relationship with the following keys:
+- source: (string) The name of the source skill (the one initiating the relationship)
+- target: (string) The name of the target skill (the one receiving the relationship)
+- type: (string) One of the 4 relationship types: "similar_to", "belong_to", "compose_with", "depend_on"
+- reason: (string) A brief explanation of why this relationship exists based on the skill descriptions.
 
 Output Example:
-{{
-  "relationships": [
+[
     {{
       "source": "google_search_tool",
       "target": "bing_search_tool",
       "type": "similar_to",
       "reason": "Both provide web search capabilities and are interchangeable."
     }},
-    {{
-      "source": "analyze_stock_chart",
-      "target": "get_stock_data",
-      "type": "depend_on",
-      "reason": "Analysis requires the raw data fetcher to run first."
-    }},
     ...
-  ]
-}}
+]
 
-Now, analyze the skills and provide the relationships in the valid JSON format.
+Keep your output in the format below:
+<Skill_Relationships>
+your generated JSON array here
+</Skill_Relationships>
 """

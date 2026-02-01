@@ -137,6 +137,18 @@ class SkillRelationshipAnalyzer:
             return lines[0]
             
         return "No description available."
+    
+    def _extract_json_from_tags(self, content: str, tag_name: str) -> str:
+        """Helper to extract content between XML-style tags."""
+        start_tag = f"<{tag_name}>"
+        end_tag = f"</{tag_name}>"
+        
+        if start_tag in content and end_tag in content:
+            return content.split(start_tag)[1].split(end_tag)[0].strip()
+        
+        clean_content = content.replace("```json", "").replace("```", "").strip()
+        
+        return clean_content
 
     def _generate_relationship_graph(self, skills: List[Dict]) -> List[Dict]:
         """Calls LLM to infer edges between nodes."""
@@ -156,23 +168,55 @@ class SkillRelationshipAnalyzer:
                 messages=messages,
             )
             content = response.choices[0].message.content
+
+            # 1. Extract JSON from tags
+            json_str = self._extract_json_from_tags(content, "Skill_Relationships")
             
-            parsed = json.loads(content)
-            edges = parsed.get("relationships", [])
+            # 2. Parse JSON
+            parsed_data = json.loads(json_str)
             
-            # Validate edges structure
+            # 3. Extract edges
+            edges = []
+            if isinstance(parsed_data, list):
+                edges = parsed_data
+            elif isinstance(parsed_data, dict) and "relationships" in parsed_data:
+                edges = parsed_data["relationships"]
+            
+            # 4. Validate edges structure
             valid_edges = []
             valid_names = {s['name'] for s in skills}
             
+            valid_types = {'similar_to', 'belong_to', 'compose_with', 'depend_on'}
+
             for edge in edges:
-                if (edge.get('source') in valid_names and 
-                    edge.get('target') in valid_names and 
-                    edge.get('type') in ['similar_to', 'belong_to', 'compose_with', 'depend_on']):
-                    valid_edges.append(edge)
+                # Basic type check
+                if not isinstance(edge, dict):
+                    continue
+                    
+                s_name = edge.get('source')
+                t_name = edge.get('target')
+                r_type = edge.get('type')
+                
+                # Validate names and type
+                if (s_name in valid_names and 
+                    t_name in valid_names and 
+                    r_type in valid_types and
+                    s_name != t_name):
+                    
+                    valid_edges.append({
+                        "source": s_name,
+                        "target": t_name,
+                        "type": r_type,
+                        "reason": edge.get("reason", "No reason provided")
+                    })
                     
             logger.info(f"Identified {len(valid_edges)} valid relationships.")
             return valid_edges
 
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON content: {e}")
+            logger.debug(f"Raw content was: {content}")
+            return []
         except Exception as e:
             logger.error(f"Failed to analyze relationships: {e}")
             return []

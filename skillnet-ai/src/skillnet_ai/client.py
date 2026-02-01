@@ -286,7 +286,7 @@ class SkillNetClient:
         Analyze a local directory containing multiple skills to infer relationships between them.
         
         This builds a knowledge graph (edges) between skills based on their names and descriptions.
-        Relationships detected: similar_to, belong_to, pairs_with (compose_with), depend_on.
+        Relationships detected: similar_to, belong_to, compose_with, depend_on.
 
         Args:
             skills_dir: Path to the directory containing skill folders.
