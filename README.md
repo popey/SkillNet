@@ -290,9 +290,11 @@ skillnet download <private_url> --token <your_github_token>
 
 Create structured Skill from various sources using LLMs.
 
-Requirement: Ensure API_KEY is set in your environment variables.
-
 ```bash
+# Requirement: Ensure API_KEY is set in your environment variables.
+export API_KEY=sk-xxxxx
+export BASE_URL= xxxxxx # Optional custom LLM base URL
+
 # From a trajectory file
 skillnet create ./logs/trajectory.txt -d ./generated_skills
 
@@ -312,9 +314,11 @@ skillnet create --office report.pdf --model gpt-4o
 #### 4. Evaluate Skills (`evaluate`)
 Generate a comprehensive quality report (Safety, Completeness, Executability, Modifiability, Cost Awareness) for a skill.
 
-Requirement: Ensure API_KEY is set in your environment variables.
-
 ```bash
+# Requirement: Ensure API_KEY is set in your environment variables.
+export API_KEY=sk-xxxxx
+export BASE_URL= xxxxxx # Optional custom LLM base URL
+
 # Evaluate a remote skill via GitHub URL
 skillnet evaluate https://github.com/owner/repo/tree/main/skills/web_search
 
@@ -328,9 +332,11 @@ skillnet evaluate ./my_skills/tool --category "Development" --model gpt-4o
 #### 5. Analyze Relationships (`analyze`)
 Scan a local directory of skills to analyze their connections using AI.
 
-Requirement: Ensure API_KEY is set in your environment variables.
-
 ```bash
+# Requirement: Ensure API_KEY is set in your environment variables.
+export API_KEY=sk-xxxxx
+export BASE_URL= xxxxxx # Optional custom LLM base URL
+
 # Analyze a directory containing multiple skill folders
 skillnet analyze ./my_agent_skills
 
