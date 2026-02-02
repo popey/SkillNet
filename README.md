@@ -268,7 +268,7 @@ skillnet search "pdf extraction"
 skillnet search "tools for reading financial documents" --mode vector --threshold 0.85
 
 # Filter by category and sort results
-skillnet search "visualization" --category "Data" --sort-by stars --limit 10
+skillnet search "visualization" --category "Development" --sort-by stars --limit 10
 ```
 
 #### 2. Install Skills (`download`)
@@ -322,7 +322,7 @@ skillnet evaluate https://github.com/owner/repo/tree/main/skills/web_search
 skillnet evaluate ./my_skills/web_search
 
 # Custom evaluation config
-skillnet evaluate ./my_skills/tool --category "DevOps" --model gpt-4o
+skillnet evaluate ./my_skills/tool --category "Development" --model gpt-4o
 ```
 
 #### 5. Analyze Relationships (`analyze`)
