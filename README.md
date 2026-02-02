@@ -217,7 +217,7 @@ Assess the Safety, Completeness, Executability, Modifiability and Cost-Aware of 
 # target_skill = "./my_skills/web_search"
 
 # Evaluate from GitHub URL (uses github_token if provided during initialization)
-target_skill = "https://github.com/microsoft/autogen/tree/main/samples/tools/web_search"
+target_skill = "https://github.com/anthropics/skills/tree/main/skills/algorithmic-art"
 
 result = client.evaluate(target=target_skill)
 print(f"Evaluation Result: {result}")
