@@ -246,7 +246,8 @@ class SkillNetClient:
             base_url=self.base_url,
             model=model,
             max_workers=max_workers,
-            cache_dir=cache_dir
+            cache_dir=cache_dir,
+            github_token=self.github_token
         )
         evaluator = SkillEvaluator(config)
 

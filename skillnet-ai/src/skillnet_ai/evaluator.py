@@ -37,6 +37,7 @@ class EvaluatorConfig:
     script_python: str = "python"
     include_script_results: bool = False
     max_script_output_chars: int = 400
+    github_token: Optional[str] = None
 
 
 @dataclass
@@ -770,7 +771,7 @@ class SkillEvaluator:
             raise ValueError("API key is required")
         
         self.config = config
-        self.downloader = SkillDownloader()
+        self.downloader = SkillDownloader(api_token=config.github_token)
         self.loader = SkillLoader()
         self.prompt_builder = PromptBuilder()
         self.llm_client = LLMClient(config)

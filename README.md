@@ -213,13 +213,13 @@ for path in created_paths:
 Assess the Safety, Completeness, Executability, Modifiability and Cost-Aware of a skill. Supports both remote GitHub URLs and local directories.
 
 ```python
+# Evaluate from local directory
 # target_skill = "./my_skills/web_search"
+
+# Evaluate from GitHub URL (uses github_token if provided during initialization)
 target_skill = "https://github.com/microsoft/autogen/tree/main/samples/tools/web_search"
 
-# Evaluates the skill using the client's API key
 result = client.evaluate(target=target_skill)
-
-# Display results
 print(f"Evaluation Result: {result}")
 ```
 
