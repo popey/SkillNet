@@ -14,9 +14,9 @@ class SkillNetError(Exception):
 
 class SkillNetClient:
     """
-    A Python SDK client for interacting with SkillNet AI services.
+    A Python SDK client for interacting with SkillNet services.
     
-    This client aggregates Search, Download, Creation, and Evaluation functionalities.
+    This client aggregates Search, Download, Create, Evaluate, and Analyze functionalities.
     """
 
     def __init__(
