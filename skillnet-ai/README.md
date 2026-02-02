@@ -54,7 +54,7 @@ Perform keywords match or semantic searches to find skills.
 
 ```python
 # 1. Standard Keywords Match
-results = client.search(q="pdf tool")
+results = client.search(q="pdf")
 
 # 2. Semantic Search
 results = client.search(q="Help me analyze financial PDF reports", mode="vector")
@@ -195,10 +195,10 @@ Search the registry using keywords match or semantic search.
 
 ```bash
 # Basic keywords match
-skillnet search "pdf extraction"
+skillnet search "pdf"
 
 # Semantic/Vector search (finds skills by meaning)
-skillnet search "tools for reading financial documents" --mode vector --threshold 0.85
+skillnet search "Help me analyze financial PDF reports" --mode vector --threshold 0.85
 
 # Filter by category and sort results
 skillnet search "visualization" --category "Development" --sort-by stars --limit 10

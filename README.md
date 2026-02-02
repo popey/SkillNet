@@ -56,7 +56,7 @@ SkillNet provides a public API to search skills. Support both keywords match and
 
 Find "development" tools sorted by stars.
 ```bash
-curl -X GET http://api-skillnet.openkg.cn/v1/search?q=development&sort_by=stars&limit=5 \
+curl -X GET "http://api-skillnet.openkg.cn/v1/search?q=pdf&sort_by=stars&limit=5" \
      -H "accept: application/json"
 ```
 
@@ -64,7 +64,7 @@ curl -X GET http://api-skillnet.openkg.cn/v1/search?q=development&sort_by=stars&
 
 Find skills related to "reading charts" using AI similarity.
 ```bash
-curl -X GET http://api-skillnet.openkg.cn/v1/search?q=reading%20charts&mode=vector&threshold=0.8 \
+curl -X GET "http://api-skillnet.openkg.cn/v1/search?q=reading%20charts&mode=vector&threshold=0.8" \
      -H "accept: application/json"
 ```
 
@@ -142,7 +142,7 @@ Perform keywords match or semantic searches to find skills. (See [Parameter Refe
 
 ```python
 # 1. Standard Keywords Match
-results = client.search(q="pdf tool")
+results = client.search(q="pdf")
 
 # 2. Semantic Search
 results = client.search(q="Help me analyze financial PDF reports", mode="vector")
@@ -262,10 +262,10 @@ Search the registry using keywords match or semantic search.
 
 ```bash
 # Basic keywords match
-skillnet search "pdf extraction"
+skillnet search "pdf"
 
 # Semantic/Vector search (finds skills by meaning)
-skillnet search "tools for reading financial documents" --mode vector --threshold 0.85
+skillnet search "Help me analyze financial PDF reports" --mode vector --threshold 0.85
 
 # Filter by category and sort results
 skillnet search "visualization" --category "Development" --sort-by stars --limit 10
