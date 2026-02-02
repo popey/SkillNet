@@ -34,3 +34,6 @@ dependencies = [
 
 [project.scripts]
 skillnet = "skillnet_ai.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
