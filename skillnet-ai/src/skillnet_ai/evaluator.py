@@ -28,9 +28,9 @@ class EvaluatorConfig:
     api_key: str
     base_url: str
     model: str
-    cache_dir: str
     max_workers: int = 5
     temperature: float = 0.3
+    cache_dir: str = "./evaluate_cache_dir"
     run_scripts: bool = False
     script_timeout_sec: int = 8
     max_script_runs: int = 5
@@ -898,7 +898,7 @@ if __name__ == '__main__':
     parser.add_argument('--base-url', help='OpenAI API base URL')
     parser.add_argument('--model', default='gpt-4o', help='Model name')
     parser.add_argument('--max-workers', type=int, default=5, help='Max workers')
-    parser.add_argument('--cache-dir', default='skill_downloads', help='Cache directory')
+    parser.add_argument('--cache-dir', default='./evaluate_cache_dir', help='Cache directory')
     parser.add_argument('--run-scripts', action='store_true',
                         help='Execute python scripts under scripts/')
     parser.add_argument('--script-timeout', type=int, default=8,
