@@ -9,8 +9,8 @@ def main():
     client = SkillNetClient()
 
     # Search for skills
-    print("🔍 Searching for: pdf tool")
-    results = client.search(q="pdf tool", limit=5)
+    print("🔍 Searching for skills: pdf")
+    results = client.search(q="pdf", limit=5)
 
     if not results:
         print("❌ No skills found.")

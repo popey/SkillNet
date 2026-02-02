@@ -15,7 +15,7 @@ def main():
     # Evaluate a remote skill from GitHub
     print("📊 Evaluating remote skill...")
     result = client.evaluate(
-        target="https://github.com/microsoft/autogen/tree/main/samples/tools/web_search"
+        target="https://github.com/anthropics/skills/tree/main/skills/algorithmic-art"
     )
     print("Result:", result)
 
