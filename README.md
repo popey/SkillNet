@@ -12,7 +12,6 @@
 
 </div>
 
-
 ## 📖 Table of Contents
 
 - [📖 Overview](#-overview)
@@ -43,7 +42,6 @@ SkillNet is an open infrastructure for creating, evaluating, and organizing AI s
 - **📊 Evaluation**: Evaluate and score skills for quality assurance (Safety, Completeness, Excutability, Modifiability, Cost-Aware).
 - **🕸️ Relationship Analysis**: Automatically map the connections between skills in your local library, identifying structural relationships between skills (similar_to, belong_to, compose_with, depend_on).
 
-
 # 🌐 API Access
 
 SkillNet provides a public API to search skills. Support both keywords match and semantic search.
@@ -55,6 +53,7 @@ SkillNet provides a public API to search skills. Support both keywords match and
 **1. Keywords Match**
 
 Find "development" tools sorted by stars.
+
 ```bash
 curl -X GET "http://api-skillnet.openkg.cn/v1/search?q=pdf&sort_by=stars&limit=5" \
      -H "accept: application/json"
@@ -63,6 +62,7 @@ curl -X GET "http://api-skillnet.openkg.cn/v1/search?q=pdf&sort_by=stars&limit=5
 **2. Vector Semantic Search**
 
 Find skills related to "reading charts" using AI similarity.
+
 ```bash
 curl -X GET "http://api-skillnet.openkg.cn/v1/search?q=reading%20charts&mode=vector&threshold=0.8" \
      -H "accept: application/json"
@@ -70,17 +70,17 @@ curl -X GET "http://api-skillnet.openkg.cn/v1/search?q=reading%20charts&mode=vec
 
 ### 📡 Parameter Reference
 
-| Parameter | Type | Required | Default | Description |
-| :--- | :--- | :---: | :--- | :--- |
-| `q` | string | ✅ | - | The search query (Keywords or Natural Language). |
-| `mode` | string | - | `keyword` | `keyword` (Fuzzy match) or `vector` (Semantic AI). |
-| `category` | string | - | `None` | Filter: Development, AIGC, Research, Science, etc. |
-| `limit` | int | - | `10` | Results per request (Max: 50). |
+| Parameter  | Type   | Required | Default   | Description                                        |
+| :--------- | :----- | :------: | :-------- | :------------------------------------------------- |
+| `q`        | string |    ✅    | -         | The search query (Keywords or Natural Language).   |
+| `mode`     | string |    -     | `keyword` | `keyword` (Fuzzy match) or `vector` (Semantic AI). |
+| `category` | string |    -     | `None`    | Filter: Development, AIGC, Research, Science, etc. |
+| `limit`    | int    |    -     | `10`      | Results per request (Max: 50).                     |
 
 **Mode Specific Parameters:**
 
-* **Keyword Mode:** `page` (int), `min_stars` (int), `sort_by` (string: `stars` or `recent`)
-* **Vector Mode:** `threshold` (float: `0.0` to `1.0`)
+- **Keyword Mode:** `page` (int), `min_stars` (int), `sort_by` (string: `stars` or `recent`)
+- **Vector Mode:** `threshold` (float: `0.0` to `1.0`)
 
 ### 📦 Response Structure
 
@@ -109,8 +109,8 @@ curl -X GET "http://api-skillnet.openkg.cn/v1/search?q=reading%20charts&mode=vec
   "success": true
 }
 ```
-</details>
 
+</details>
 
 # 🐍 Python Toolkit (`skillnet-ai`)
 
@@ -127,6 +127,7 @@ pip install skillnet-ai
 The `SkillNetClient` is your main entry point.
 
 #### 1. Initialization
+
 ```python
 from skillnet_ai import SkillNetClient
 
@@ -138,6 +139,7 @@ client = SkillNetClient(
 ```
 
 #### 2. Search for Skills
+
 Perform keywords match or semantic searches to find skills. (See [Parameter Reference](#-parameter-reference) for configuration details.)
 
 ```python
@@ -154,6 +156,7 @@ if results:
 ```
 
 #### 3. Install Skills
+
 Download and install a skill directly from a URL (e.g., from above search results) into your local workspace.
 
 ```python
@@ -168,6 +171,7 @@ except Exception as e:
 ```
 
 #### 4. Create Skills
+
 Turn local trajectory, gitHub repository, office documents or text description into a polished Skill Package (SKILL.md, scripts, etc.).
 
 ```python
@@ -180,7 +184,7 @@ Agent: Script executed. Renamed 5 files.
 """
 # Generate Skill, Returns a list of paths to the generated skill folders
 created_paths = client.create(
-    trajectory_content=trajectory_log, 
+    trajectory_content=trajectory_log,
     output_dir="./created_skills",
     model="gpt-4o"
 )
@@ -210,6 +214,7 @@ for path in created_paths:
 ```
 
 #### 5. Skill Evaluation
+
 Assess the Safety, Completeness, Executability, Modifiability and Cost-Aware of a skill. Supports both remote GitHub URLs and local directories.
 
 ```python
@@ -224,6 +229,7 @@ print(f"Evaluation Result: {result}")
 ```
 
 #### 6. Skill Relationship Analysis
+
 Analyze a local directory containing multiple skills to infer a relationship graph. It identifies relationships like dependencies (depend_on), collaboration (compose_with), hierarchy (belong_to), and alternatives (similar_to).
 
 ```python
@@ -240,19 +246,18 @@ for rel in relationships:
     # Output: PDF_Parser --[compose_with]--> Text_Summarizer
 ```
 
-
 ### 💻 CLI Usage
 
 The CLI is powered by `Typer` and `Rich` for a beautiful terminal experience.
 
 #### Common Commands
 
-| Command | Action | Example |
-| :--- | :--- | :--- |
-| **`search`** | Search skills | `skillnet search "data viz" --mode vector` |
-| **`download`** | Install skill | `skillnet download <github_url> -d ./skills` |
-| **`create`** | Create skill | `skillnet create log.txt --model gpt-4o` |
-| **`evaluate`** | Evaluate skill | `skillnet evaluate ./my_tool` |
+| Command        | Action         | Example                                      |
+| :------------- | :------------- | :------------------------------------------- |
+| **`search`**   | Search skills  | `skillnet search "data viz" --mode vector`   |
+| **`download`** | Install skill  | `skillnet download <github_url> -d ./skills` |
+| **`create`**   | Create skill   | `skillnet create log.txt --model gpt-4o`     |
+| **`evaluate`** | Evaluate skill | `skillnet evaluate ./my_tool`                |
 
 > **Tip:** Use `skillnet [command] --help` to see all available options (e.g., thresholds, sorting).
 
@@ -290,11 +295,25 @@ skillnet download <private_url> --token <your_github_token>
 
 Create structured Skill from various sources using LLMs.
 
+**Linux/macOS:**
+
 ```bash
 # Requirement: Ensure API_KEY is set in your environment variables.
 export API_KEY=sk-xxxxx
-export BASE_URL= xxxxxx # Optional custom LLM base URL
+export BASE_URL=xxxxxx  # Optional custom LLM base URL
+```
 
+**Windows PowerShell:**
+
+```powershell
+# Requirement: Ensure API_KEY is set in your environment variables.
+$env:API_KEY = "sk-xxxxx"
+$env:BASE_URL = "xxxxxx"  # Optional custom LLM base URL
+```
+
+**Usage Examples:**
+
+```bash
 # From a trajectory file
 skillnet create ./logs/trajectory.txt -d ./generated_skills
 
@@ -312,13 +331,28 @@ skillnet create --office report.pdf --model gpt-4o
 ```
 
 #### 4. Evaluate Skills (`evaluate`)
+
 Generate a comprehensive quality report (Safety, Completeness, Executability, Modifiability, Cost Awareness) for a skill.
+
+**Linux/macOS:**
 
 ```bash
 # Requirement: Ensure API_KEY is set in your environment variables.
 export API_KEY=sk-xxxxx
-export BASE_URL= xxxxxx # Optional custom LLM base URL
+export BASE_URL=xxxxxx  # Optional custom LLM base URL
+```
 
+**Windows PowerShell:**
+
+```powershell
+# Requirement: Ensure API_KEY is set in your environment variables.
+$env:API_KEY = "sk-xxxxx"
+$env:BASE_URL = "xxxxxx"  # Optional custom LLM base URL
+```
+
+**Usage Examples:**
+
+```bash
 # Evaluate a remote skill via GitHub URL
 skillnet evaluate https://github.com/anthropics/skills/tree/main/skills/algorithmic-art
 
@@ -330,13 +364,28 @@ skillnet evaluate ./my_skills/tool --category "Development" --model gpt-4o
 ```
 
 #### 5. Analyze Relationships (`analyze`)
+
 Scan a local directory of skills to analyze their connections using AI.
+
+**Linux/macOS:**
 
 ```bash
 # Requirement: Ensure API_KEY is set in your environment variables.
 export API_KEY=sk-xxxxx
-export BASE_URL= xxxxxx # Optional custom LLM base URL
+export BASE_URL=xxxxxx  # Optional custom LLM base URL
+```
 
+**Windows PowerShell:**
+
+```powershell
+# Requirement: Ensure API_KEY is set in your environment variables.
+$env:API_KEY = "sk-xxxxx"
+$env:BASE_URL = "xxxxxx"  # Optional custom LLM base URL
+```
+
+**Usage Examples:**
+
+```bash
 # Analyze a directory containing multiple skill folders
 skillnet analyze ./my_agent_skills
 
@@ -348,11 +397,21 @@ skillnet analyze ./my_agent_skills --model gpt-4o
 ```
 
 ### Environment Configuration
+
 To use **Creation**, **Evaluation**, or **Analyze** features, set your environment variables:
+
+**Linux/macOS:**
 
 ```bash
 export API_KEY="your_api_key"
-export BASE_URL="https://xxxxx" # Optional
+export BASE_URL="https://xxxxx"  # Optional
+```
+
+**Windows PowerShell:**
+
+```powershell
+$env:API_KEY = "your_api_key"
+$env:BASE_URL = "https://xxxxx"  # Optional
 ```
 
 ---
