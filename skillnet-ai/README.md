@@ -2,7 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/skillnet-ai.svg)](https://badge.fury.io/py/skillnet-ai)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.9+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 
 **skillnet-ai** is the official Python Toolkit for interacting with the SkillNet platform. It allows AI Agents to **Create**, **Evaluate** and **Organize** AI skills at scale. It functions seamlessly as both a powerful Python Library and a feature-rich Command Line Interface (CLI).
 
