@@ -5,7 +5,7 @@ import os
 import shlex
 import subprocess
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed, wait, FIRST_COMPLETED
 from dataclasses import dataclass
 from typing import Dict, Any, List, Optional, Tuple, Callable, Iterator
 
@@ -69,6 +69,9 @@ class Skill:
         normalized_url = cls._normalize_url(url)
         if not normalized_url:
             return None, f"Invalid GitHub URL: {url}"
+        # Derive skill name from URL if not provided
+        name = kwargs.get('name') or normalized_url.rstrip('/').split('/')[-1]
+
         # Download to local cache (with retries in evaluator)
         local_path = None
         for attempt in range(max_retries):
@@ -83,8 +86,6 @@ class Skill:
                 time.sleep(retry_delay)
         if not local_path:
             return None, f"Failed to download after {max_retries} retries: {url}"
-        # Derive skill name from URL if not provided
-        name = kwargs.get('name') or normalized_url.rstrip('/').split('/')[-1]
 
         return cls(
             path=local_path,
@@ -835,26 +836,55 @@ class SkillEvaluator:
         Returns:
             List of evaluation results in the same order as input.
         """
-        results = [None] * len(skills)
-        
-        with ThreadPoolExecutor(max_workers=self.config.max_workers) as executor:
-            future_to_idx = {
-                executor.submit(self.evaluate, skill): idx 
-                for idx, skill in enumerate(skills)
-            }
-            
+        results: List[Optional[Dict[str, Any]]] = [None] * len(skills)
+
+        max_workers = max(1, int(self.config.max_workers))
+        max_in_flight = max_workers * 2
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            it = iter(enumerate(skills))
+            in_flight: set = set()
+            future_to_idx: Dict[Any, int] = {}
+
+            def _submit_next() -> bool:
+                try:
+                    idx, skill = next(it)
+                except StopIteration:
+                    return False
+                fut = executor.submit(self.evaluate, skill)
+                in_flight.add(fut)
+                future_to_idx[fut] = idx
+                return True
+
+            for _ in range(min(max_in_flight, len(skills))):
+                _submit_next()
+
             with tqdm(total=len(skills), desc="Evaluating skills") as pbar:
-                for future in as_completed(future_to_idx):
-                    idx = future_to_idx[future]
-                    results[idx] = future.result()
-                    pbar.update(1)
-        
-        return results
+                try:
+                    while in_flight:
+                        done, pending = wait(in_flight, return_when=FIRST_COMPLETED)
+                        in_flight = set(pending)
+                        for fut in done:
+                            idx = future_to_idx.pop(fut)
+                            results[idx] = fut.result()
+                            pbar.update(1)
+                            if len(in_flight) < max_in_flight:
+                                _submit_next()
+                except KeyboardInterrupt:
+                    for fut in in_flight:
+                        fut.cancel()
+                    executor.shutdown(wait=False, cancel_futures=True)
+                    raise
+
+        return [r if r is not None else self._create_error_result("Missing result") for r in results]
     
     def evaluate_from_url(self, url: str, **kwargs) -> Dict[str, Any]:
         """Convenience helper: create and evaluate a skill from a URL."""
         skill, err = Skill.from_url(
-            url, self.downloader, self.config.cache_dir, **kwargs
+            url,
+            self.downloader,
+            self.config.cache_dir,
+            **kwargs
         )
         if err:
             return self._create_error_result(err)
@@ -896,9 +926,11 @@ if __name__ == '__main__':
     parser.add_argument('--output', required=True, help='Output JSONL file')
     parser.add_argument('--api-key', help='OpenAI API key')
     parser.add_argument('--base-url', help='OpenAI API base URL')
+    parser.add_argument('--github-token', help='GitHub token for downloading private repos or avoiding rate limits')
     parser.add_argument('--model', default='gpt-4o', help='Model name')
     parser.add_argument('--max-workers', type=int, default=5, help='Max workers')
     parser.add_argument('--cache-dir', default='skill_downloads', help='Cache directory')
+    parser.add_argument('--limit', type=int, default=-1, help='Limit number of input records to process (0 = all)')
     parser.add_argument('--run-scripts', action='store_true',
                         help='Execute python scripts under scripts/')
     parser.add_argument('--script-timeout', type=int, default=8,
@@ -917,15 +949,18 @@ if __name__ == '__main__':
     def _load_records(jsonl_path: str) -> List[Dict[str, Any]]:
         with open(jsonl_path, 'r', encoding='utf-8') as f:
             return [json.loads(line) for line in f if line.strip()]
-    
-    def _build_skills(
+
+    def _evaluate_records_streaming(
         records: List[Dict[str, Any]],
         evaluator: 'SkillEvaluator',
         config: EvaluatorConfig,
-    ) -> Tuple[List[Optional[Skill]], Dict[int, str]]:
-        skills: List[Optional[Skill]] = []
-        errors: Dict[int, str] = {}
-        for idx, rec in enumerate(records):
+    ) -> List[Dict[str, Any]]:
+        results: List[Optional[Dict[str, Any]]] = [None] * len(records)
+
+        max_workers = max(1, int(config.max_workers))
+        max_in_flight = max_workers * 2
+
+        def _run_one(idx: int, rec: Dict[str, Any]) -> Dict[str, Any]:
             if 'skill_url' in rec:
                 skill, err = Skill.from_url(
                     rec['skill_url'],
@@ -933,43 +968,61 @@ if __name__ == '__main__':
                     config.cache_dir,
                     name=rec.get('skill_name'),
                     description=rec.get('skill_description'),
-                    category=rec.get('category')
+                    category=rec.get('category'),
                 )
-            elif 'skill_path' in rec:
+                if err:
+                    return evaluator._create_error_result(err)
+                return evaluator.evaluate(skill)
+
+            if 'skill_path' in rec:
                 skill, err = Skill.from_path(
                     rec['skill_path'],
                     name=rec.get('skill_name'),
                     description=rec.get('skill_description'),
-                    category=rec.get('category')
+                    category=rec.get('category'),
                 )
-            else:
-                raise ValueError("Record must have 'skill_url' or 'skill_path'")
+                if err:
+                    return evaluator._create_error_result(err)
+                return evaluator.evaluate(skill)
 
-            if err:
-                errors[idx] = err
-                skills.append(None)
-            else:
-                skills.append(skill)
-        return skills, errors
+            return evaluator._create_error_result("Record must have 'skill_url' or 'skill_path'")
 
-    def _evaluate_records(
-        records: List[Dict[str, Any]],
-        evaluator: 'SkillEvaluator',
-        skills: List[Optional[Skill]],
-        errors: Dict[int, str],
-    ) -> List[Dict[str, Any]]:
-        skills_to_eval = [(idx, s) for idx, s in enumerate(skills) if s is not None]
-        idx_to_result: Dict[int, Dict[str, Any]] = {}
-        if skills_to_eval:
-            indices, valid_skills = zip(*skills_to_eval)
-            batch_results = evaluator.evaluate_batch(list(valid_skills))
-            idx_to_result = dict(zip(indices, batch_results))
-        return [
-            evaluator._create_error_result(errors[idx])
-            if idx in errors
-            else idx_to_result[idx]
-            for idx in range(len(records))
-        ]
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            it = iter(enumerate(records))
+            in_flight: set = set()
+            future_to_idx: Dict[Any, int] = {}
+
+            def _submit_next() -> bool:
+                try:
+                    idx, rec = next(it)
+                except StopIteration:
+                    return False
+                fut = executor.submit(_run_one, idx, rec)
+                in_flight.add(fut)
+                future_to_idx[fut] = idx
+                return True
+
+            for _ in range(min(max_in_flight, len(records))):
+                _submit_next()
+
+            with tqdm(total=len(records), desc="Downloading & evaluating") as pbar:
+                try:
+                    while in_flight:
+                        done, pending = wait(in_flight, return_when=FIRST_COMPLETED)
+                        in_flight = set(pending)
+                        for fut in done:
+                            idx = future_to_idx.pop(fut)
+                            results[idx] = fut.result()
+                            pbar.update(1)
+                            if len(in_flight) < max_in_flight:
+                                _submit_next()
+                except KeyboardInterrupt:
+                    for fut in in_flight:
+                        fut.cancel()
+                    executor.shutdown(wait=False, cancel_futures=True)
+                    raise
+
+        return [r if r is not None else evaluator._create_error_result("Missing result") for r in results]
     
     def _write_outputs(records: List[Dict[str, Any]], output_jsonl_path: str) -> str:
         with open(output_jsonl_path, 'w', encoding='utf-8') as f:
@@ -992,12 +1045,15 @@ if __name__ == '__main__':
         max_script_runs=args.max_script_runs,
         script_python=args.script_python,
         include_script_results=args.include_script_results,
-        max_script_output_chars=args.max_script_output_chars
+        max_script_output_chars=args.max_script_output_chars,
+        github_token=args.github_token or os.getenv('GITHUB_TOKEN'),
     )
     evaluator = SkillEvaluator(config)
     records = _load_records(args.input)
-    skills, download_errors = _build_skills(records, evaluator, config)
-    results = _evaluate_records(records, evaluator, skills, download_errors)
+    if args.limit and args.limit > 0:
+        records = records[: args.limit]
+
+    results = _evaluate_records_streaming(records, evaluator, config)
     for rec, result in zip(records, results):
         rec['evaluation'] = result
     json_path = _write_outputs(records, args.output)
