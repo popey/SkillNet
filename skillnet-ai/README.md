@@ -226,10 +226,10 @@ Download and install a skill directly from a GitHub repository subdirectory.
 
 ```bash
 # Download to the current directory
-skillnet download https://github.com/owner/repo/tree/main/skills/math_solver
+skillnet download https://github.com/anthropics/skills/tree/main/skills/algorithmic-art
 
 # Download to a specific target directory
-skillnet download https://github.com/owner/repo/tree/main/skills/math_solver -d ./my_agent/skills
+skillnet download https://github.com/anthropics/skills/tree/main/skills/algorithmic-art -d ./my_agent/skills
 
 # Download from a private repository
 skillnet download <private_url> --token <your_github_token>
@@ -270,7 +270,7 @@ export API_KEY=sk-xxxxx
 export BASE_URL= xxxxxx # Optional custom LLM base URL
 
 # Evaluate a remote skill via GitHub URL
-skillnet evaluate https://github.com/owner/repo/tree/main/skills/web_search
+skillnet evaluate https://github.com/anthropics/skills/tree/main/skills/algorithmic-art
 
 # Evaluate a local skill directory
 skillnet evaluate ./my_skills/web_search
