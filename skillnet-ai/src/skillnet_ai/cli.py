@@ -133,14 +133,15 @@ def download(
             table.add_row("[bold cyan]Location:[/bold cyan]", installed_path)
             
             console.print(table)
-            console.print(f"\n[green]✓ {folder_name} is ready to use.[/green]")
+            console.print(f"\n[green]✅ {folder_name} is ready to use.[/green]")
         else:
             # Failure (Logic handled inside class, but we catch the None return)
-            console.print("[bold red]Download Failed.[/bold red]")
+            console.print("[bold red]❌ Download Failed.[/bold red]")
             console.print("Possible reasons:")
-            console.print("1. The URL format is incorrect (must point to a specific folder, not just the repo root).")
-            console.print("2. The repository is private and no token was provided.")
-            console.print("3. GitHub API rate limits exceeded (try providing a token).")
+            console.print("1. Please check your network settings and ensure connection to GitHub is working properly.")
+            console.print("2. The URL format is incorrect (must point to a specific skill folder, not just the repo root).")
+            console.print("3. The repository is private and no token was provided.")
+            console.print("4. GitHub API rate limits exceeded (try providing a token).")
             raise typer.Exit(code=1)
 
     except Exception as e:
