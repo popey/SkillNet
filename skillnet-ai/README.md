@@ -239,12 +239,25 @@ skillnet download <private_url> --token <your_github_token>
 
 Generate structured Skill Packages from various sources using LLMs.
 
+**Linux/macOS:**
+
 ```bash
 # Requirement: Ensure API_KEY is set in your environment variables.
 export API_KEY=sk-xxxxx
-export BASE_URL= xxxxxx # Optional custom LLM base URL
+export BASE_URL=xxxxxx  # Optional custom LLM base URL
+```
 
+**Windows PowerShell:**
 
+```powershell
+# Requirement: Ensure API_KEY is set in your environment variables.
+$env:API_KEY = "sk-xxxxx"
+$env:BASE_URL = "xxxxxx"  # Optional custom LLM base URL
+```
+
+**Usage Examples:**
+
+```bash
 # From a trajectory file
 skillnet create ./logs/trajectory.txt -d ./generated_skills
 
@@ -264,11 +277,26 @@ skillnet create --office report.pdf --model gpt-4o
 ### 4. Evaluate Skills (`evaluate`)
 Generate a comprehensive quality report (Safety, Completeness, Executability, Modifiability, Cost Awareness) for a skill.
 
+**Linux/macOS:**
+
 ```bash
 # Requirement: Ensure API_KEY is set in your environment variables.
 export API_KEY=sk-xxxxx
-export BASE_URL= xxxxxx # Optional custom LLM base URL
+export BASE_URL=xxxxxx  # Optional custom LLM base URL
+```
 
+**Windows PowerShell:**
+
+```powershell
+# Requirement: Ensure API_KEY is set in your environment variables.
+$env:API_KEY = "sk-xxxxx"
+$env:BASE_URL = "xxxxxx"  # Optional custom LLM base URL
+```
+
+**Usage Examples:**
+
+```bash
+# Requirement: Ensure API_KEY is set in your environment variables.
 # Evaluate a remote skill via GitHub URL
 skillnet evaluate https://github.com/anthropics/skills/tree/main/skills/algorithmic-art
 
@@ -282,12 +310,25 @@ skillnet evaluate ./my_skills/tool --category "Development" --model gpt-4o
 ### 5. Analyze Relationships (`analyze`)
 Scan a directory of skills to analyze their connections using AI.
 
+**Linux/macOS:**
 
 ```bash
 # Requirement: Ensure API_KEY is set in your environment variables.
 export API_KEY=sk-xxxxx
-export BASE_URL= xxxxxx # Optional custom LLM base URL
+export BASE_URL=xxxxxx  # Optional custom LLM base URL
+```
 
+**Windows PowerShell:**
+
+```powershell
+# Requirement: Ensure API_KEY is set in your environment variables.
+$env:API_KEY = "sk-xxxxx"
+$env:BASE_URL = "xxxxxx"  # Optional custom LLM base URL
+```
+
+**Usage Examples:**
+
+```bash
 # Analyze a directory containing multiple skill folders
 skillnet analyze ./my_agent_skills
 
