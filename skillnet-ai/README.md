@@ -2,7 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/skillnet-ai.svg)](https://badge.fury.io/py/skillnet-ai)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 
 **skillnet-ai** is the official Python Toolkit for interacting with the SkillNet platform. It allows AI Agents to **Create**, **Evaluate** and **Organize** AI skills at scale. It functions seamlessly as both a powerful Python Library and a feature-rich Command Line Interface (CLI).
 
@@ -43,9 +43,9 @@ from skillnet_ai import SkillNetClient
 
 # Initialize with optional credentials
 client = SkillNetClient(
-    api_key="sk-...",       # Required for AI Search, Creation, and Evaluation
-    base_url="...",         # Optional custom LLM base URL
-    github_token="ghp-..."  # Optional, for private repos or higher rate limits
+    api_key="sk-...",       # Required for Create, Evaluate, and Analyze functions
+    # base_url="...",         # Optional custom LLM base URL
+    # github_token="ghp-..."  # Optional, for private repos or higher rate limits
 )
 ```
 
@@ -54,7 +54,7 @@ Perform keywords match or semantic searches to find skills.
 
 ```python
 # 1. Standard Keywords Match
-results = client.search(q="pdf tool")
+results = client.search(q="pdf")
 
 # 2. Semantic Search
 results = client.search(q="Help me analyze financial PDF reports", mode="vector")
@@ -158,7 +158,7 @@ Assess the Safety, Completeness, Executability, Modifiability and Cost-Aware of 
 # target_skill = "./my_skills/web_search"
 
 # Evaluate from GitHub URL (uses github_token if provided during initialization)
-target_skill = "https://github.com/microsoft/autogen/tree/main/samples/tools/web_search"
+target_skill = "https://github.com/anthropics/skills/tree/main/skills/algorithmic-art"
 
 result = client.evaluate(target=target_skill)
 print(f"Evaluation Result: {result}")
@@ -195,10 +195,10 @@ Search the registry using keywords match or semantic search.
 
 ```bash
 # Basic keywords match
-skillnet search "pdf extraction"
+skillnet search "pdf"
 
 # Semantic/Vector search (finds skills by meaning)
-skillnet search "tools for reading financial documents" --mode vector --threshold 0.85
+skillnet search "Help me analyze financial PDF reports" --mode vector --threshold 0.85
 
 # Filter by category and sort results
 skillnet search "visualization" --category "Development" --sort-by stars --limit 10
@@ -226,10 +226,10 @@ Download and install a skill directly from a GitHub repository subdirectory.
 
 ```bash
 # Download to the current directory
-skillnet download https://github.com/owner/repo/tree/main/skills/math_solver
+skillnet download https://github.com/anthropics/skills/tree/main/skills/algorithmic-art
 
 # Download to a specific target directory
-skillnet download https://github.com/owner/repo/tree/main/skills/math_solver -d ./my_agent/skills
+skillnet download https://github.com/anthropics/skills/tree/main/skills/algorithmic-art -d ./my_agent/skills
 
 # Download from a private repository
 skillnet download <private_url> --token <your_github_token>
@@ -239,7 +239,23 @@ skillnet download <private_url> --token <your_github_token>
 
 Generate structured Skill Packages from various sources using LLMs.
 
-Requirement: Ensure API_KEY is set in your environment variables.
+**Linux/macOS:**
+
+```bash
+# Requirement: Ensure API_KEY is set in your environment variables.
+export API_KEY=sk-xxxxx
+export BASE_URL=xxxxxx  # Optional custom LLM base URL
+```
+
+**Windows PowerShell:**
+
+```powershell
+# Requirement: Ensure API_KEY is set in your environment variables.
+$env:API_KEY = "sk-xxxxx"
+$env:BASE_URL = "xxxxxx"  # Optional custom LLM base URL
+```
+
+**Usage Examples:**
 
 ```bash
 # From a trajectory file
@@ -261,11 +277,28 @@ skillnet create --office report.pdf --model gpt-4o
 ### 4. Evaluate Skills (`evaluate`)
 Generate a comprehensive quality report (Safety, Completeness, Executability, Modifiability, Cost Awareness) for a skill.
 
-Requirement: Ensure API_KEY is set in your environment variables.
+**Linux/macOS:**
 
 ```bash
+# Requirement: Ensure API_KEY is set in your environment variables.
+export API_KEY=sk-xxxxx
+export BASE_URL=xxxxxx  # Optional custom LLM base URL
+```
+
+**Windows PowerShell:**
+
+```powershell
+# Requirement: Ensure API_KEY is set in your environment variables.
+$env:API_KEY = "sk-xxxxx"
+$env:BASE_URL = "xxxxxx"  # Optional custom LLM base URL
+```
+
+**Usage Examples:**
+
+```bash
+# Requirement: Ensure API_KEY is set in your environment variables.
 # Evaluate a remote skill via GitHub URL
-skillnet evaluate https://github.com/owner/repo/tree/main/skills/web_search
+skillnet evaluate https://github.com/anthropics/skills/tree/main/skills/algorithmic-art
 
 # Evaluate a local skill directory
 skillnet evaluate ./my_skills/web_search
@@ -277,7 +310,23 @@ skillnet evaluate ./my_skills/tool --category "Development" --model gpt-4o
 ### 5. Analyze Relationships (`analyze`)
 Scan a directory of skills to analyze their connections using AI.
 
-Requirement: Ensure API_KEY is set in your environment variables.
+**Linux/macOS:**
+
+```bash
+# Requirement: Ensure API_KEY is set in your environment variables.
+export API_KEY=sk-xxxxx
+export BASE_URL=xxxxxx  # Optional custom LLM base URL
+```
+
+**Windows PowerShell:**
+
+```powershell
+# Requirement: Ensure API_KEY is set in your environment variables.
+$env:API_KEY = "sk-xxxxx"
+$env:BASE_URL = "xxxxxx"  # Optional custom LLM base URL
+```
+
+**Usage Examples:**
 
 ```bash
 # Analyze a directory containing multiple skill folders
@@ -319,10 +368,11 @@ skill-name/
 
 ## 🗺 Roadmap
 
-- [x] Keywords Match & Semantic Search
-- [x] Skill Installer
-- [x] Skill Creator (Local File & GitHub Repository)
-- [x] Skill Evaluation & Scoring
+- ✅ Keyword Match & Semantic Search
+- ✅ Skill Installer
+- ✅ Skill Creator (Local File & GitHub Repository)
+- ✅ Skill Evaluation & Scoring
+- ✅ Skill Relationship Analysis
 
 ---
 

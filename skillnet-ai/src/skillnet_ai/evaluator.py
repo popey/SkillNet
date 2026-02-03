@@ -28,9 +28,9 @@ class EvaluatorConfig:
     api_key: str
     base_url: str
     model: str
-    cache_dir: str
     max_workers: int = 5
     temperature: float = 0.3
+    cache_dir: str = "./evaluate_cache_dir"
     run_scripts: bool = False
     script_timeout_sec: int = 8
     max_script_runs: int = 5
