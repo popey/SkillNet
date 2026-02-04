@@ -30,6 +30,8 @@
 
 SkillNet is an open infrastructure for creating, evaluating, and organizing AI skills at scale.
 
+![](images/graph.gif)
+
 ## 🚀 Features
 
 - **🔍 Search**: Find skills using keywords match or semantic search.
