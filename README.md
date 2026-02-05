@@ -120,7 +120,10 @@ curl -X GET "http://api-skillnet.openkg.cn/v1/search?q=reading%20charts&mode=vec
 **skillnet-ai** is the official Python Toolkit. It functions seamlessly as both a library and a CLI to **Create**, **Evaluate**, and **Organize** skills.
 
 ### 🎬 Quick Start Demo
-<video src="images/demo.mp4" width="100%" controls> Your browser does not support the video. </video>
+
+<video src="https://github.com/zjunlp/SkillNet/raw/main/images/demo.mp4" width="100%" controls>
+  <p>Your browser does not support the video tag. You can <a href="https://github.com/zjunlp/SkillNet/raw/main/images/demo.mp4">download the video here</a>.</p>
+</video>
 
 ### 📥 Installation
 
@@ -428,7 +431,7 @@ To demonstrate the power of SkillNet, we provide a complete example of a Scienti
 
 <div align="center"> <img src="images/science.gif" width="100%" alt="Scientific Discovery Demo"> </div>
 
-👉 **[Try the Interactive Demo (Website)](http://skillnet.openkg.cn/)**
+👉 **[Try the Interactive Demo (Website: Scenarios->Science)](http://skillnet.openkg.cn/)**
 
 ### 🧬 Workflow Lifecycle
 - Task Definition: User provides a goal: "Analyze scRNA-seq data to find cancer targets."
