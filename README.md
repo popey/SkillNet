@@ -118,6 +118,9 @@ curl -X GET "http://api-skillnet.openkg.cn/v1/search?q=reading%20charts&mode=vec
 
 **skillnet-ai** is the official Python Toolkit. It functions seamlessly as both a library and a CLI to **Create**, **Evaluate**, and **Organize** skills.
 
+### 🎬 Quick Start Demo
+<video src="images/demo.mp4" width="100%" controls> Your browser does not support the video. </video>
+
 ### 📥 Installation
 
 ```bash
