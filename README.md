@@ -121,9 +121,7 @@ curl -X GET "http://api-skillnet.openkg.cn/v1/search?q=reading%20charts&mode=vec
 
 ### 🎬 Quick Start Demo
 
-<video src="https://github.com/zjunlp/SkillNet/raw/main/images/demo.mp4" width="100%" controls>
-  <p>Your browser does not support the video tag. You can <a href="https://github.com/zjunlp/SkillNet/raw/main/images/demo.mp4">download the video here</a>.</p>
-</video>
+https://github.com/user-attachments/assets/f4413924-6ba2-4e8c-9003-ce143e4ad042
 
 ### 📥 Installation
 
