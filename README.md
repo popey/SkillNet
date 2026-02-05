@@ -21,6 +21,7 @@
   - [📥 Installation](#-installation)
   - [🛠 Python SDK Usage](#-usage-python-sdk)
   - [💻 CLI Usage](#-cli-usage)
+- [🔬 Example Use Case](#-example-use-case)
 - [📂 Skill Structure](#-skill-structure)
 - [🗺 Roadmap & Contributing](#-roadmap)
 
@@ -418,6 +419,28 @@ export BASE_URL="https://xxxxx"  # Optional
 $env:API_KEY = "your_api_key"
 $env:BASE_URL = "https://xxxxx"  # Optional
 ```
+
+---
+
+## 🔬 Example Use Case
+
+To demonstrate the power of SkillNet, we provide a complete example of a Scientific Discovery. This scenario demonstrates how an AI Agent leverages the SkillNet infrastructure to autonomously plan and execute a complex scientific mission—from raw data processing to clinical validation.
+
+<div align="center"> <img src="images/science.gif" width="100%" alt="Scientific Discovery Demo"> </div>
+
+👉 **[Try the Interactive Demo (Website)](http://skillnet.openkg.cn/)**
+
+### 🧬 Workflow Lifecycle
+- Task Definition: User provides a goal: "Analyze scRNA-seq data to find cancer targets."
+- AI Planning: The Agent decomposes the mission into logical steps (Data $\rightarrow$ Mechanism $\rightarrow$ Validation $\rightarrow$ Report).
+- Skill Discovery: The Agent uses client.search() to find specialized skills like cellxgene-census and kegg-database.
+- Acquisition & Orchestration: Skills are downloaded, quality-evaluated via client.evaluate(), and mapped for dependencies.
+- Execution: The skills are executed sequentially to generate a final discovery report.
+
+### 🚀 Try it yourself
+You can explore the full implementation, in our interactive Jupyter Notebook:
+
+👉 **[View Scientific Discovery Demo (Notebook)](https://github.com/zjunlp/SkillNet/blob/main/examples/scientific_workflow_demo.ipynb)**
 
 ---
 
