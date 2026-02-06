@@ -265,7 +265,8 @@ The CLI is powered by `Typer` and `Rich` for a beautiful terminal experience.
 | **`search`**   | Search skills  | `skillnet search "data viz" --mode vector`   |
 | **`download`** | Install skill  | `skillnet download <github_url> -d ./skills` |
 | **`create`**   | Create skill   | `skillnet create log.txt --model gpt-4o`     |
-| **`evaluate`** | Evaluate skill | `skillnet evaluate ./my_tool`                |
+| **`evaluate`** | Evaluate skill quality| `skillnet evaluate ./my_tool`                |
+| **`analyze`** | Analyze skill relations | `skillnet analyze ./my_agent_skills`                |
 
 > **Tip:** Use `skillnet [command] --help` to see all available options (e.g., thresholds, sorting).
 
