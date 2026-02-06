@@ -18,6 +18,7 @@
 - [🚀 Features](#-features)
 - [🌐 API Access](#-api-access)
 - [🐍 Python Toolkit (`skillnet-ai`)](#-python-toolkit-skillnet-ai)
+  - [🎬 Quick Start Demo](#-quick-start-demo)
   - [📥 Installation](#-installation)
   - [🛠 Python SDK Usage](#-usage-python-sdk)
   - [💻 CLI Usage](#-cli-usage)
