@@ -17,7 +17,7 @@
   - GitHub repositories
   - Office documents (PDF, PPT, Word)
   - Direct text prompts
-- **📊 Evaluation**: Evaluate and score skills for quality assurance (Safety, Completeness, Excutability, Modifiability, Cost-Aware).
+- **📊 Evaluation**: Evaluate and score skills for quality assurance (Safety, Completeness, Excutability, Maintainability, Cost-Awareness).
 - **🕸️ Relationship Analysis**: Automatically map the connections between skills in your local library, identifying structural relationships between skills (similar_to, belong_to, compose_with, depend_on).
 
 ---
@@ -151,7 +151,7 @@ created_paths = client.create(
 ```
 
 ### 5. Skill Evaluation
-Assess the Safety, Completeness, Executability, Modifiability and Cost-Aware of a skill. Supports both remote GitHub URLs and local directories.
+Assess the Safety, Completeness, Executability, Maintainability and Cost-Awareness of a skill. Supports both remote GitHub URLs and local directories.
 
 ```python
 # Evaluate from local directory
@@ -275,7 +275,7 @@ skillnet create --office report.pdf --model gpt-4o
 ```
 
 ### 4. Evaluate Skills (`evaluate`)
-Generate a comprehensive quality report (Safety, Completeness, Executability, Modifiability, Cost Awareness) for a skill.
+Generate a comprehensive quality report (Safety, Completeness, Executability, Maintainability, Cost-Awareness) for a skill.
 
 **Linux/macOS:**
 
