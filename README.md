@@ -152,10 +152,10 @@ Perform keywords match or semantic searches to find skills. (See [Parameter Refe
 
 ```python
 # 1. Standard Keywords Match
-results = client.search(q="pdf")
+results = client.search(q="pdf", mode="keyword", limit=10, min_stars=5, sort_by="stars")
 
 # 2. Semantic Search
-results = client.search(q="Help me analyze financial PDF reports", mode="vector")
+results = client.search(q="Help me analyze financial PDF reports", mode="vector", threshold=0.85)
 
 if results:
     top_skill = results[0]
@@ -232,7 +232,7 @@ Assess the Safety, Completeness, Executability, Modifiability and Cost-Aware of 
 # Evaluate from GitHub URL (uses github_token if provided during initialization)
 target_skill = "https://github.com/anthropics/skills/tree/main/skills/algorithmic-art"
 
-result = client.evaluate(target=target_skill)
+result = client.evaluate(target=target_skill, model="gpt-4o", cache_dir="./evaluate_cache_dir")
 print(f"Evaluation Result: {result}")
 ```
 
@@ -246,7 +246,7 @@ skills_directory = "./my_agent_skills"
 
 # Analyze relationships between skills
 # This will also save a 'relationships.json' in the directory by default
-relationships = client.analyze(skills_dir=skills_directory)
+relationships = client.analyze(skills_dir=skills_directory, save_to_file=True, model="gpt-4o")
 
 # Display the relationships
 for rel in relationships:
