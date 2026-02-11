@@ -46,6 +46,12 @@ SkillNet is an open infrastructure for creating, evaluating, and organizing AI s
 - **📊 Evaluation**: Evaluate and score skills for quality assurance (Safety, Completeness, Excutability, Maintainability, Cost-Awareness).
 - **🕸️ Relationship Analysis**: Automatically map the connections between skills in your local library, identifying structural relationships between skills (similar_to, belong_to, compose_with, depend_on).
 
+## 🎬 Quick Start Demo
+
+https://github.com/user-attachments/assets/9f9d35b0-36fd-4d7d-a072-39afa380b241
+
+
+
 # 🌐 API Access
 
 SkillNet provides a public API to search skills. Support both keywords match and semantic search.
@@ -119,10 +125,6 @@ curl -X GET "http://api-skillnet.openkg.cn/v1/search?q=reading%20charts&mode=vec
 # 🐍 Python Toolkit (`skillnet-ai`)
 
 **skillnet-ai** is the official Python Toolkit. It functions seamlessly as both a library and a CLI to **Create**, **Evaluate**, and **Organize** skills.
-
-### 🎬 Quick Start Demo
-
-https://github.com/user-attachments/assets/f4413924-6ba2-4e8c-9003-ce143e4ad042
 
 ### 📥 Installation
 
