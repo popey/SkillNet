@@ -39,7 +39,6 @@ def search(
 
         # Visual feedback during API call
         with console.status(f"[bold green]Searching SkillNet ({mode} mode)..."):
-            # Assuming searcher.search returns List[SkillModel]
             results = searcher.search(
                 q=q,
                 mode=mode,  # type: ignore
@@ -64,14 +63,10 @@ def search(
         table.add_column("Category", style="magenta")
         table.add_column("Stars", justify="right", style="green")
         table.add_column("Description", style="white")
+        table.add_column("Evaluation", justify="left", style="yellow")
         table.add_column("URL", style="dim blue", overflow="fold") # Added URL column
 
-        # Note: 'score' was removed because SkillModel definition does not have a 'score' field.
-        # If your API returns a score for vector search, you must add it to SkillModel first.
-
         for item in results:
-            # 1. Access fields using Pydantic dot notation
-            # 2. Use correct field names from SkillModel (e.g. skill_description)
             name = item.skill_name
             cat = item.category if item.category else "N/A"
             stars = str(item.stars)
@@ -80,6 +75,20 @@ def search(
 
             # Truncate long descriptions for display
             short_desc = (desc[:100] + '...') if len(desc) > 100 else desc
+
+            eval_lines = []
+            if item.evaluation and isinstance(item.evaluation, dict):
+                metrics = {
+                    "safety": "Safety",
+                    "executability": "Cxecutability",
+                    "completeness": "Completeness",
+                    "maintainability": "Maintainability",
+                    "cost_awareness": "Cost-Awareness"
+                }         
+                for key, display_name in metrics.items():
+                    level = item.evaluation.get(key, {}).get("level", "N/A")
+                    eval_lines.append(f"{display_name}: {level}") 
+            eval_full_str = "\n".join(eval_lines) if eval_lines else "N/A"
             
             # Prepare row data
             row_data = [
@@ -87,6 +96,7 @@ def search(
                 cat,
                 stars,
                 short_desc,
+                eval_full_str,
                 url
             ]
 
@@ -457,7 +467,7 @@ def _display_evaluation_report(target_name: str, data: dict):
     console.print(f"\n[bold underline]Evaluation Report: {os.path.basename(target_name)}[/bold underline]\n")
 
     # Dimensions to display
-    dimensions = ["safety", "completeness", "executability", "modifiability", "cost_awareness"]
+    dimensions = ["safety", "completeness", "executability", "maintainability", "cost_awareness"]
     
     # Create a grid of panels
     panels = []

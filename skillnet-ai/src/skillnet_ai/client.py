@@ -64,7 +64,7 @@ class SkillNetClient:
             threshold: Similarity threshold (vector mode only).
 
         Returns:
-            List[SkillModel]: A list of skill objects found.
+            A list of skill objects found.
         """
         try:
             searcher = SkillNetSearcher()

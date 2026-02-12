@@ -908,7 +908,7 @@ class SkillEvaluator:
             "safety": error_item,
             "completeness": error_item,
             "executability": error_item,
-            "modifiability": error_item,
+            "maintainability": error_item,
             "cost_awareness": error_item
         }
 

@@ -208,7 +208,7 @@ Evaluation dimensions and how to judge them (apply these rules even if the overa
    - When reading formulas and code snippets, audit them line-by-line in the context of their target language and typical runtime environment; if you find subtle traps or inconsistencies that would mislead an implementer or cause incorrect behavior, choose a lower (more conservative) executability rating.
    - Do not treat a trivially successful script (e.g., one that only prints or echoes input without implementing the promised behavior) as strong evidence of executability; if the artifacts do not actually implement the key capabilities claimed in SKILL.md, executability should be at most "Average" and often "Poor".
 
-4) Modifiability
+4) Maintainability
    Assess how easy it would be to adjust/reuse/compose this Skill as described.
    Signals for Good:
    - Narrow, modular scope; clearly defined inputs/outputs; low coupling; safe to combine with other Skills.
@@ -217,8 +217,8 @@ Evaluation dimensions and how to judge them (apply these rules even if the overa
    - Some reusable parts, but unclear boundaries or assumptions; moderate coupling to a specific repo/tooling.
    Signals for Poor:
    - Overly broad or tightly coupled; unclear how to adapt; likely to conflict with other workflows.
-   Additional guidance for Modifiability:
-   - If the described capabilities are broad but the provided implementation is only a thin or trivial placeholder with no clear structure for where real logic should go, do not rate modifiability as "Good"; prefer "Average" because significant work is required to build the promised behavior safely and predictably.
+   Additional guidance for Maintainability:
+   - If the described capabilities are broad but the provided implementation is only a thin or trivial placeholder with no clear structure for where real logic should go, do not rate maintainability as "Good"; prefer "Average" because significant work is required to build the promised behavior safely and predictably.
 
 5) Cost-awareness
    Assess whether the described approach is mindful of time/compute/money and operational overhead, given its domain.
@@ -248,7 +248,7 @@ Example 1: BMI calculator Skill (health-related, wrong formula, no disclaimer)
     - Reason: The core formula is incorrect in the target language and there is no input validation or handling of special cases, so critical detail is missing for reliable use.
   - executability: "Poor"
     - Reason: Following the formula as written in Python would not produce correct results, and there are no real scripts or commands to execute successfully.
-  - modifiability: "Average"
+  - maintainability: "Average"
     - Reason: Inputs and outputs (height, weight, BMI category) are conceptually clear, but the incorrect example and lack of validation make safe modification non-trivial.
   - cost_awareness: "Good"
     - Reason: The task is a simple numeric calculation with no heavy data or external services, so it is inherently low-cost.
@@ -265,7 +265,7 @@ Example 2: Quick task helper Skill (broad promise, placeholder implementation)
     - Reason: The Skill promises a wide range of behaviors but does not specify formats, transformation rules, or error handling, and the implementation does not cover the described capabilities.
   - executability: "Poor"
     - Reason: Although the script technically runs, it is only a trivial placeholder; an agent following this Skill would not achieve the advertised conversions or edits.
-  - modifiability: "Average"
+  - maintainability: "Average"
     - Reason: The script is small and easy to edit, but there is no structure or guidance on where to implement the promised behaviors, so substantial work is needed to make it truly useful.
   - cost_awareness: "Good"
     - Reason: The intended tasks are quick, lightweight transformations with no indication of heavy computation or large-scale processing.
@@ -282,7 +282,7 @@ Example 3: Well-scoped document summarizer Skill (mostly solid)
     - Reason: Inputs, steps, and limits are clearly specified, including handling for unsupported types and size bounds.
   - executability: "Good"
     - Reason: The workflow is concrete and can be followed using standard tools (e.g., text reading and summarization) without ambiguity.
-  - modifiability: "Good"
+  - maintainability: "Good"
     - Reason: The scope is narrow and modular, with clear points where chunking strategy or summary length can be adjusted.
   - cost_awareness: "Good"
     - Reason: The Skill explicitly caps document size and describes a strategy (chunking) that avoids unbounded compute.
@@ -308,14 +308,14 @@ Example 5: Overpowered deployment cleaner Skill (risky but technically executabl
     - Reason: The main steps are described, but it does not clearly document rollback procedures, scoping rules, or safe usage patterns.
   - executability: "Good"
     - Reason: The scripts and commands are concrete and executable; script_execution results demonstrate that they run and perform real work.
-  - modifiability: "Average"
+  - maintainability: "Average"
     - Reason: While the scripts can be edited, the tight coupling to specific infrastructure and lack of configuration points make safe adaptation non-trivial.
   - cost_awareness: "Average"
     - Reason: The Skill does not appear to be compute-heavy, but it also does not explicitly address operational risk or cost; it neither optimizes nor clearly wastes resources.
 
 Output requirements:
 - Return STRICT JSON only (no prose, no markdown).
-- Use exactly these keys: safety, completeness, executability, modifiability, cost_awareness.
+- Use exactly these keys: safety, completeness, executability, maintainability, cost_awareness.
 - Each key must contain: level (Good/Average/Poor) and reason (1-2 sentences).
 - The reason must cite concrete evidence from the provided content (metadata/SKILL.md/scripts), not imagined details.
 
@@ -333,7 +333,7 @@ Return the evaluation results in JSON format exactly like this:
     "level": "Good/Average/Poor",
     "reason": "Reason for the rating (1-2 sentences)"
   }},
-  "modifiability": {{
+  "maintainability": {{
     "level": "Good/Average/Poor",
     "reason": "Reason for the rating (1-2 sentences)"
   }},

@@ -1,4 +1,4 @@
-from typing import Optional, List, Literal
+from typing import Optional, List, Literal, Dict, Any
 from pydantic import BaseModel, Field
 
 class SkillModel(BaseModel):
@@ -9,6 +9,7 @@ class SkillModel(BaseModel):
     stars: int = 0
     skill_url: Optional[str] = None
     category: Optional[str] = None
+    evaluation: Optional[Dict[str, Any]] = None
 
 class MetaModel(BaseModel):
     """
