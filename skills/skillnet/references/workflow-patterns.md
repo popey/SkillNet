@@ -14,7 +14,7 @@ Recipes for common scenarios. Each pattern shows the trigger signal, the recomme
 2. `skillnet search "kubernetes helm" --limit 5`
 3. If 0 results → retry: `skillnet search "kubernetes deployment" --mode vector --threshold 0.65`
 4. Review results — check evaluation scores (prefer Good Safety + Good Executability)
-5. `skillnet download "<top-result-url>" -d ~/.openclaw/skills`
+5. `skillnet download "<top-result-url>" -d ~/.openclaw/workspace/skills`
 6. Read the downloaded SKILL.md — extract patterns, constraints, and tool choices relevant to your task
 7. If the skill only partially matches, use what's useful and fill gaps yourself
 
@@ -28,9 +28,9 @@ Recipes for common scenarios. Each pattern shows the trigger signal, the recomme
 
 **Steps**:
 
-1. `skillnet create --github https://github.com/owner/repo --output-dir ~/.openclaw/skills`
+1. `skillnet create --github https://github.com/owner/repo --output-dir ~/.openclaw/workspace/skills`
 2. Wait for creation (analyses README, source structure, key files)
-3. `skillnet evaluate ~/.openclaw/skills/<generated-name>`
+3. `skillnet evaluate ~/.openclaw/workspace/skills/<generated-name>`
 4. If evaluation shows "Poor" on any dimension → warn the user, suggest manual review
 5. Read the generated SKILL.md — now you understand the project's architecture, patterns, and usage
 
@@ -55,8 +55,8 @@ Routine tasks, minor fixes, or straightforward work → do NOT create.
 1. If no `API_KEY` → use the standard ask text to request one
 2. Formulate what you learned as a concise description
 3. **MUST use `skillnet create`** — never manually write a SKILL.md
-4. `skillnet create --prompt "A skill that teaches: [lesson learned]. Use when: [trigger conditions]. Key steps: [solution outline]" --output-dir ~/.openclaw/skills`
-5. `skillnet evaluate ~/.openclaw/skills/<new-skill>`
+4. `skillnet create --prompt "A skill that teaches: [lesson learned]. Use when: [trigger conditions]. Key steps: [solution outline]" --output-dir ~/.openclaw/workspace/skills`
+5. `skillnet evaluate ~/.openclaw/workspace/skills/<new-skill>`
 
 **Outcome**: Knowledge is preserved via SkillNet's standardized format. If user declined the key, do NOT hand-write a SKILL.md as workaround — either use `skillnet create` or skip.
 
@@ -87,13 +87,13 @@ Routine tasks, minor fixes, or straightforward work → do NOT create.
 
 **Steps**:
 
-1. `skillnet analyze ~/.openclaw/skills`
+1. `skillnet analyze ~/.openclaw/workspace/skills`
 2. Review `relationships.json`:
    - `similar_to` pairs → consider merging (keep the one with higher evaluation scores)
    - `depend_on` chains → ensure dependencies are all installed
    - `belong_to` hierarchies → organize into subdirectories if helpful
 3. For skills with unknown quality → `skillnet evaluate <skill-path>`
-4. Remove or archive skills scoring "Poor" on Safety or multiple "Poor" dimensions
+4. Remove or archive skills scoring "Poor" on Safety or multiple "Poor" dimensions (use safe removal: `mv <skill> ~/.openclaw/trash/`)
 
 **Outcome**: A lean, high-quality skill library with understood relationships.
 
@@ -106,7 +106,7 @@ Routine tasks, minor fixes, or straightforward work → do NOT create.
 **Steps**:
 
 1. Save the document to a local path if not already on disk
-2. `skillnet create --office /path/to/document.pdf --output-dir ~/.openclaw/skills`
+2. `skillnet create --office /path/to/document.pdf --output-dir ~/.openclaw/workspace/skills`
 3. Evaluate the created skill
 4. Read SKILL.md to verify the knowledge was correctly extracted
 
@@ -116,12 +116,12 @@ Routine tasks, minor fixes, or straightforward work → do NOT create.
 
 ## Decision Matrix: Which SkillNet Feature to Use
 
-| Situation                            | Feature                   | Command                                        |
-| ------------------------------------ | ------------------------- | ---------------------------------------------- |
-| Need expertise in a new domain       | **search** + **download** | `skillnet search ... && skillnet download ...` |
-| User provides a GitHub repo to learn | **create** (github)       | `skillnet create --github <url>`               |
-| Finished a complex task with lessons | **create** (prompt)       | `skillnet create --prompt "..."`               |
-| User shares a knowledge document     | **create** (office)       | `skillnet create --office <file>`              |
-| User provides execution logs or data | **create** (trajectory)   | `skillnet create --trajectory <trajectory-file>` |
-| Unsure about a skill's quality       | **evaluate**              | `skillnet evaluate <path-or-url>`              |
-| Too many skills, need organization   | **analyze**               | `skillnet analyze <dir>`                       |
+| Situation                            | Feature                   | Command                                                           |
+| ------------------------------------ | ------------------------- | ----------------------------------------------------------------- |
+| Need expertise in a new domain       | **search** + **download** | `skillnet search ... && skillnet download ...`                    |
+| User provides a GitHub repo to learn | **create** (github)       | `skillnet create --github <url> -d ~/.openclaw/workspace/skills`  |
+| Finished a complex task with lessons | **create** (prompt)       | `skillnet create --prompt "..." -d ~/.openclaw/workspace/skills`  |
+| User shares a knowledge document     | **create** (office)       | `skillnet create --office <file> -d ~/.openclaw/workspace/skills` |
+| User provides execution logs or data | **create** (trajectory)   | `skillnet create <file> -d ~/.openclaw/workspace/skills`          |
+| Unsure about a skill's quality       | **evaluate**              | `skillnet evaluate <path-or-url>`                                 |
+| Too many skills, need organization   | **analyze**               | `skillnet analyze <dir>`                                          |

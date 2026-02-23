@@ -2,7 +2,9 @@
 
 ## REST API (Public, No Auth)
 
-**Base URL**: `http://api-skillnet.openkg.cn/v1`
+**Base URL**: `https://api-skillnet.openkg.cn/v1`
+
+> **Data handling**: The search API only sends your query string to return matching skills. No local files, credentials, or personal data are transmitted during search or download operations.
 
 ### `GET /search`
 
@@ -53,7 +55,7 @@
 
 ## CLI Commands
 
-Install: `pip install skillnet-ai` (provides `skillnet` command)
+Install: `pip install skillnet-ai` or `pipx install skillnet-ai` (provides `skillnet` command)
 
 ### `skillnet search`
 
@@ -83,7 +85,7 @@ Arguments:
 
 Options:
   -d, --target-dir TEXT         Local install directory  [default: .]
-  --token TEXT                  GitHub token override
+  -t, --token TEXT              GitHub token override
 ```
 
 ### `skillnet create`
@@ -205,3 +207,24 @@ Returns `List[Dict[str, Any]]` — relationship edges.
 | `API_KEY`      | LLM API key (OpenAI-compatible) | For create, evaluate, analyze |
 | `BASE_URL`     | Custom LLM endpoint             | No (defaults to OpenAI)       |
 | `GITHUB_TOKEN` | GitHub PAT for private repos    | No                            |
+
+## Security & Privacy
+
+### Credential Scope
+
+- **API_KEY**: Used exclusively for authenticating with the LLM endpoint (`BASE_URL`). It is never sent to the SkillNet API or any other third-party service.
+- **GITHUB_TOKEN**: Sent only to `api.github.com` (read-only `repo` scope sufficient). Never forwarded elsewhere.
+
+### Network Endpoints
+
+The CLI only contacts:
+
+- `api-skillnet.openkg.cn` — skill search/download (read-only, no auth)
+- `api.github.com` — repo access (only with GITHUB_TOKEN)
+- Your configured `BASE_URL` — LLM processing
+
+Set `BASE_URL` to a local endpoint (e.g., `http://127.0.0.1:8000/v1`) for air-gapped usage.
+
+### No Destructive Operations
+
+The CLI never executes file deletion commands. Skill cleanup should be performed manually using safe methods (e.g., moving to a backup directory).

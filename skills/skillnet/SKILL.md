@@ -20,25 +20,18 @@ metadata:
         "install":
           [
             {
-              "id": "script",
-              "kind": "shell",
-              "command": "bash {baseDir}/scripts/install_skillnet.sh",
-              "bins": ["skillnet"],
-              "label": "Auto-detect best method (recommended, handles PEP 668 + PATH)",
-            },
-            {
-              "id": "uv",
-              "kind": "shell",
-              "command": 'curl -LsSf https://astral.sh/uv/install.sh | sh && export PATH="$HOME/.local/bin:$PATH" && (uv pip install --system skillnet-ai 2>/dev/null || (uv venv $HOME/.local/share/skillnet/venv && VIRTUAL_ENV=$HOME/.local/share/skillnet/venv uv pip install skillnet-ai && mkdir -p $HOME/.local/bin && ln -sf $HOME/.local/share/skillnet/venv/bin/skillnet $HOME/.local/bin/skillnet))',
-              "bins": ["skillnet"],
-              "label": "Install skillnet-ai via uv (with venv fallback)",
-            },
-            {
               "id": "pipx",
               "kind": "shell",
               "command": "pipx install skillnet-ai",
               "bins": ["skillnet"],
-              "label": "Install skillnet-ai via pipx",
+              "label": "Install skillnet-ai via pipx (recommended, isolated environment)",
+            },
+            {
+              "id": "pip",
+              "kind": "shell",
+              "command": "pip install skillnet-ai",
+              "bins": ["skillnet"],
+              "label": "Install skillnet-ai via pip",
             },
           ],
       },
@@ -104,16 +97,16 @@ Download a skill and **immediately** load it into your current context:
 # Download to local skill library
 # <skill-url> must point to a specific skill subdirectory, e.g.:
 #   https://github.com/openclaw/openclaw/tree/main/skills/summarize
-skillnet download "<skill-url>" -d ~/.openclaw/skills
+skillnet download "<skill-url>" -d ~/.openclaw/workspace/skills
 
 # Read SKILL.md — the skill's core instructions (always read this first)
-cat ~/.openclaw/skills/<skill-name>/SKILL.md
+cat ~/.openclaw/workspace/skills/<skill-name>/SKILL.md
 
 # Read scripts and references relevant to current task
-ls ~/.openclaw/skills/<skill-name>/scripts/ 2>/dev/null
-cat ~/.openclaw/skills/<skill-name>/scripts/<relevant-script> 2>/dev/null
-ls ~/.openclaw/skills/<skill-name>/references/ 2>/dev/null
-cat ~/.openclaw/skills/<skill-name>/references/<relevant-file> 2>/dev/null
+ls ~/.openclaw/workspace/skills/<skill-name>/scripts/ 2>/dev/null
+cat ~/.openclaw/workspace/skills/<skill-name>/scripts/<relevant-script> 2>/dev/null
+ls ~/.openclaw/workspace/skills/<skill-name>/references/ 2>/dev/null
+cat ~/.openclaw/workspace/skills/<skill-name>/references/<relevant-file> 2>/dev/null
 ```
 
 No user permission needed to search, download, or load.
@@ -132,16 +125,16 @@ Apply does **not** mean blindly copy the entire skill. If the skill covers 80% o
 **Dedup check** — before downloading or creating, check for existing local skills:
 
 ```bash
-ls ~/.openclaw/skills/
-grep -rl "<keyword>" ~/.openclaw/skills/*/SKILL.md 2>/dev/null
+ls ~/.openclaw/workspace/skills/
+grep -rl "<keyword>" ~/.openclaw/workspace/skills/*/SKILL.md 2>/dev/null
 ```
 
-| Found                                 | Action                     |
-| ------------------------------------- | -------------------------- |
-| Same trigger + same solution          | Skip download              |
-| Same trigger + better solution        | Replace old                |
-| Overlapping domain, different problem | Keep both                  |
-| Outdated                              | `rm -rf` old → install new |
+| Found                                 | Action                   |
+| ------------------------------------- | ------------------------ |
+| Same trigger + same solution          | Skip download            |
+| Same trigger + better solution        | Replace old              |
+| Overlapping domain, different problem | Keep both                |
+| Outdated                              | Remove old → install new |
 
 ---
 
@@ -165,23 +158,23 @@ Four modes — auto-detected from input:
 ```bash
 # From GitHub repo
 skillnet create --github https://github.com/owner/repo \
-  --output-dir ~/.openclaw/skills
+  --output-dir ~/.openclaw/workspace/skills
 
 # From document (PDF/PPT/DOCX)
-skillnet create --office report.pdf --output-dir ~/.openclaw/skills
+skillnet create --office report.pdf --output-dir ~/.openclaw/workspace/skills
 
 # From execution trajectory / log
-skillnet create trajectory.txt --output-dir ~/.openclaw/skills
+skillnet create trajectory.txt --output-dir ~/.openclaw/workspace/skills
 
 # From natural-language description
 skillnet create --prompt "A skill for managing Docker Compose" \
-  --output-dir ~/.openclaw/skills
+  --output-dir ~/.openclaw/workspace/skills
 ```
 
 **Always evaluate after creating:**
 
 ```bash
-skillnet evaluate ~/.openclaw/skills/<new-skill>
+skillnet evaluate ~/.openclaw/workspace/skills/<new-skill>
 ```
 
 **Trigger → mode mapping:**
@@ -198,7 +191,7 @@ skillnet evaluate ~/.openclaw/skills/<new-skill>
 Requires `API_KEY`. Scores five dimensions (Good / Average / Poor): **Safety**, **Completeness**, **Executability**, **Maintainability**, **Cost-Awareness**.
 
 ```bash
-skillnet evaluate ~/.openclaw/skills/my-skill
+skillnet evaluate ~/.openclaw/workspace/skills/my-skill
 skillnet evaluate "https://github.com/owner/repo/tree/main/skills/foo"
 ```
 
@@ -209,7 +202,7 @@ skillnet evaluate "https://github.com/owner/repo/tree/main/skills/foo"
 Requires `API_KEY`. Detects: `similar_to`, `belong_to`, `compose_with`, `depend_on`.
 
 ```bash
-skillnet analyze ~/.openclaw/skills
+skillnet analyze ~/.openclaw/workspace/skills
 # → outputs relationships.json in the same directory
 ```
 
@@ -217,7 +210,7 @@ When skill count exceeds ~30, or when user asks to organize:
 
 ```bash
 # Generate full relationship report
-skillnet analyze ~/.openclaw/skills
+skillnet analyze ~/.openclaw/workspace/skills
 
 # Review relationships.json:
 #   similar_to pairs → compare & prune duplicates
@@ -225,11 +218,11 @@ skillnet analyze ~/.openclaw/skills
 #   belong_to → consider organizing into subdirectories
 
 # Evaluate and compare competing skills
-skillnet evaluate ~/.openclaw/skills/skill-a
-skillnet evaluate ~/.openclaw/skills/skill-b
+skillnet evaluate ~/.openclaw/workspace/skills/skill-a
+skillnet evaluate ~/.openclaw/workspace/skills/skill-b
 ```
 
-`skillnet analyze` only generates a report — it never modifies or deletes skills. Any cleanup actions (removing duplicates, pruning low-quality skills) require user confirmation before executing.
+`skillnet analyze` only generates a report — it never modifies or deletes skills. Any cleanup actions (removing duplicates, pruning low-quality skills) require user confirmation before executing. Use safe removal (e.g., `mv <skill> ~/.openclaw/trash/`) rather than permanent deletion.
 
 ---
 
@@ -237,13 +230,13 @@ skillnet evaluate ~/.openclaw/skills/skill-b
 
 During execution, if any of these occur, act immediately — do not wait for user instruction:
 
-| Trigger                                     | Action                                                                       |
-| ------------------------------------------- | ---------------------------------------------------------------------------- |
-| Encounter unfamiliar tool/framework/library | `skillnet search "<name>"` → download → read SKILL.md → extract useful parts |
-| User provides a GitHub URL                  | `skillnet create --github <url>` → evaluate → read SKILL.md → apply          |
-| User shares a PDF/DOCX/PPT                  | `skillnet create --office <file>` → evaluate → read SKILL.md → apply         |
-| User provides execution logs or data        | `skillnet create <file>` → evaluate → read SKILL.md → apply                  |
-| Task hits a wall, no idea how to proceed    | `skillnet search "<problem>" --mode vector` → check results                  |
+| Trigger                                     | Action                                                                                               |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Encounter unfamiliar tool/framework/library | `skillnet search "<name>"` → download → read SKILL.md → extract useful parts                         |
+| User provides a GitHub URL                  | `skillnet create --github <url> -d ~/.openclaw/workspace/skills` → evaluate → read SKILL.md → apply  |
+| User shares a PDF/DOCX/PPT                  | `skillnet create --office <file> -d ~/.openclaw/workspace/skills` → evaluate → read SKILL.md → apply |
+| User provides execution logs or data        | `skillnet create <file> -d ~/.openclaw/workspace/skills` → evaluate → read SKILL.md → apply          |
+| Task hits a wall, no idea how to proceed    | `skillnet search "<problem>" --mode vector` → check results                                          |
 
 **Pragmatic note**: In-task triggers should not interrupt flow. If you're in the middle of producing output, finish the current step first, then trigger the search/create. If the task is time-sensitive and you already have a working approach, a search can run in parallel or be deferred to post-task.
 
@@ -251,20 +244,18 @@ During execution, if any of these occur, act immediately — do not wait for use
 
 After completing a significant task, consider: was this difficult, reusable, and high-quality enough to preserve?
 
-If at least two are true — (1) the solution required non-obvious work, (2) it's clearly reusable, (3) the user asked to preserve it — ask for a key and create:
+If at least two are true — (1) the solution required non-obvious work, (2) it's clearly reusable, (3) the user asked to preserve it — check credentials and create:
 
-> 这次任务产出了有价值的可复用经验。我想用 SkillNet 的 create 把它沉淀成技能，方便以后一键复用。需要一个 OpenAI 兼容的 API_KEY（可选 BASE_URL 和模型名称，默认 gpt-4o）。只用于本次 create/evaluate，不会外传。可以现在提供吗？
+1. If `API_KEY` is already configured → proceed silently.
+2. If not → use the standard API_KEY ask template (see "Environment Variables & Credential Strategy").
+3. If user declines → acknowledge and move on.
 
 ```bash
-export API_KEY="<value>"
-# If user provided BASE_URL and model:
-export BASE_URL="<value>"
+# Credentials already available (configured or just provided)
 skillnet create --prompt "A skill that teaches: [lesson]. Use when: [triggers]. Key steps: [solution]" \
-  --output-dir ~/.openclaw/skills --model <model-name>
-skillnet evaluate ~/.openclaw/skills/<new-skill> --model <model-name>
+  --output-dir ~/.openclaw/workspace/skills --model <model-name>
+skillnet evaluate ~/.openclaw/workspace/skills/<new-skill> --model <model-name>
 ```
-
-If user declines → acknowledge and move on.
 
 ---
 
@@ -284,7 +275,9 @@ Categories: ai-agent-building, ai-audio-speech, bioinformatics-compbio, cheminfo
 
 Fallback: keyword returns 0 → try broader/simpler keywords → then `--mode vector --threshold 0.65`.
 
-## Environment Variables
+## Environment Variables & Credential Strategy
+
+### Variable Reference
 
 | Variable       | Needed for                                | Default                     |
 | -------------- | ----------------------------------------- | --------------------------- |
@@ -292,25 +285,78 @@ Fallback: keyword returns 0 → try broader/simpler keywords → then `--mode ve
 | `BASE_URL`     | custom LLM endpoint                       | `https://api.openai.com/v1` |
 | `GITHUB_TOKEN` | download, create --github (private repos) | — (60 req/hr without)       |
 
-**Important**: `search` and `download` (public repos) are **completely free** — no API key, no token. Never ask for credentials before searching.
+### Command ↔ Variable Requirement
 
-**Just-in-time key requests** — ask when actually needed, after you've shown the user some value:
+| Command             | `API_KEY`    | `BASE_URL` | `GITHUB_TOKEN`                |
+| ------------------- | ------------ | ---------- | ----------------------------- |
+| `skillnet search`   | —            | —          | —                             |
+| `skillnet download` | —            | —          | Private repos only            |
+| `skillnet create`   | **Required** | Optional   | `--github` private repos only |
+| `skillnet evaluate` | **Required** | Optional   | —                             |
+| `skillnet analyze`  | **Required** | Optional   | —                             |
 
-- Before `create`/`evaluate`/`analyze`: check `API_KEY`. If empty → ask:
+**No env vars are required for install, search, or download (public repos).** The skill is always visible and callable without any credentials.
 
-  > **中文**: 我想用 SkillNet 的 create 把这次方案沉淀成一个可复用技能，方便以后一键复用与分享。需要一个 OpenAI 兼容的 API_KEY（可选 BASE_URL 和模型名称，默认 gpt-4o）。只会用于本次 create/evaluate，不会外传。可以现在提供吗？
-  >
-  > **English**: I'd like to use SkillNet create to package our solution as a reusable skill. This needs an OpenAI-compatible API_KEY (optionally BASE_URL and model name, default gpt-4o). It will only be used for create/evaluate in this run. May I proceed with your key now?
+### Just-in-Time Credential Strategy
 
-  Then `export API_KEY="<value>"` (and `export BASE_URL` + `--model` if provided) and proceed.
-  If user declines → continue the main task.
+Credentials follow a **"silent if configured, ask only when needed"** pattern:
 
-- If `download` or `create --github` fails (403/rate-limit): check `GITHUB_TOKEN`. If empty → ask:
-  > "The download hit a GitHub rate limit. A Personal Access Token (classic, repo scope) would resolve this. Could you provide one?"
-  > Then `export GITHUB_TOKEN="<value>"` and retry.
-  > If user declines → proceed without that skill.
+1. **If already configured** (via `openclaw.json`, environment, or earlier in the session) → **use silently**, never re-ask.
+2. **If missing and the command needs it** → ask the user **once** using the standard templates below.
+3. **If the user declines** → acknowledge and continue the main task. Never block.
 
-Never tell user to set env vars themselves — ask for the value, export it, proceed. Never block the main task on a missing key.
+**Execution convention** — inject credentials for the current invocation only:
+
+```bash
+# One-shot injection (does not pollute the global environment)
+API_KEY="..." BASE_URL="..." skillnet create --prompt "..." --output-dir ~/.openclaw/workspace/skills
+
+# Or export for the session if multiple commands follow
+export API_KEY="<value>"
+export BASE_URL="<value>"   # only if user provided
+export GITHUB_TOKEN="<value>"  # only if needed
+```
+
+Never tell the user to set env vars themselves — ask for the value, inject it, proceed.
+
+### Standard Ask Templates
+
+**API_KEY** — triggered before `create`/`evaluate`/`analyze` when not configured:
+
+> I need an OpenAI-compatible API_KEY (used only for create/evaluate/analyze in this run). Optionally provide BASE_URL and model name (default gpt-4o). May I proceed with your key?
+
+**GITHUB_TOKEN** — triggered only on private repo access or rate-limit (403):
+
+> We hit GitHub rate limits or need private repo access. Can you share a read-only Personal Access Token (`repo:read` scope)?
+
+**BASE_URL** — triggered only if user explicitly wants a custom endpoint but hasn't provided one:
+
+> Would you like to use a custom LLM BASE_URL? (default `https://api.openai.com/v1`)
+
+### OpenClaw Pre-Configuration (Silent Use)
+
+If credentials are provided in `openclaw.json`, they are injected automatically — no prompts, no interruptions:
+
+```json
+{
+  "skills": {
+    "entries": {
+      "skillnet": {
+        "enabled": true,
+        "apiKey": "sk-xxxx",
+        "env": {
+          "BASE_URL": "https://api.openai.com/v1",
+          "GITHUB_TOKEN": "ghp_xxx"
+        }
+      }
+    }
+  }
+}
+```
+
+- `apiKey` → injected as `API_KEY` (bound via `primaryEnv` in metadata).
+- `env.BASE_URL` / `env.GITHUB_TOKEN` → injected as environment variables.
+- Once configured, all commands run silently without asking the user.
 
 ---
 
@@ -331,8 +377,8 @@ skillnet search "langgraph supervisor agent" --mode vector --threshold 0.65
 **Step 2 — Download & Selective Apply:**
 
 ```bash
-skillnet download "https://github.com/.../langgraph-supervisor-template" -d ~/.openclaw/skills
-cat ~/.openclaw/skills/langgraph-supervisor-template/SKILL.md
+skillnet download "https://github.com/.../langgraph-supervisor-template" -d ~/.openclaw/workspace/skills
+cat ~/.openclaw/workspace/skills/langgraph-supervisor-template/SKILL.md
 # → Useful: supervisor routing pattern, state schema design, tool-calling conventions
 # → Not useful: generic example agents (we need "search→code→review" specifically)
 ```
@@ -345,9 +391,9 @@ User says: "Also reference https://github.com/langchain-ai/langgraph for the lat
 
 ```bash
 # API_KEY needed → ask user (they've already seen initial progress, so this is non-disruptive)
-skillnet create --github https://github.com/langchain-ai/langgraph --output-dir ~/.openclaw/skills
-skillnet evaluate ~/.openclaw/skills/langgraph
-cat ~/.openclaw/skills/langgraph/SKILL.md
+skillnet create --github https://github.com/langchain-ai/langgraph --output-dir ~/.openclaw/workspace/skills
+skillnet evaluate ~/.openclaw/workspace/skills/langgraph
+cat ~/.openclaw/workspace/skills/langgraph/SKILL.md
 # → Now have detailed API patterns to improve the implementation
 ```
 
@@ -359,8 +405,8 @@ The "search→code→review" pipeline required non-obvious routing logic (condit
 skillnet create --prompt "Multi-agent code pipeline with LangGraph: searcher→coder→reviewer \
   with conditional retry routing when review fails. Use when: building multi-agent code generation \
   systems. Key: use Command for dynamic routing, separate state channels per agent." \
-  --output-dir ~/.openclaw/skills
-skillnet evaluate ~/.openclaw/skills/langgraph-code-pipeline
+  --output-dir ~/.openclaw/workspace/skills
+skillnet evaluate ~/.openclaw/workspace/skills/langgraph-code-pipeline
 # → Safety: Good, Completeness: Good, Executability: Average — acceptable
 ```
 
@@ -372,3 +418,23 @@ skillnet evaluate ~/.openclaw/skills/langgraph-code-pipeline
 - `skillnet create` outputs a standard skill directory with SKILL.md — no post-processing needed.
 - For CLI flags, REST API, and Python SDK reference, see `{baseDir}/references/api-reference.md`.
 - For workflow patterns and decision recipes, see `{baseDir}/references/workflow-patterns.md`.
+
+## Security & Privacy Notes
+
+### Credential Scope
+
+- **API_KEY**: Used solely for authenticating with your chosen LLM endpoint (`BASE_URL`). It is **never** sent to the SkillNet search API or any other third party.
+- **GITHUB_TOKEN**: Sent only to `api.github.com` to access repositories. Only `repo:read` scope is needed. Never forwarded to any other service.
+
+### Network Endpoints
+
+- **search / download**: Only the query string is sent to `https://api-skillnet.openkg.cn`. No local files, credentials, or personal data are transmitted.
+- **create / evaluate / analyze**: Content is processed via the LLM endpoint you configure (`BASE_URL`, default: `https://api.openai.com/v1`). No data is sent to the SkillNet service for these operations.
+- **Local/air-gapped friendly**: Point `BASE_URL` to a local endpoint (e.g., `http://127.0.0.1:8000/v1` for vLLM, LM Studio, Ollama).
+
+### Output & Side Effects
+
+- **No background processes**: The CLI runs only when invoked and exits immediately after producing output.
+- **No system modifications**: Installation uses standard Python package managers (`pipx` or `pip`). No remote shell scripts are executed.
+- **Local output only**: Created skills are written to the specified output directory and nowhere else.
+- `skillnet analyze` only generates a report — it never modifies or deletes skills.

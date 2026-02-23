@@ -16,14 +16,12 @@ Usage:
 
 Requires: pip install skillnet-ai
           Environment variable: API_KEY
-          Optional: --model to override default (gpt-4o)
-          Optional: BASE_URL for OpenAI-compatible endpoints (default: https://api.openai.com/v1)
 """
 import argparse
 import os
 import sys
 
-DEFAULT_OUTPUT = os.path.expanduser("~/.openclaw/skills")
+DEFAULT_OUTPUT = os.path.expanduser("~/.openclaw/workspace/skills")
 
 
 def main():

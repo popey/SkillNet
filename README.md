@@ -3,103 +3,122 @@
     <img src="images/skillnet.png" width="200" alt="SkillNet Logo">
 </a>
 
-# SkillNet: Create, Evaluate, and Connect AI Skills
+<h1>SkillNet</h1>
 
-[![PyPI version](https://badge.fury.io/py/skillnet-ai.svg)](https://badge.fury.io/py/skillnet-ai)
+<p><strong>Open Infrastructure for Creating, Evaluating, and Connecting AI Agent Skills</strong></p>
+
+<p>
+Search 500+ community skills · One-line install · Auto-create from repos / docs / logs<br/>
+5-dimension quality scoring · Semantic relationship graph
+</p>
+
+[![PyPI version](https://badge.fury.io/py/skillnet-ai.svg)](https://pypi.org/project/skillnet-ai/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![arXiv](https://img.shields.io/badge/arXiv-b5212f.svg?logo=arxiv)](https://arxiv.org/)
-[![Website](https://img.shields.io/badge/Website-skillnet.openkg.cn-0078D4.svg)](http://skillnet.openkg.cn/)
+[![Website](https://img.shields.io/badge/🌐_Website-skillnet.openkg.cn-0078D4.svg)](http://skillnet.openkg.cn/)
 
 </div>
 
-## 📖 Table of Contents
-
-- [📖 Overview](#-overview)
-- [📢 News](#-news)
-- [🚀 Features](#-features)
-- [🌐 API Access](#-api-access)
-- [🐍 Python Toolkit (`skillnet-ai`)](#-python-toolkit-skillnet-ai)
-  - [🎬 Quick Start Demo](#-quick-start-demo)
-  - [📥 Installation](#-installation)
-  - [🛠 Python SDK Usage](#-usage-python-sdk)
-  - [💻 CLI Usage](#-cli-usage)
-- [🔬 Example Use Case](#-example-use-case)
-- [🤖 OpenClaw Integration](#-openclaw-integration)
-- [📂 Skill Structure](#-skill-structure)
-- [🗺 Roadmap & Contributing](#-roadmap)
-
 ---
 
-## 📖 Overview
+**SkillNet** is an open-source platform that treats AI agent skills as first-class, shareable packages — like npm for AI capabilities. It provides end-to-end tooling to **search**, **install**, **create**, **evaluate**, and **organize** skills, so agents can learn from the community and continuously grow.
 
-SkillNet is an open infrastructure for creating, evaluating, and organizing AI skills at scale.
-
-![](images/graph.gif)
+<div align="center">
+  <img src="images/graph.gif" width="100%" alt="SkillNet Knowledge Graph">
+</div>
 
 ## 📢 News
 
-- **🤖 [2025-02] OpenClaw Integration Released!** — SkillNet is now available as a built-in skill for [OpenClaw](https://github.com/openclaw/openclaw). One command to install, zero config to use. The agent automatically searches, downloads, creates, evaluates, and analyzes skills on your behalf. [Get started →](#-openclaw-integration)
+- **🤖 [2025-02] OpenClaw Integration** — SkillNet is now a built-in skill for [OpenClaw](https://github.com/openclaw/openclaw). One command to install, zero config needed. [Get started →](#-openclaw-integration)
 
-## 🚀 Features
+## ✨ Key Features
 
-- **🔍 Search**: Find skills using keywords match or semantic search.
-- **📦 One-Line Installation**: Download skill packages directly from GitHub repositories.
-- **✨ Skill Creation**: Automatically convert various sources into structured, reusable `skills` using LLMs:
-  - Execution trajectories / conversation logs
-  - GitHub repositories
-  - Office documents (PDF, PPT, Word)
-  - Direct text prompts
-- **📊 Evaluation**: Evaluate and score skills for quality assurance (Safety, Completeness, Executability, Maintainability, Cost-Awareness).
-- **🕸️ Relationship Analysis**: Automatically map the connections between skills in your local library, identifying structural relationships between skills (similar_to, belong_to, compose_with, depend_on).
+| Feature                      | Description                                                                                                             |
+| :--------------------------- | :---------------------------------------------------------------------------------------------------------------------- |
+| 🔍 **Search**                | Find skills via keyword match or AI semantic search across 500+ curated skills                                          |
+| 📦 **One-Line Install**      | `skillnet download <url>` — grab any skill from GitHub in seconds                                                       |
+| ✨ **Auto-Create**           | Convert GitHub repos, PDFs/PPTs/Word docs, conversation logs, or text prompts into structured skill packages using LLMs |
+| 📊 **5-D Evaluation**        | Score skills on **Safety · Completeness · Executability · Maintainability · Cost-Awareness**                            |
+| 🕸️ **Relationship Analysis** | Auto-discover `similar_to` · `belong_to` · `compose_with` · `depend_on` links between skills                            |
 
-## 🎬 Quick Start Demo
+---
+
+## 🚀 Quick Start
+
+```bash
+pip install skillnet-ai
+```
+
+```python
+from skillnet_ai import SkillNetClient
+
+client = SkillNetClient()  # No API key needed for search & download
+
+# Search for skills
+results = client.search(q="pdf", limit=5)
+print(results[0].skill_name, results[0].stars)
+
+# Install a skill
+client.download(url=results[0].skill_url, target_dir="./my_skills")
+```
+
+> **Need Create / Evaluate / Analyze?** Pass `api_key="sk-..."` (or set `API_KEY` env var). See [Configuration](#-configuration).
+
+<div align="center">
 
 https://github.com/user-attachments/assets/9f9d35b0-36fd-4d7d-a072-39afa380b241
 
-# 🌐 API Access
+</div>
 
-SkillNet provides a public API to search skills. Support both keywords match and semantic search.
+---
 
-**Base Endpoint:** `http://api-skillnet.openkg.cn/v1/search`
+## 📖 Table of Contents
 
-### ⚡ Quick Examples
+- [Quick Start](#-quick-start)
+- [REST API](#-rest-api)
+- [Python SDK](#-python-sdk)
+- [CLI Reference](#-cli-reference)
+- [Configuration](#-configuration)
+- [Example: Scientific Discovery](#-example-scientific-discovery)
+- [OpenClaw Integration](#-openclaw-integration)
+- [Skill Structure](#-skill-structure)
+- [Roadmap](#-roadmap)
+- [Contributing](#-contributing)
+- [Citation](#-citation)
+- [License](#-license)
 
-**1. Keywords Match**
+---
 
-Find "development" tools sorted by stars.
+## 🌐 REST API
+
+The SkillNet search API is free, public, and requires no authentication.
 
 ```bash
-curl -X GET "http://api-skillnet.openkg.cn/v1/search?q=pdf&sort_by=stars&limit=5" \
-     -H "accept: application/json"
+# Keyword search
+curl "http://api-skillnet.openkg.cn/v1/search?q=pdf&sort_by=stars&limit=5"
+
+# Semantic search
+curl "http://api-skillnet.openkg.cn/v1/search?q=reading%20charts&mode=vector&threshold=0.8"
 ```
-
-**2. Vector Semantic Search**
-
-Find skills related to "reading charts" using AI similarity.
-
-```bash
-curl -X GET "http://api-skillnet.openkg.cn/v1/search?q=reading%20charts&mode=vector&threshold=0.8" \
-     -H "accept: application/json"
-```
-
-### 📡 Parameter Reference
-
-| Parameter  | Type   | Required | Default   | Description                                        |
-| :--------- | :----- | :------: | :-------- | :------------------------------------------------- |
-| `q`        | string |    ✅    | -         | The search query (Keywords or Natural Language).   |
-| `mode`     | string |    -     | `keyword` | `keyword` (Fuzzy match) or `vector` (Semantic AI). |
-| `category` | string |    -     | `None`    | Filter: Development, AIGC, Research, Science, etc. |
-| `limit`    | int    |    -     | `10`      | Results per request (Max: 50).                     |
-
-**Mode Specific Parameters:**
-
-- **Keyword Mode:** `page` (int), `min_stars` (int), `sort_by` (string: `stars` or `recent`)
-- **Vector Mode:** `threshold` (float: `0.0` to `1.0`)
-
-### 📦 Response Structure
 
 <details>
-<summary>Click to view JSON Response Example</summary>
+<summary><b>📡 Full Parameter Reference</b></summary>
+
+**Endpoint:** `GET http://api-skillnet.openkg.cn/v1/search`
+
+| Parameter   | Type   | Default    | Description                                        |
+| :---------- | :----- | :--------- | :------------------------------------------------- |
+| `q`         | string | _required_ | Search query (keywords or natural language)        |
+| `mode`      | string | `keyword`  | `keyword` (fuzzy match) or `vector` (semantic AI)  |
+| `category`  | string | —          | Filter: Development, AIGC, Research, Science, etc. |
+| `limit`     | int    | `10`       | Results per page (max 50)                          |
+| `page`      | int    | `1`        | Page number _(keyword mode only)_                  |
+| `min_stars` | int    | `0`        | Minimum star count _(keyword mode only)_           |
+| `sort_by`   | string | `stars`    | `stars` or `recent` _(keyword mode only)_          |
+| `threshold` | float  | `0.8`      | Similarity threshold 0.0–1.0 _(vector mode only)_  |
+
+**Response:**
 
 ```json
 {
@@ -109,397 +128,249 @@ curl -X GET "http://api-skillnet.openkg.cn/v1/search?q=reading%20charts&mode=vec
       "skill_description": "Extracts text and tables from PDF documents.",
       "author": "openkg-team",
       "stars": 128,
-      "skill_url": "http://...",
+      "skill_url": "https://...",
       "category": "Productivity"
     }
   ],
-  "meta": {
-    "query": "pdf",
-    "mode": "keyword",
-    "total": 1,
-    "limit": 10,
-    ...
-  },
+  "meta": { "query": "pdf", "mode": "keyword", "total": 1, "limit": 10 },
   "success": true
 }
 ```
 
 </details>
 
-# 🐍 Python Toolkit (`skillnet-ai`)
+---
 
-**skillnet-ai** is the official Python Toolkit. It functions seamlessly as both a library and a CLI to **Create**, **Evaluate**, and **Organize** skills.
+## 🐍 Python SDK
 
-### 📥 Installation
-
-```bash
-pip install skillnet-ai
-```
-
-### 🛠 Usage (Python SDK)
-
-The `SkillNetClient` is your main entry point.
-
-#### 1. Initialization
+### Initialize
 
 ```python
 from skillnet_ai import SkillNetClient
 
 client = SkillNetClient(
-    api_key="sk-...",       # Required for Creation, and Evaluation
-    # base_url="...",       # Optional: Custom LLM base URL
-    # github_token="ghp-..." # Optional: For private repos or higher rate limits
+    api_key="sk-...",         # Required for create / evaluate / analyze
+    # base_url="...",         # Optional: custom LLM endpoint
+    # github_token="ghp-..." # Optional: for private repos
 )
 ```
 
-#### 2. Search for Skills
-
-Perform keywords match or semantic searches to find skills. (See [Parameter Reference](#-parameter-reference) for configuration details.)
+### Search
 
 ```python
-# 1. Standard Keywords Match
-results = client.search(q="pdf", mode="keyword", limit=10, min_stars=5, sort_by="stars")
+# Keyword search
+results = client.search(q="pdf", limit=10, min_stars=5, sort_by="stars")
 
-# 2. Semantic Search
-results = client.search(q="Help me analyze financial PDF reports", mode="vector", threshold=0.85)
+# Semantic search
+results = client.search(q="analyze financial PDF reports", mode="vector", threshold=0.85)
 
 if results:
-    top_skill = results[0]
-    print(f"Found: {top_skill.skill_name} (Stars: {top_skill.stars})")
-    print(f"URL: {top_skill.skill_url}")
+    print(f"{results[0].skill_name} ⭐{results[0].stars}")
 ```
 
-#### 3. Install Skills
-
-Download and install a skill directly from a URL (e.g., from above search results) into your local workspace.
+### Install
 
 ```python
-skill_url = "https://github.com/anthropics/skills/tree/main/skills/skill-creator"
-
-try:
-    # Downloads to ./my_agent_skills
-    local_path = client.download(url=skill_url, target_dir="./my_agent_skills")
-    print(f"Skill successfully installed at: {local_path}")
-except Exception as e:
-    print(f"Download failed: {e}")
+local_path = client.download(
+    url="https://github.com/anthropics/skills/tree/main/skills/skill-creator",
+    target_dir="./my_skills"
+)
 ```
 
-#### 4. Create Skills
+### Create
 
-Turn local trajectory, gitHub repository, office documents or text description into a polished Skill Package (SKILL.md, scripts, etc.).
+Convert diverse sources into structured skill packages with a single call:
 
 ```python
-# 1. Create skill from Local Trajectory
-# Prepare your trajectory (e.g., a conversation log string)
-trajectory_log = """
-User: I need to rename all .jpg files in this folder to .png.
-Agent: I will write a python script to iterate through the folder...
-Agent: Script executed. Renamed 5 files.
-"""
-# Generate Skill, Returns a list of paths to the generated skill folders
-created_paths = client.create(
-    trajectory_content=trajectory_log,
-    output_dir="./created_skills",
-    model="gpt-4o"
-)
+# From conversation logs / execution traces
+client.create(trajectory_content="User: rename .jpg to .png\nAgent: Done.", output_dir="./skills")
 
-# 2. Create skill from GitHub Repository
-created_paths = client.create(
-    github_url="https://github.com/zjunlp/DeepKE",
-    output_dir="./created_skills",
-    model="gpt-4o"
-)
+# From GitHub repository
+client.create(github_url="https://github.com/zjunlp/DeepKE", output_dir="./skills")
 
-# 3. Create skill from a office documents (PDF, Word, PPT)
-created_paths = client.create(
-    office_file="./docs/user_guide.pdf",
-    output_dir="./created_skills"
-)
+# From office documents (PDF / PPT / Word)
+client.create(office_file="./guide.pdf", output_dir="./skills")
 
-# 4. Create skill from a prompt description
-created_paths = client.create(
-    prompt="Create a skill for web scraping that extracts article titles and content",
-    output_dir="./created_skills"
-)
-
-print(f"Created {len(created_paths)} new skills.")
-for path in created_paths:
-    print(f"- {path}")
+# From natural language prompt
+client.create(prompt="A skill for web scraping article titles", output_dir="./skills")
 ```
 
-#### 5. Skill Evaluation
+### Evaluate
 
-Assess the Safety, Completeness, Executability, Maintainability and Cost-Awareness of a skill. Supports both remote GitHub URLs and local directories.
+Score any skill across 5 quality dimensions. Accepts local paths or GitHub URLs.
 
 ```python
-# Evaluate from local directory
-# target_skill = "./my_skills/web_search"
-
-# Evaluate from GitHub URL (uses github_token if provided during initialization)
-target_skill = "https://github.com/anthropics/skills/tree/main/skills/algorithmic-art"
-
-result = client.evaluate(target=target_skill, model="gpt-4o", cache_dir="./evaluate_cache_dir")
-print(f"Evaluation Result: {result}")
+result = client.evaluate(
+    target="https://github.com/anthropics/skills/tree/main/skills/algorithmic-art"
+)
+# Returns: { "safety": {"level": "Good", "reason": "..."}, "completeness": {...}, ... }
 ```
 
-#### 6. Skill Relationship Analysis
+### Analyze Relationships
 
-Analyze a local directory containing multiple skills to infer a relationship graph. It identifies relationships like dependencies (depend_on), collaboration (compose_with), hierarchy (belong_to), and alternatives (similar_to).
+Map the connections between skills in a local directory — outputs `similar_to`, `belong_to`, `compose_with`, and `depend_on` edges.
 
 ```python
-# Directory containing multiple skill folders
-skills_directory = "./my_agent_skills"
+relationships = client.analyze(skills_dir="./my_skills")
 
-# Analyze relationships between skills
-# This will also save a 'relationships.json' in the directory by default
-relationships = client.analyze(skills_dir=skills_directory, save_to_file=True, model="gpt-4o")
-
-# Display the relationships
 for rel in relationships:
     print(f"{rel['source']} --[{rel['type']}]--> {rel['target']}")
-    # Output: PDF_Parser --[compose_with]--> Text_Summarizer
-```
-
-### 💻 CLI Usage
-
-The CLI is powered by `Typer` and `Rich` for a beautiful terminal experience.
-
-#### Common Commands
-
-| Command        | Action                  | Example                                      |
-| :------------- | :---------------------- | :------------------------------------------- |
-| **`search`**   | Search skills           | `skillnet search "data viz" --mode vector`   |
-| **`download`** | Install skill           | `skillnet download <github_url> -d ./skills` |
-| **`create`**   | Create skill            | `skillnet create log.txt --model gpt-4o`     |
-| **`evaluate`** | Evaluate skill quality  | `skillnet evaluate ./my_tool`                |
-| **`analyze`**  | Analyze skill relations | `skillnet analyze ./my_agent_skills`         |
-
-> **Tip:** Use `skillnet [command] --help` to see all available options (e.g., thresholds, sorting).
-
-#### 1. Search Skills (`search`)
-
-Search the registry using keywords match or semantic search.
-
-```bash
-# Basic keywords match
-skillnet search "pdf"
-
-# Semantic/Vector search (finds skills by meaning)
-skillnet search "Help me analyze financial PDF reports" --mode vector --threshold 0.85
-
-# Filter by category and sort results
-skillnet search "visualization" --category "Development" --sort-by stars --limit 10
-```
-
-#### 2. Install Skills (`download`)
-
-Download and install a skill directly from a GitHub repository subdirectory.
-
-```bash
-# Download to the current directory
-skillnet download https://github.com/anthropics/skills/tree/main/skills/algorithmic-art
-
-# Download to a specific target directory
-skillnet download https://github.com/anthropics/skills/tree/main/skills/algorithmic-art -d ./my_agent/skills
-
-# Download from a private repository
-skillnet download <private_url> --token <your_github_token>
-```
-
-#### 3. Create Skills (`create`)
-
-Create structured Skill from various sources using LLMs.
-
-**Linux/macOS:**
-
-```bash
-# Requirement: Ensure API_KEY is set in your environment variables.
-export API_KEY=sk-xxxxx
-export BASE_URL=xxxxxx  # Optional custom LLM base URL
-```
-
-**Windows PowerShell:**
-
-```powershell
-# Requirement: Ensure API_KEY is set in your environment variables.
-$env:API_KEY = "sk-xxxxx"
-$env:BASE_URL = "xxxxxx"  # Optional custom LLM base URL
-```
-
-**Usage Examples:**
-
-```bash
-# From a trajectory file
-skillnet create ./logs/trajectory.txt -d ./generated_skills
-
-# From a GitHub repository
-skillnet create --github https://github.com/owner/repo
-
-# From an office document (PDF, PPT, Word)
-skillnet create --office ./docs/guide.pdf
-
-# From a direct prompt
-skillnet create --prompt "Create a skill for extracting tables from images"
-
-# Specify a custom model
-skillnet create --office report.pdf --model gpt-4o
-```
-
-#### 4. Evaluate Skills (`evaluate`)
-
-Generate a comprehensive quality report (Safety, Completeness, Executability, Maintainability, Cost-Awareness) for a skill.
-
-**Linux/macOS:**
-
-```bash
-# Requirement: Ensure API_KEY is set in your environment variables.
-export API_KEY=sk-xxxxx
-export BASE_URL=xxxxxx  # Optional custom LLM base URL
-```
-
-**Windows PowerShell:**
-
-```powershell
-# Requirement: Ensure API_KEY is set in your environment variables.
-$env:API_KEY = "sk-xxxxx"
-$env:BASE_URL = "xxxxxx"  # Optional custom LLM base URL
-```
-
-**Usage Examples:**
-
-```bash
-# Evaluate a remote skill via GitHub URL
-skillnet evaluate https://github.com/anthropics/skills/tree/main/skills/algorithmic-art
-
-# Evaluate a local skill directory
-skillnet evaluate ./my_skills/web_search
-
-# Custom evaluation config
-skillnet evaluate ./my_skills/tool --category "Development" --model gpt-4o
-```
-
-#### 5. Analyze Relationships (`analyze`)
-
-Scan a local directory of skills to analyze their connections using AI.
-
-**Linux/macOS:**
-
-```bash
-# Requirement: Ensure API_KEY is set in your environment variables.
-export API_KEY=sk-xxxxx
-export BASE_URL=xxxxxx  # Optional custom LLM base URL
-```
-
-**Windows PowerShell:**
-
-```powershell
-# Requirement: Ensure API_KEY is set in your environment variables.
-$env:API_KEY = "sk-xxxxx"
-$env:BASE_URL = "xxxxxx"  # Optional custom LLM base URL
-```
-
-**Usage Examples:**
-
-```bash
-# Analyze a directory containing multiple skill folders
-skillnet analyze ./my_agent_skills
-
-# Analyze without saving the result file (just print to console)
-skillnet analyze ./my_agent_skills --no-save
-
-# Specify a model for the analysis
-skillnet analyze ./my_agent_skills --model gpt-4o
-```
-
-### Environment Configuration
-
-To use **Creation**, **Evaluation**, or **Analyze** features, set your environment variables:
-
-**Linux/macOS:**
-
-```bash
-export API_KEY="your_api_key"
-export BASE_URL="https://xxxxx"  # Optional
-```
-
-**Windows PowerShell:**
-
-```powershell
-$env:API_KEY = "your_api_key"
-$env:BASE_URL = "https://xxxxx"  # Optional
+# PDF_Parser --[compose_with]--> Text_Summarizer
 ```
 
 ---
 
-## 🔬 Example Use Case
+## 💻 CLI Reference
 
-To demonstrate the power of SkillNet, we provide a complete example of a Scientific Discovery. This scenario demonstrates how an AI Agent leverages the SkillNet infrastructure to autonomously plan and execute a complex scientific mission—from raw data processing to clinical validation.
+The CLI ships with `pip install skillnet-ai` and offers the same features with rich terminal output.
 
-<div align="center"> <img src="images/science.gif" width="100%" alt="Scientific Discovery Demo"> </div>
+| Command    | Description            | Example                                  |
+| :--------- | :--------------------- | :--------------------------------------- |
+| `search`   | Find skills            | `skillnet search "pdf" --mode vector`    |
+| `download` | Install a skill        | `skillnet download <url> -d ./skills`    |
+| `create`   | Create from any source | `skillnet create log.txt --model gpt-4o` |
+| `evaluate` | Quality report         | `skillnet evaluate ./my_skill`           |
+| `analyze`  | Relationship graph     | `skillnet analyze ./my_skills`           |
 
-👉 **[Try the Interactive Demo (Website: Scenarios->Science)](http://skillnet.openkg.cn/)**
+> Use `skillnet <command> --help` for full options.
 
-### 🧬 Workflow Lifecycle
+### Search
 
-- Task Definition: User provides a goal: "Analyze scRNA-seq data to find cancer targets."
-- AI Planning: The Agent decomposes the mission into logical steps (Data $\rightarrow$ Mechanism $\rightarrow$ Validation $\rightarrow$ Report).
-- Skill Discovery: The Agent uses client.search() to find specialized skills like cellxgene-census and kegg-database.
-- Acquisition & Orchestration: Skills are downloaded, quality-evaluated via client.evaluate(), and mapped for dependencies.
-- Execution: The skills are executed sequentially to generate a final discovery report.
+```bash
+skillnet search "pdf"
+skillnet search "analyze financial reports" --mode vector --threshold 0.85
+skillnet search "visualization" --category "Development" --sort-by stars --limit 10
+```
 
-### 🚀 Try it yourself
+### Install
 
-You can explore the full implementation, in our interactive Jupyter Notebook:
+```bash
+skillnet download https://github.com/anthropics/skills/tree/main/skills/algorithmic-art
+skillnet download <url> -d ./my_agent/skills
+skillnet download <private_url> --token <your_github_token>
+```
 
-👉 **[View Scientific Discovery Demo (Notebook)](https://github.com/zjunlp/SkillNet/blob/main/examples/scientific_workflow_demo.ipynb)**
+### Create
+
+```bash
+# From trajectory file
+skillnet create ./logs/trajectory.txt -d ./generated_skills
+
+# From GitHub repo
+skillnet create --github https://github.com/owner/repo
+
+# From office document (PDF, PPT, Word)
+skillnet create --office ./docs/guide.pdf
+
+# From prompt
+skillnet create --prompt "A skill for extracting tables from images"
+```
+
+### Evaluate
+
+```bash
+skillnet evaluate https://github.com/anthropics/skills/tree/main/skills/algorithmic-art
+skillnet evaluate ./my_skills/web_search
+skillnet evaluate ./my_skills/tool --category "Development" --model gpt-4o
+```
+
+### Analyze
+
+```bash
+skillnet analyze ./my_agent_skills
+skillnet analyze ./my_agent_skills --no-save   # print only, don't write file
+skillnet analyze ./my_agent_skills --model gpt-4o
+```
+
+---
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+| Variable       | Required For                       | Default                     |
+| :------------- | :--------------------------------- | :-------------------------- |
+| `API_KEY`      | `create` · `evaluate` · `analyze`  | —                           |
+| `BASE_URL`     | Custom LLM endpoint                | `https://api.openai.com/v1` |
+| `GITHUB_TOKEN` | Private repos / higher rate limits | —                           |
+
+> `search` and `download` (public repos) work without any credentials.
+
+**Linux / macOS:**
+
+```bash
+export API_KEY="sk-..."
+export BASE_URL="https://..."  # optional
+```
+
+**Windows PowerShell:**
+
+```powershell
+$env:API_KEY = "sk-..."
+$env:BASE_URL = "https://..."  # optional
+```
+
+---
+
+## 🔬 Example: Scientific Discovery
+
+A complete end-to-end demo showing how an AI Agent uses SkillNet to autonomously plan and execute a complex scientific workflow — from raw scRNA-seq data to a cancer target validation report.
+
+<div align="center">
+  <img src="images/science.gif" width="100%" alt="Scientific Discovery Workflow">
+</div>
+
+<table>
+<tr><td>1️⃣</td><td><b>Task</b></td><td>User provides a goal: "Analyze scRNA-seq data to find cancer targets"</td></tr>
+<tr><td>2️⃣</td><td><b>Plan</b></td><td>Agent decomposes into: Data → Mechanism → Validation → Report</td></tr>
+<tr><td>3️⃣</td><td><b>Discover</b></td><td><code>client.search()</code> finds <em>cellxgene-census</em>, <em>kegg-database</em>, etc.</td></tr>
+<tr><td>4️⃣</td><td><b>Evaluate</b></td><td>Skills are quality-gated via <code>client.evaluate()</code> before use</td></tr>
+<tr><td>5️⃣</td><td><b>Execute</b></td><td>Skills run sequentially to produce a final discovery report</td></tr>
+</table>
+
+👉 **[Try the Interactive Demo](http://skillnet.openkg.cn/)** (Website → Scenarios → Science)
+&nbsp;|&nbsp;
+📓 **[View Notebook](https://github.com/zjunlp/SkillNet/blob/main/examples/scientific_workflow_demo.ipynb)**
 
 ---
 
 ## 🤖 OpenClaw Integration
 
-SkillNet integrates with [OpenClaw](https://github.com/openclaw/openclaw) (open-source personal AI agent framework) as a built-in, lazy-loaded skill. You do **not** need OpenClaw's source code — only a working OpenClaw install. Once loaded, the agent automatically:
+SkillNet integrates with [OpenClaw](https://github.com/openclaw/openclaw) as a built-in, lazy-loaded skill. Once installed, your agent automatically:
 
-- **Searches & applies** existing skills before tackling complex or unfamiliar tasks
-- **Creates skills** from GitHub repos, documents (PDF/PPT/Word), or completed work via `skillnet create`
-- **Evaluates & analyzes** your local skill library for quality scores and inter-skill relationships
+- **Searches** existing skills before starting complex tasks
+- **Creates** new skills from repos, documents, or completed work
+- **Evaluates & analyzes** your local library for quality and inter-skill relationships
 
-This forms a closed loop: community skills guide execution → successful outcomes become new skills → periodic analysis keeps the library clean.
+> Community skills guide execution → successful outcomes become new skills → periodic analysis keeps the library clean.
 
-<div align="center"> <img src="images/openclaw_skillnet.gif" width="100%" alt="OpenClaw + SkillNet Demo"> </div>
+<div align="center">
+  <img src="images/openclaw_skillnet.gif" width="100%" alt="OpenClaw + SkillNet Demo">
+</div>
 
-### 📋 Prerequisites
+<details>
+<summary><b>📥 Installation</b></summary>
 
-- [OpenClaw](https://github.com/openclaw/openclaw) installed with a configured workspace (default: `~/.openclaw/workspace`)
-- No OpenClaw repo checkout is required
-
-### 📥 Install via ClawHub (Recommended)
+**Prerequisites:** [OpenClaw](https://github.com/openclaw/openclaw) installed (default workspace: `~/.openclaw/workspace`)
 
 **Option A — CLI:**
 
 ```bash
-# 1. Install ClawHub CLI (once)
 npm i -g clawhub
-
-# 2. Install the skill into your OpenClaw workspace (pick one)
-cd ~/.openclaw/workspace && clawhub install skillnet
-# — or from anywhere —
 clawhub install skillnet --workdir ~/.openclaw/workspace
-
-# 3. Restart OpenClaw so it discovers the new skill
-openclaw gateway restart   # or simply start a new chat session
+openclaw gateway restart
 ```
 
 **Option B — Via OpenClaw chat:**
-
-Simply tell your agent:
 
 ```
 Install the skillnet skill from ClawHub.
 ```
 
-The skill lands at `<workspace>/skills/skillnet` — workspace skills take precedence over global and bundled ones.
+</details>
 
-### 🧪 Quick Verification
+<details>
+<summary><b>🧪 Quick Verification</b></summary>
 
 In your OpenClaw chat, try:
 
@@ -511,35 +382,67 @@ Search SkillNet for a "docker" skill and summarize the top result.
 Create a skill from this GitHub repo: https://github.com/owner/repo (then evaluate it).
 ```
 
-> 👉 The source of this skill package is also available at [`skills/skillnet/`](skills/skillnet/) for reference, but the recommended install method is via **ClawHub** as shown above.
+</details>
+
+> The skill source is also available at [`skills/skillnet/`](skills/skillnet/) for reference.
 
 ---
 
 ## 📂 Skill Structure
 
-Standardized structure for all SkillNet packages:
+Every SkillNet package follows a standardized layout:
 
 ```text
 skill-name/
-├── SKILL.md          # [Required] Metadata (YAML) + Instructions
-├── scripts/          # [Optional] Executable Python/Bash scripts
-├── references/       # [Optional] Static docs or API specs
-└── assets/           # [Optional] Icons, templates, examples
+├── SKILL.md          # [Required] YAML metadata + markdown instructions
+├── scripts/          # [Optional] Executable Python / Bash scripts
+├── references/       # [Optional] Static docs, API specs, schemas
+└── assets/           # [Optional] Templates, icons, examples
 ```
 
 ---
 
 ## 🗺 Roadmap
 
-- ✅ Keyword Match & Semantic Search
-- ✅ Skill Installer
-- ✅ Skill Creator (Local File & GitHub Repository)
-- ✅ Skill Evaluation & Scoring
-- ✅ Skill Relationship Analysis
+- [x] Keyword match & semantic search
+- [x] One-line skill installer
+- [x] Skill creator (trajectory · GitHub · office docs · prompt)
+- [x] 5-dimension quality evaluation
+- [x] Skill relationship analysis
+- [ ] Skill versioning & dependency resolution
+- [ ] Community skill marketplace
+- [ ] Multi-agent collaborative skill execution
+
+---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please submit a Pull Request or open an Issue on GitHub.
+Contributions of all kinds are welcome! Whether it's fixing a typo, adding a feature, or sharing a new skill — every contribution counts.
+
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feat/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'feat: add amazing feature'`)
+4. **Push** to the branch (`git push origin feat/amazing-feature`)
+5. **Open** a Pull Request
+
+You can also [open an Issue](https://github.com/zjunlp/SkillNet/issues) to report bugs or suggest features.
+
+---
+
+## 📝 Citation
+
+If you find SkillNet useful in your research, please consider citing:
+
+```bibtex
+@misc{skillnet2025,
+  title={SkillNet: Open Infrastructure for Creating, Evaluating, and Connecting AI Agent Skills},
+  author={SkillNet Team},
+  year={2025},
+  url={http://skillnet.openkg.cn}
+}
+```
+
+---
 
 ## 📄 License
 
