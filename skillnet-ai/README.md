@@ -272,18 +272,6 @@ skill-name/
 
 ---
 
-## 🗺 Roadmap
-
-- [x] Keyword match & semantic search
-- [x] One-line skill installer
-- [x] Skill creator (trajectory · GitHub · office docs · prompt)
-- [x] 5-dimension quality evaluation
-- [x] Skill relationship analysis
-- [ ] Skill versioning & dependency resolution
-- [ ] Community skill marketplace
-
----
-
 ## 🤝 Contributing
 
 Contributions are welcome! Feel free to [open an Issue](https://github.com/zjunlp/SkillNet/issues) or submit a Pull Request.

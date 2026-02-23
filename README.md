@@ -3,8 +3,6 @@
     <img src="images/skillnet.png" width="200" alt="SkillNet Logo">
 </a>
 
-<h1>SkillNet</h1>
-
 <p><strong>Open Infrastructure for Creating, Evaluating, and Connecting AI Agent Skills</strong></p>
 
 <p>
@@ -30,7 +28,7 @@ Search 500+ community skills · One-line install · Auto-create from repos / doc
 
 ## 📢 News
 
-- **🤖 [2025-02] OpenClaw Integration** — SkillNet is now a built-in skill for [OpenClaw](https://github.com/openclaw/openclaw). One command to install, zero config needed. [Get started →](#-openclaw-integration)
+- **🤖 [2025-02] OpenClaw Integration Released!** — SkillNet is now available as a built-in skill for [OpenClaw](https://github.com/openclaw/openclaw). One command to install, zero config to use. The agent automatically searches, downloads, creates, evaluates, and analyzes skills on your behalf. [Get started →](#-openclaw-integration)
 
 ## ✨ Key Features
 
@@ -40,7 +38,22 @@ Search 500+ community skills · One-line install · Auto-create from repos / doc
 | 📦 **One-Line Install**      | `skillnet download <url>` — grab any skill from GitHub in seconds                                                       |
 | ✨ **Auto-Create**           | Convert GitHub repos, PDFs/PPTs/Word docs, conversation logs, or text prompts into structured skill packages using LLMs |
 | 📊 **5-D Evaluation**        | Score skills on **Safety · Completeness · Executability · Maintainability · Cost-Awareness**                            |
-| 🕸️ **Relationship Analysis** | Auto-discover `similar_to` · `belong_to` · `compose_with` · `depend_on` links between skills                            |
+| 🕸️ **Skill Graph**           | Auto-discover `similar_to` · `belong_to` · `compose_with` · `depend_on` links between skills                            |
+
+---
+
+## 📖 Table of Contents
+
+- [Quick Start](#-quick-start)
+- [REST API](#-rest-api)
+- [Python SDK](#-python-sdk)
+- [CLI Reference](#-cli-reference)
+- [Configuration](#-configuration)
+- [Example: Scientific Discovery](#-example-scientific-discovery)
+- [OpenClaw Integration](#-openclaw-integration)
+- [Skill Structure](#-skill-structure)
+- [Contributing](#-contributing)
+- [License](#-license)
 
 ---
 
@@ -63,30 +76,11 @@ print(results[0].skill_name, results[0].stars)
 client.download(url=results[0].skill_url, target_dir="./my_skills")
 ```
 
-> **Need Create / Evaluate / Analyze?** Pass `api_key="sk-..."` (or set `API_KEY` env var). See [Configuration](#-configuration).
-
 <div align="center">
 
 https://github.com/user-attachments/assets/9f9d35b0-36fd-4d7d-a072-39afa380b241
 
 </div>
-
----
-
-## 📖 Table of Contents
-
-- [Quick Start](#-quick-start)
-- [REST API](#-rest-api)
-- [Python SDK](#-python-sdk)
-- [CLI Reference](#-cli-reference)
-- [Configuration](#-configuration)
-- [Example: Scientific Discovery](#-example-scientific-discovery)
-- [OpenClaw Integration](#-openclaw-integration)
-- [Skill Structure](#-skill-structure)
-- [Roadmap](#-roadmap)
-- [Contributing](#-contributing)
-- [Citation](#-citation)
-- [License](#-license)
 
 ---
 
@@ -402,19 +396,6 @@ skill-name/
 
 ---
 
-## 🗺 Roadmap
-
-- [x] Keyword match & semantic search
-- [x] One-line skill installer
-- [x] Skill creator (trajectory · GitHub · office docs · prompt)
-- [x] 5-dimension quality evaluation
-- [x] Skill relationship analysis
-- [ ] Skill versioning & dependency resolution
-- [ ] Community skill marketplace
-- [ ] Multi-agent collaborative skill execution
-
----
-
 ## 🤝 Contributing
 
 Contributions of all kinds are welcome! Whether it's fixing a typo, adding a feature, or sharing a new skill — every contribution counts.
@@ -429,21 +410,6 @@ You can also [open an Issue](https://github.com/zjunlp/SkillNet/issues) to repor
 
 ---
 
-## 📝 Citation
-
-If you find SkillNet useful in your research, please consider citing:
-
-```bibtex
-@misc{skillnet2025,
-  title={SkillNet: Open Infrastructure for Creating, Evaluating, and Connecting AI Agent Skills},
-  author={SkillNet Team},
-  year={2025},
-  url={http://skillnet.openkg.cn}
-}
-```
-
----
-
-## 📄 License
+##  License
 
 This project is licensed under the [MIT License](LICENSE).
