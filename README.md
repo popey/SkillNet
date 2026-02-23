@@ -452,17 +452,61 @@ You can explore the full implementation, in our interactive Jupyter Notebook:
 
 ## 🤖 OpenClaw Integration
 
-SkillNet integrates with [OpenClaw](https://github.com/openclaw/openclaw), an open-source personal AI agent framework, as a built-in skill. OpenClaw adopts lazy-loading skill design — only compact metadata is injected at session start, and full instructions load on demand when triggered.
+SkillNet integrates with [OpenClaw](https://github.com/openclaw/openclaw) (an open-source personal AI agent framework) as a built-in, lazy-loaded skill. **You don't need OpenClaw's source code here** — just a working OpenClaw installation.
 
-Once installed, the agent automatically:
+Once set up, the agent automatically:
 
 - **Searches & applies** existing skills before tackling complex or unfamiliar tasks
-- **Creates skills** from GitHub repos, documents (PDF/PPT/Word), or completed work via `skillnet create`
+- **Creates skills** from GitHub repos, documents (PDF/PPT/Word), or completed work
 - **Evaluates & analyzes** the local skill library for quality scores and inter-skill relationships
 
-This creates a closed loop: community skills inform task execution → successful outcomes become new skills → periodic analysis keeps the library clean.
-
 <div align="center"> <img src="images/openclaw_skillnet.gif" width="100%" alt="OpenClaw + SkillNet Demo"> </div>
+
+### Quick Setup
+
+**Prerequisites**: OpenClaw is installed and running on your machine.
+
+**Step 1: Copy the skill to OpenClaw**
+
+macOS/Linux:
+
+```bash
+mkdir -p ~/.openclaw/skills
+cp -R skills/skillnet ~/.openclaw/skills/skillnet
+```
+
+Windows PowerShell:
+
+```powershell
+New-Item -Path "$env:USERPROFILE\.openclaw\skills" -ItemType Directory -Force
+Copy-Item -Recurse "skills\skillnet" "$env:USERPROFILE\.openclaw\skills\skillnet"
+```
+
+**Step 2: Restart OpenClaw**
+
+```bash
+openclaw gateway restart
+```
+
+OpenClaw will detect the skill and prompt you to install the `skillnet` CLI automatically (choose from script/uv/pipx).
+
+**Step 3: Trigger the skill in OpenClaw**
+
+In OpenClaw chat, try:
+
+> "Search SkillNet for a 'docker' skill and show the top result."
+
+OpenClaw will detect that the `skillnet` CLI is missing and prompt you to install it (choose from script/uv/pipx). After installation completes, the command will execute automatically.
+
+**Optional: Environment variables for advanced features**
+
+Only needed if you use `create`, `evaluate`, or `analyze` commands:
+
+- `API_KEY` — OpenAI-compatible API key (required for create/evaluate/analyze)
+- `BASE_URL` — Custom LLM endpoint (optional, defaults to OpenAI)
+- `GITHUB_TOKEN` — GitHub PAT for private repos or higher rate limits (optional)
+
+**Note**: `search` and `download` are completely free — no keys required.
 
 👉 The full integration skill package is available at [`skills/skillnet/`](skills/skillnet/).
 
