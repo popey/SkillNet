@@ -469,6 +469,8 @@ This forms a closed loop: community skills guide execution → successful outcom
 
 ### 📥 Install via ClawHub (Recommended)
 
+**Option A — CLI:**
+
 ```bash
 # 1. Install ClawHub CLI (once)
 npm i -g clawhub
@@ -480,6 +482,14 @@ clawhub install skillnet --workdir ~/.openclaw/workspace
 
 # 3. Restart OpenClaw so it discovers the new skill
 openclaw gateway restart   # or simply start a new chat session
+```
+
+**Option B — Via OpenClaw chat:**
+
+Simply tell your agent:
+
+```
+Install the skillnet skill from ClawHub.
 ```
 
 The skill lands at `<workspace>/skills/skillnet` — workspace skills take precedence over global and bundled ones.
