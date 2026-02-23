@@ -484,7 +484,7 @@ openclaw gateway restart   # or simply start a new chat session
 
 The skill lands at `<workspace>/skills/skillnet` — workspace skills take precedence over global and bundled ones.
 
-### 🧪 Quick Smoke Test
+### 🧪 Quick Verification
 
 In your OpenClaw chat, try:
 
