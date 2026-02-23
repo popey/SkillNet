@@ -51,7 +51,6 @@ Search 500+ community skills · One-line install · Auto-create from repos / doc
 - [Configuration](#-configuration)
 - [Example: Scientific Discovery](#-example-scientific-discovery)
 - [OpenClaw Integration](#-openclaw-integration)
-- [Skill Structure](#-skill-structure)
 - [Contributing](#-contributing)
 - [License](#-license)
 
@@ -379,20 +378,6 @@ Create a skill from this GitHub repo: https://github.com/owner/repo (then evalua
 </details>
 
 > The skill source is also available at [`skills/skillnet/`](skills/skillnet/) for reference.
-
----
-
-## 📂 Skill Structure
-
-Every SkillNet package follows a standardized layout:
-
-```text
-skill-name/
-├── SKILL.md          # [Required] YAML metadata + markdown instructions
-├── scripts/          # [Optional] Executable Python / Bash scripts
-├── references/       # [Optional] Static docs, API specs, schemas
-└── assets/           # [Optional] Templates, icons, examples
-```
 
 ---
 
