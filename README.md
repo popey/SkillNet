@@ -44,14 +44,12 @@ SkillNet is an open infrastructure for creating, evaluating, and organizing AI s
   - GitHub repositories
   - Office documents (PDF, PPT, Word)
   - Direct text prompts
-- **📊 Evaluation**: Evaluate and score skills for quality assurance (Safety, Completeness, Excutability, Maintainability, Cost-Awareness).
+- **📊 Evaluation**: Evaluate and score skills for quality assurance (Safety, Completeness, Executability, Maintainability, Cost-Awareness).
 - **🕸️ Relationship Analysis**: Automatically map the connections between skills in your local library, identifying structural relationships between skills (similar_to, belong_to, compose_with, depend_on).
 
 ## 🎬 Quick Start Demo
 
 https://github.com/user-attachments/assets/9f9d35b0-36fd-4d7d-a072-39afa380b241
-
-
 
 # 🌐 API Access
 
@@ -263,13 +261,13 @@ The CLI is powered by `Typer` and `Rich` for a beautiful terminal experience.
 
 #### Common Commands
 
-| Command        | Action         | Example                                      |
-| :------------- | :------------- | :------------------------------------------- |
-| **`search`**   | Search skills  | `skillnet search "data viz" --mode vector`   |
-| **`download`** | Install skill  | `skillnet download <github_url> -d ./skills` |
-| **`create`**   | Create skill   | `skillnet create log.txt --model gpt-4o`     |
-| **`evaluate`** | Evaluate skill quality| `skillnet evaluate ./my_tool`                |
-| **`analyze`** | Analyze skill relations | `skillnet analyze ./my_agent_skills`                |
+| Command        | Action                  | Example                                      |
+| :------------- | :---------------------- | :------------------------------------------- |
+| **`search`**   | Search skills           | `skillnet search "data viz" --mode vector`   |
+| **`download`** | Install skill           | `skillnet download <github_url> -d ./skills` |
+| **`create`**   | Create skill            | `skillnet create log.txt --model gpt-4o`     |
+| **`evaluate`** | Evaluate skill quality  | `skillnet evaluate ./my_tool`                |
+| **`analyze`**  | Analyze skill relations | `skillnet analyze ./my_agent_skills`         |
 
 > **Tip:** Use `skillnet [command] --help` to see all available options (e.g., thresholds, sorting).
 
@@ -437,6 +435,7 @@ To demonstrate the power of SkillNet, we provide a complete example of a Scienti
 👉 **[Try the Interactive Demo (Website: Scenarios->Science)](http://skillnet.openkg.cn/)**
 
 ### 🧬 Workflow Lifecycle
+
 - Task Definition: User provides a goal: "Analyze scRNA-seq data to find cancer targets."
 - AI Planning: The Agent decomposes the mission into logical steps (Data $\rightarrow$ Mechanism $\rightarrow$ Validation $\rightarrow$ Report).
 - Skill Discovery: The Agent uses client.search() to find specialized skills like cellxgene-census and kegg-database.
@@ -444,6 +443,7 @@ To demonstrate the power of SkillNet, we provide a complete example of a Scienti
 - Execution: The skills are executed sequentially to generate a final discovery report.
 
 ### 🚀 Try it yourself
+
 You can explore the full implementation, in our interactive Jupyter Notebook:
 
 👉 **[View Scientific Discovery Demo (Notebook)](https://github.com/zjunlp/SkillNet/blob/main/examples/scientific_workflow_demo.ipynb)**
@@ -452,63 +452,53 @@ You can explore the full implementation, in our interactive Jupyter Notebook:
 
 ## 🤖 OpenClaw Integration
 
-SkillNet integrates with [OpenClaw](https://github.com/openclaw/openclaw) (an open-source personal AI agent framework) as a built-in, lazy-loaded skill. **You don't need OpenClaw's source code here** — just a working OpenClaw installation.
-
-Once set up, the agent automatically:
+SkillNet integrates with [OpenClaw](https://github.com/openclaw/openclaw) (open-source personal AI agent framework) as a built-in, lazy-loaded skill. You do **not** need OpenClaw's source code — only a working OpenClaw install. Once loaded, the agent automatically:
 
 - **Searches & applies** existing skills before tackling complex or unfamiliar tasks
-- **Creates skills** from GitHub repos, documents (PDF/PPT/Word), or completed work
-- **Evaluates & analyzes** the local skill library for quality scores and inter-skill relationships
+- **Creates skills** from GitHub repos, documents (PDF/PPT/Word), or completed work via `skillnet create`
+- **Evaluates & analyzes** your local skill library for quality scores and inter-skill relationships
+
+This forms a closed loop: community skills guide execution → successful outcomes become new skills → periodic analysis keeps the library clean.
 
 <div align="center"> <img src="images/openclaw_skillnet.gif" width="100%" alt="OpenClaw + SkillNet Demo"> </div>
 
-### Quick Setup
+### 📋 Prerequisites
 
-**Prerequisites**: OpenClaw is installed and running on your machine.
+- [OpenClaw](https://github.com/openclaw/openclaw) installed with a configured workspace (default: `~/.openclaw/workspace`)
+- No OpenClaw repo checkout is required
 
-**Step 1: Copy the skill to OpenClaw**
-
-macOS/Linux:
-
-```bash
-mkdir -p ~/.openclaw/skills
-cp -R skills/skillnet ~/.openclaw/skills/skillnet
-```
-
-Windows PowerShell:
-
-```powershell
-New-Item -Path "$env:USERPROFILE\.openclaw\skills" -ItemType Directory -Force
-Copy-Item -Recurse "skills\skillnet" "$env:USERPROFILE\.openclaw\skills\skillnet"
-```
-
-**Step 2: Restart OpenClaw**
+### 📥 Install via ClawHub (Recommended)
 
 ```bash
-openclaw gateway restart
+# 1. Install ClawHub CLI (once)
+npm i -g clawhub
+
+# 2. Install the skill into your OpenClaw workspace (pick one)
+cd ~/.openclaw/workspace && clawhub install skillnet
+# — or from anywhere —
+clawhub install skillnet --workdir ~/.openclaw/workspace
+
+# 3. Restart OpenClaw so it discovers the new skill
+openclaw gateway restart   # or simply start a new chat session
 ```
 
-OpenClaw will detect the skill and prompt you to install the `skillnet` CLI automatically (choose from script/uv/pipx).
+The skill lands at `<workspace>/skills/skillnet` — workspace skills take precedence over global and bundled ones.
 
-**Step 3: Trigger the skill in OpenClaw**
+### 🧪 Quick Smoke Test
 
-In OpenClaw chat, try:
+In your OpenClaw chat, try:
 
-> "Search SkillNet for a 'docker' skill and show the top result."
+```
+Search SkillNet for a "docker" skill and summarize the top result.
+```
 
-OpenClaw will detect that the `skillnet` CLI is missing and prompt you to install it (choose from script/uv/pipx). After installation completes, the command will execute automatically.
+```
+Create a skill from this GitHub repo: https://github.com/owner/repo (then evaluate it).
+```
 
-**Optional: Environment variables for advanced features**
-
-Only needed if you use `create`, `evaluate`, or `analyze` commands:
-
-- `API_KEY` — OpenAI-compatible API key (required for create/evaluate/analyze)
-- `BASE_URL` — Custom LLM endpoint (optional, defaults to OpenAI)
-- `GITHUB_TOKEN` — GitHub PAT for private repos or higher rate limits (optional)
-
-**Note**: `search` and `download` are completely free — no keys required.
-
-👉 The full integration skill package is available at [`skills/skillnet/`](skills/skillnet/).
+> For SkillNet CLI installation and usage (`search` / `create` / `evaluate` / `analyze`), see the [Python Toolkit](#-python-toolkit-skillnet-ai) section above.
+>
+> 👉 The source of this skill package is also available at [`skills/skillnet/`](skills/skillnet/) for reference, but the recommended install method is via **ClawHub** as shown above.
 
 ---
 

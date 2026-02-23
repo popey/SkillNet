@@ -102,6 +102,8 @@ Download a skill and **immediately** load it into your current context:
 
 ```bash
 # Download to local skill library
+# <skill-url> must point to a specific skill subdirectory, e.g.:
+#   https://github.com/openclaw/openclaw/tree/main/skills/summarize
 skillnet download "<skill-url>" -d ~/.openclaw/skills
 
 # Read SKILL.md — the skill's core instructions (always read this first)

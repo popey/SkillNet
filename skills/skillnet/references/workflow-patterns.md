@@ -122,6 +122,6 @@ Routine tasks, minor fixes, or straightforward work → do NOT create.
 | User provides a GitHub repo to learn | **create** (github)       | `skillnet create --github <url>`               |
 | Finished a complex task with lessons | **create** (prompt)       | `skillnet create --prompt "..."`               |
 | User shares a knowledge document     | **create** (office)       | `skillnet create --office <file>`              |
-| User provides execution logs or data | **create** (trajectory)   | `skillnet create <trajectory-file>`            |
+| User provides execution logs or data | **create** (trajectory)   | `skillnet create --trajectory <trajectory-file>` |
 | Unsure about a skill's quality       | **evaluate**              | `skillnet evaluate <path-or-url>`              |
 | Too many skills, need organization   | **analyze**               | `skillnet analyze <dir>`                       |

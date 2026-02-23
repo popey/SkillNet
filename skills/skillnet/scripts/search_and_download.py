@@ -3,7 +3,7 @@
 
 Usage:
   python search_and_download.py "query" [--mode vector] [--threshold 0.7] \
-        [--download] [--target-dir ~/.openclaw/skills]
+        [--download] [--target-dir ~/.openclaw/skills] [--no-fallback]
 
 Requires: pip install skillnet-ai
 """
@@ -23,9 +23,12 @@ def main():
     parser.add_argument("--download", action="store_true", help="Auto-download the top result")
     parser.add_argument("--target-dir", default=os.path.expanduser("~/.openclaw/skills"),
                         help="Directory to install downloaded skills into")
-    parser.add_argument("--fallback", action="store_true", default=True,
-                        help="If keyword returns 0 results, retry with vector mode")
+    parser.add_argument("--no-fallback", action="store_true",
+                        help="Disable automatic retry with vector mode when keyword returns 0 results")
     args = parser.parse_args()
+
+    # Determine effective fallback flag
+    fallback = not args.no_fallback
 
     try:
         from skillnet_ai import SkillNetClient
@@ -47,7 +50,7 @@ def main():
     )
 
     # Fallback: keyword → vector
-    if not results and args.mode == "keyword" and args.fallback:
+    if not results and args.mode == "keyword" and fallback:
         print("   No keyword results. Retrying with vector mode (threshold=0.65)...")
         results = client.search(
             q=args.query,
