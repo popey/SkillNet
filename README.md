@@ -15,6 +15,7 @@
 ## 📖 Table of Contents
 
 - [📖 Overview](#-overview)
+- [📢 News](#-news)
 - [🚀 Features](#-features)
 - [🌐 API Access](#-api-access)
 - [🐍 Python Toolkit (`skillnet-ai`)](#-python-toolkit-skillnet-ai)
@@ -34,6 +35,10 @@
 SkillNet is an open infrastructure for creating, evaluating, and organizing AI skills at scale.
 
 ![](images/graph.gif)
+
+## 📢 News
+
+- **🤖 [2025-02] OpenClaw Integration Released!** — SkillNet is now available as a built-in skill for [OpenClaw](https://github.com/openclaw/openclaw). One command to install, zero config to use. The agent automatically searches, downloads, creates, evaluates, and analyzes skills on your behalf. [Get started →](#-openclaw-integration)
 
 ## 🚀 Features
 
