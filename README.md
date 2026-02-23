@@ -496,8 +496,6 @@ Search SkillNet for a "docker" skill and summarize the top result.
 Create a skill from this GitHub repo: https://github.com/owner/repo (then evaluate it).
 ```
 
-> For SkillNet CLI installation and usage (`search` / `create` / `evaluate` / `analyze`), see the [Python Toolkit](#-python-toolkit-skillnet-ai) section above.
->
 > 👉 The source of this skill package is also available at [`skills/skillnet/`](skills/skillnet/) for reference, but the recommended install method is via **ClawHub** as shown above.
 
 ---
