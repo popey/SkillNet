@@ -23,6 +23,7 @@
   - [🛠 Python SDK Usage](#-usage-python-sdk)
   - [💻 CLI Usage](#-cli-usage)
 - [🔬 Example Use Case](#-example-use-case)
+- [🤖 OpenClaw Integration](#-openclaw-integration)
 - [📂 Skill Structure](#-skill-structure)
 - [🗺 Roadmap & Contributing](#-roadmap)
 
@@ -446,6 +447,24 @@ To demonstrate the power of SkillNet, we provide a complete example of a Scienti
 You can explore the full implementation, in our interactive Jupyter Notebook:
 
 👉 **[View Scientific Discovery Demo (Notebook)](https://github.com/zjunlp/SkillNet/blob/main/examples/scientific_workflow_demo.ipynb)**
+
+---
+
+## 🤖 OpenClaw Integration
+
+SkillNet integrates with [OpenClaw](https://github.com/openclaw/openclaw), an open-source personal AI agent framework, as a built-in skill. OpenClaw adopts lazy-loading skill design — only compact metadata is injected at session start, and full instructions load on demand when triggered.
+
+Once installed, the agent automatically:
+
+- **Searches & applies** existing skills before tackling complex or unfamiliar tasks
+- **Creates skills** from GitHub repos, documents (PDF/PPT/Word), or completed work via `skillnet create`
+- **Evaluates & analyzes** the local skill library for quality scores and inter-skill relationships
+
+This creates a closed loop: community skills inform task execution → successful outcomes become new skills → periodic analysis keeps the library clean.
+
+<div align="center"> <img src="images/openclaw_skillnet.gif" width="100%" alt="OpenClaw + SkillNet Demo"> </div>
+
+👉 The full integration skill package is available at [`skills/skillnet/`](skills/skillnet/).
 
 ---
 

@@ -1,4 +1,4 @@
-scripts/
+/scripts/
 __pycache__/
 skill_downloads/
 download_skill*
