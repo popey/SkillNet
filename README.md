@@ -32,13 +32,13 @@ Search 500+ community skills · One-line install · Auto-create from repos / doc
 
 ## ✨ Key Features
 
-| Feature                      | Description                                                                                                             |
-| :--------------------------- | :---------------------------------------------------------------------------------------------------------------------- |
-| 🔍 **Search**                | Find skills via keyword match or AI semantic search across 500+ curated skills                                          |
-| 📦 **One-Line Install**      | `skillnet download <url>` — grab any skill from GitHub in seconds                                                       |
-| ✨ **Auto-Create**           | Convert GitHub repos, PDFs/PPTs/Word docs, conversation logs, or text prompts into structured skill packages using LLMs |
-| 📊 **5-D Evaluation**        | Score skills on **Safety · Completeness · Executability · Maintainability · Cost-Awareness**                            |
-| 🕸️ **Skill Graph**           | Auto-discover `similar_to` · `belong_to` · `compose_with` · `depend_on` links between skills                            |
+| Feature | Description |
+| :--- | :--- |
+| 🔍&nbsp;**Search** | Find skills via keyword match or AI semantic search across 500+ curated skills |
+| 📦&nbsp;**One&#8209;Line&nbsp;Install** | `skillnet download <url>` — grab any skill from GitHub in seconds |
+| ✨&nbsp;**Auto&#8209;Create** | Convert GitHub repos, PDFs/PPTs/Word docs, conversation logs, or text prompts into structured skill packages using LLMs |
+| 📊&nbsp;**5&#8209;D&nbsp;Evaluation** | Score skills on **Safety · Completeness · Executability · Maintainability · Cost‑Awareness** |
+| 🕸️&nbsp;**Skill&nbsp;Graph** | Auto-discover `similar_to` · `belong_to` · `compose_with` · `depend_on` links between skills |
 
 ---
 
