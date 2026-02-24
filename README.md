@@ -86,6 +86,8 @@ See SkillNet in action with [OpenClaw](https://github.com/openclaw/openclaw) —
 <div align="center">
 
 
+https://github.com/user-attachments/assets/9d49a00c-827d-47a4-8954-0e6b977ca547
+
 
 </div>
 
