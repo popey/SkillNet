@@ -49,7 +49,7 @@ SkillNet is your skill supply chain. Before starting any non-trivial task, **spe
 The cycle:
 
 1. **Search** (free, no key) — Quick check for existing skills
-2. **Download & Load** (free for public repos) — Install and read the skill
+2. **Download & Load** (free for public repos) — Confirm with user, then install and read the skill
 3. **Apply** — Extract useful patterns, constraints, and tools from the skill — not blind copy
 4. **Create** (needs API_KEY) — When the task produced valuable, reusable knowledge, or the user asks, use `skillnet create` to package it
 5. **Evaluate** (needs API_KEY) — Verify quality
@@ -87,11 +87,11 @@ skillnet search "multi-agent supervisor orchestration" --mode vector --threshold
 | Low-quality / irrelevant                             | Proceed without; consider creating a skill after task          |
 | 0 results (both modes)                               | Proceed without; consider creating a skill after task          |
 
-**The search must never block your main task.** If you're unsure about relevance, download and skim the SKILL.md (10 seconds) — if it doesn't click, discard it and move on.
+**The search must never block your main task.** If you're unsure about relevance, ask the user whether to download the skill for a quick review — if approved, skim the SKILL.md (10 seconds) and discard it if it doesn't fit.
 
 ### Step 2: Download → Load → Apply
 
-Download a skill and **immediately** load it into your current context:
+After confirming with the user, download a skill and load it into your current context:
 
 ```bash
 # Download to local skill library
@@ -109,14 +109,14 @@ ls ~/.openclaw/workspace/skills/<skill-name>/references/ 2>/dev/null
 cat ~/.openclaw/workspace/skills/<skill-name>/references/<relevant-file> 2>/dev/null
 ```
 
-No user permission needed to search, download, or load.
+No user permission needed to search. **Always confirm with the user before downloading or loading a skill.**
 
 **What "Apply" means** — read the skill and extract:
 
 - **Patterns & architecture** — directory structures, naming conventions, design patterns to adopt
 - **Constraints & guardrails** — "always do X", "never do Y", safety rules
 - **Tool choices & configurations** — recommended libraries, flags, environment setup
-- **Reusable scripts** — run or adapt bundled scripts directly
+- **Reusable scripts** — review bundled scripts with the user before running or adapting them
 
 Apply does **not** mean blindly copy the entire skill. If the skill covers 80% of your task, use that 80% and fill the gap yourself. If it only overlaps 20%, extract those patterns and discard the rest.
 
@@ -228,27 +228,28 @@ skillnet evaluate ~/.openclaw/workspace/skills/skill-b
 
 ## In-Task Triggers
 
-During execution, if any of these occur, act immediately — do not wait for user instruction:
+During execution, if any of these occur, suggest the action to the user and proceed after confirmation:
 
-| Trigger                                     | Action                                                                                               |
-| ------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Encounter unfamiliar tool/framework/library | `skillnet search "<name>"` → download → read SKILL.md → extract useful parts                         |
-| User provides a GitHub URL                  | `skillnet create --github <url> -d ~/.openclaw/workspace/skills` → evaluate → read SKILL.md → apply  |
-| User shares a PDF/DOCX/PPT                  | `skillnet create --office <file> -d ~/.openclaw/workspace/skills` → evaluate → read SKILL.md → apply |
-| User provides execution logs or data        | `skillnet create <file> -d ~/.openclaw/workspace/skills` → evaluate → read SKILL.md → apply          |
-| Task hits a wall, no idea how to proceed    | `skillnet search "<problem>" --mode vector` → check results                                          |
+| Trigger                                     | Action                                                                                                                   |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Encounter unfamiliar tool/framework/library | `skillnet search "<name>"` → suggest downloading to the user → on approval, read SKILL.md → extract useful parts         |
+| User provides a GitHub URL                  | Confirm with user → `skillnet create --github <url> -d ~/.openclaw/workspace/skills` → evaluate → read SKILL.md → apply  |
+| User shares a PDF/DOCX/PPT                  | Confirm with user → `skillnet create --office <file> -d ~/.openclaw/workspace/skills` → evaluate → read SKILL.md → apply |
+| User provides execution logs or data        | Confirm with user → `skillnet create <file> -d ~/.openclaw/workspace/skills` → evaluate → read SKILL.md → apply          |
+| Task hits a wall, no idea how to proceed    | `skillnet search "<problem>" --mode vector` → check results → suggest downloading relevant skills to the user            |
 
-**Pragmatic note**: In-task triggers should not interrupt flow. If you're in the middle of producing output, finish the current step first, then trigger the search/create. If the task is time-sensitive and you already have a working approach, a search can run in parallel or be deferred to post-task.
+**Pragmatic note**: In-task triggers should not interrupt flow. If you're in the middle of producing output, finish the current step first, then suggest the search/create action. Always confirm with the user before downloading or executing any third-party code, even during in-task triggers. If the task is time-sensitive and you already have a working approach, a search can run in parallel or be deferred to post-task.
 
 ## Completion Hook
 
 After completing a significant task, consider: was this difficult, reusable, and high-quality enough to preserve?
 
-If at least two are true — (1) the solution required non-obvious work, (2) it's clearly reusable, (3) the user asked to preserve it — check credentials and create:
+If at least two are true — (1) the solution required non-obvious work, (2) it's clearly reusable, (3) the user asked to preserve it — suggest creating a skill to the user:
 
-1. If `API_KEY` is already configured → proceed silently.
-2. If not → use the standard API_KEY ask template (see "Environment Variables & Credential Strategy").
-3. If user declines → acknowledge and move on.
+1. Ask the user whether they would like to preserve this solution as a reusable skill.
+2. If the user agrees and `API_KEY` is already configured → inform the user which credentials and endpoint will be used, then proceed.
+3. If `API_KEY` is not configured → use the standard API_KEY ask template (see "Environment Variables & Credential Strategy").
+4. If user declines → acknowledge and move on.
 
 ```bash
 # Credentials already available (configured or just provided)
@@ -299,9 +300,9 @@ Fallback: keyword returns 0 → try broader/simpler keywords → then `--mode ve
 
 ### Just-in-Time Credential Strategy
 
-Credentials follow a **"silent if configured, ask only when needed"** pattern:
+Credentials follow a **"transparent — always inform the user which credentials are being used"** pattern:
 
-1. **If already configured** (via `openclaw.json`, environment, or earlier in the session) → **use silently**, never re-ask.
+1. **If already configured** (via `openclaw.json`, environment, or earlier in the session) → use the configured credentials and briefly inform the user (e.g., "Using your configured API_KEY").
 2. **If missing and the command needs it** → ask the user **once** using the standard templates below.
 3. **If the user declines** → acknowledge and continue the main task. Never block.
 
@@ -317,7 +318,7 @@ export BASE_URL="<value>"   # only if user provided
 export GITHUB_TOKEN="<value>"  # only if needed
 ```
 
-Never tell the user to set env vars themselves — ask for the value, inject it, proceed.
+Ask the user for the value or guide them to set the env var themselves, then proceed.
 
 ### Standard Ask Templates
 
@@ -356,7 +357,7 @@ If credentials are provided in `openclaw.json`, they are injected automatically 
 
 - `apiKey` → injected as `API_KEY` (bound via `primaryEnv` in metadata).
 - `env.BASE_URL` / `env.GITHUB_TOKEN` → injected as environment variables.
-- Once configured, all commands run silently without asking the user.
+- Once configured, commands use these credentials automatically. The agent will still inform the user before executing security-sensitive operations (download, create, evaluate, analyze).
 
 ---
 
@@ -438,3 +439,20 @@ skillnet evaluate ~/.openclaw/workspace/skills/langgraph-code-pipeline
 - **No system modifications**: Installation uses standard Python package managers (`pipx` or `pip`). No remote shell scripts are executed.
 - **Local output only**: Created skills are written to the specified output directory and nowhere else.
 - `skillnet analyze` only generates a report — it never modifies or deletes skills.
+
+### User Confirmation Policy
+
+The agent **must** follow these gating rules for all SkillNet operations:
+
+| Operation                                                | User confirmation required? | Notes                                                                                                        |
+| -------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `skillnet search`                                        | **No**                      | Read-only query; no local files or credentials are transmitted. Always safe to run.                          |
+| `skillnet download`                                      | **Yes**                     | Downloads third-party code to disk. Always confirm with the user before executing.                           |
+| Loading a downloaded skill's SKILL.md                    | **Yes**                     | Reading third-party instructions into the agent's context. Confirm as part of the download approval.         |
+| Running or adapting a downloaded skill's bundled scripts | **Yes**                     | Executing third-party code. Always let the user review the script content before running.                    |
+| `skillnet create`                                        | **Yes**                     | Sends content to the configured LLM endpoint. Inform the user which endpoint and credentials are being used. |
+| `skillnet evaluate`                                      | **Yes**                     | Sends skill content to the configured LLM endpoint. Inform the user before proceeding.                       |
+| `skillnet analyze`                                       | **Yes**                     | Sends skill metadata to the configured LLM endpoint. Inform the user before proceeding.                      |
+| Credential usage                                         | **Transparent**             | Always inform the user which credentials and endpoints are being used, even when pre-configured.             |
+
+**Never** execute download, create, evaluate, analyze, or run third-party scripts without explicit user approval. Search is the only fully autonomous operation.
