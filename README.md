@@ -341,8 +341,7 @@ SkillNet integrates with [OpenClaw](https://github.com/openclaw/openclaw) as a b
   <img src="images/openclaw_skillnet.gif" width="100%" alt="OpenClaw + SkillNet Demo">
 </div>
 
-<details>
-<summary><b>📥 Installation</b></summary>
+### 📥 Installation
 
 **Prerequisites:** [OpenClaw](https://github.com/openclaw/openclaw) installed (default workspace: `~/.openclaw/workspace`)
 
@@ -359,8 +358,6 @@ openclaw gateway restart
 ```
 Install the skillnet skill from ClawHub.
 ```
-
-</details>
 
 <details>
 <summary><b>⚙️ Configuration</b></summary>
@@ -407,8 +404,7 @@ Three parameters control how SkillNet runs inside OpenClaw. If pre-configured in
 
 </details>
 
-<details>
-<summary><b>🧪 Quick Verification</b></summary>
+### 🧪 Quick Verification
 
 In your OpenClaw chat, try:
 
@@ -423,8 +419,6 @@ Search SkillNet for a "docker" skill and summarize the top result.
 ```
 Create a skill from this GitHub repo: https://github.com/owner/repo (then evaluate it).
 ```
-
-</details>
 
 > The skill source is also available at [`skills/skillnet/`](skills/skillnet/) for reference.
 
