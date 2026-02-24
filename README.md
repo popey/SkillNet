@@ -359,8 +359,7 @@ openclaw gateway restart
 Install the skillnet skill from ClawHub.
 ```
 
-<details>
-<summary><b>⚙️ Configuration</b></summary>
+### ⚙️ Configuration
 
 Three parameters control how SkillNet runs inside OpenClaw. If pre-configured in `openclaw.json`, the agent uses them silently — no prompts, no interruptions. If not configured, the agent only asks when a command actually needs the value, injects it for that single call, and never pollutes the global environment.
 
@@ -370,9 +369,9 @@ Three parameters control how SkillNet runs inside OpenClaw. If pre-configured in
 | `BASE_URL`     | Custom / local LLM endpoint       | `https://api.openai.com/v1` |
 | `GITHUB_TOKEN` | Private repos / rate-limit bypass | —                           |
 
-> `search` and `download` (public repos) work without any credentials.
+> `search` and `download` work without any credentials.
 
-**Recommended: pre-configure in `openclaw.json`** (save & restart gateway):
+**Recommended: pre-configure in `openclaw.json`**:
 
 ```json
 {
@@ -390,19 +389,6 @@ Three parameters control how SkillNet runs inside OpenClaw. If pre-configured in
   }
 }
 ```
-
-**Common scenarios:**
-
-- **OpenAI only (minimal):** fill `apiKey` only; remove or keep `env` block with defaults.
-- **Local inference (vLLM / LM Studio / Ollama):** set `apiKey` to any placeholder (e.g. `"sk-local"`), set `BASE_URL` to `"http://127.0.0.1:8000/v1"`.
-- **Private repos / rate limits:** add a read-only `GITHUB_TOKEN` (recommended scope: `repo:read` or fine-grained read-only).
-
-**Without pre-configuration (on-demand prompting):**
-
-- First time the agent runs `create` / `evaluate` / `analyze` without a configured `apiKey` → it asks once in chat, you reply, and the key is used only for that call.
-- Accessing a private GitHub repo or hitting rate limits → the agent asks for a read-only `GITHUB_TOKEN` only when needed.
-
-</details>
 
 ### 🧪 Quick Verification
 
