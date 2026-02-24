@@ -361,15 +361,9 @@ Install the skillnet skill from ClawHub.
 
 ### ⚙️ Configuration
 
-Three parameters control how SkillNet runs inside OpenClaw. If pre-configured in `openclaw.json`, the agent uses them silently — no prompts, no interruptions. If not configured, the agent only asks when a command actually needs the value, injects it for that single call, and never pollutes the global environment.
+The same three parameters (`API_KEY`, `BASE_URL`, `GITHUB_TOKEN`) apply here — see [Configuration](#-configuration) for details.
 
-| Parameter      | Required For                      | Default                     |
-| :------------- | :-------------------------------- | :-------------------------- |
-| `apiKey`       | `create` · `evaluate` · `analyze` | —                           |
-| `BASE_URL`     | Custom / local LLM endpoint       | `https://api.openai.com/v1` |
-| `GITHUB_TOKEN` | Private repos / rate-limit bypass | —                           |
-
-> `search` and `download` work without any credentials.
+In OpenClaw, you can pre-configure them in `openclaw.json` so the agent uses them silently — no prompts, no interruptions. If not configured, the agent only asks when a command actually needs the value, injects it for that single call, and never pollutes the global environment.
 
 **Recommended: pre-configure in `openclaw.json`**:
 
@@ -400,7 +394,7 @@ In your OpenClaw chat, try:
 Search SkillNet for a "docker" skill and summarize the top result.
 ```
 
-**Requires API key (verifies silent injection):**
+**Requires API key:**
 
 ```
 Create a skill from this GitHub repo: https://github.com/owner/repo (then evaluate it).
