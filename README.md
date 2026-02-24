@@ -48,7 +48,7 @@ Search 500+ community skills · One-line install · Auto-create from repos / doc
 - [REST API](#-rest-api)
 - [Python SDK](#-python-sdk)
 - [CLI Reference](#-cli-reference)
-- [Configuration](#-configuration)
+- [Configuration](#configuration)
 - [Example: Scientific Discovery](#-example-scientific-discovery)
 - [OpenClaw Integration](#-openclaw-integration)
 - [Contributing](#-contributing)
@@ -277,7 +277,7 @@ skillnet analyze ./my_agent_skills --model gpt-4o
 
 ---
 
-## ⚙️ Configuration
+## <a id="configuration"></a>⚙️ Configuration
 
 ### Environment Variables
 
@@ -337,10 +337,6 @@ SkillNet integrates with [OpenClaw](https://github.com/openclaw/openclaw) as a b
 
 > Community skills guide execution → successful outcomes become new skills → periodic analysis keeps the library clean.
 
-<div align="center">
-  <img src="images/openclaw_skillnet.gif" width="100%" alt="OpenClaw + SkillNet Demo">
-</div>
-
 ### 📥 Installation
 
 **Prerequisites:** [OpenClaw](https://github.com/openclaw/openclaw) installed (default workspace: `~/.openclaw/workspace`)
@@ -361,7 +357,7 @@ Install the skillnet skill from ClawHub.
 
 ### ⚙️ Configuration
 
-The same three parameters (`API_KEY`, `BASE_URL`, `GITHUB_TOKEN`) apply here — see [Configuration](#-configuration) for details.
+The same three parameters (`API_KEY`, `BASE_URL`, `GITHUB_TOKEN`) apply here — see [Configuration](#configuration) for details.
 
 In OpenClaw, you can pre-configure them in `openclaw.json` so the agent uses them silently — no prompts, no interruptions. If not configured, the agent only asks when a command actually needs the value, injects it for that single call, and never pollutes the global environment.
 
@@ -421,5 +417,3 @@ You can also [open an Issue](https://github.com/zjunlp/SkillNet/issues) to repor
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
-
-写清楚批量导入功能
