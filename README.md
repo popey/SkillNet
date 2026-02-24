@@ -75,6 +75,8 @@ print(results[0].skill_name, results[0].stars)
 client.download(url=results[0].skill_url, target_dir="./my_skills")
 ```
 
+**🌐 SkillNet Web** — Search, download individual skills, and explore curated skill collections through the [SkillNet website](http://skillnet.openkg.cn/).
+
 <div align="center">
 
 https://github.com/user-attachments/assets/9f9d35b0-36fd-4d7d-a072-39afa380b241
