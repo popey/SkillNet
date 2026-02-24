@@ -81,6 +81,14 @@ https://github.com/user-attachments/assets/9f9d35b0-36fd-4d7d-a072-39afa380b241
 
 </div>
 
+See SkillNet in action with [OpenClaw](https://github.com/openclaw/openclaw) — the agent automatically searches, creates, evaluates, and analyzes skills on your behalf. [Learn more →](#-openclaw-integration)
+
+<div align="center">
+
+
+
+</div>
+
 ---
 
 ## 🌐 REST API
