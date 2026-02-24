@@ -32,13 +32,13 @@ Search 500+ community skills · One-line install · Auto-create from repos / doc
 
 ## ✨ Key Features
 
-| Feature | Description |
-| :--- | :--- |
-| 🔍&nbsp;**Search** | Find skills via keyword match or AI semantic search across 500+ curated skills |
-| 📦&nbsp;**One&#8209;Line&nbsp;Install** | `skillnet download <url>` — grab any skill from GitHub in seconds |
-| ✨&nbsp;**Auto&#8209;Create** | Convert GitHub repos, PDFs/PPTs/Word docs, conversation logs, or text prompts into structured skill packages using LLMs |
-| 📊&nbsp;**5&#8209;D&nbsp;Evaluation** | Score skills on **Safety · Completeness · Executability · Maintainability · Cost‑Awareness** |
-| 🕸️&nbsp;**Skill&nbsp;Graph** | Auto-discover `similar_to` · `belong_to` · `compose_with` · `depend_on` links between skills |
+| Feature                                 | Description                                                                                                             |
+| :-------------------------------------- | :---------------------------------------------------------------------------------------------------------------------- |
+| 🔍&nbsp;**Search**                      | Find skills via keyword match or AI semantic search across 500+ curated skills                                          |
+| 📦&nbsp;**One&#8209;Line&nbsp;Install** | `skillnet download <url>` — grab any skill from GitHub in seconds                                                       |
+| ✨&nbsp;**Auto&#8209;Create**           | Convert GitHub repos, PDFs/PPTs/Word docs, conversation logs, or text prompts into structured skill packages using LLMs |
+| 📊&nbsp;**5&#8209;D&nbsp;Evaluation**   | Score skills on **Safety · Completeness · Executability · Maintainability · Cost‑Awareness**                            |
+| 🕸️&nbsp;**Skill&nbsp;Graph**            | Auto-discover `similar_to` · `belong_to` · `compose_with` · `depend_on` links between skills                            |
 
 ---
 
@@ -363,17 +363,87 @@ Install the skillnet skill from ClawHub.
 </details>
 
 <details>
+<summary><b>⚙️ Configuration (Silent Pre-Configuration)</b></summary>
+
+Three parameters control how SkillNet runs inside OpenClaw. If pre-configured in `openclaw.json`, the agent uses them silently — no prompts, no interruptions. If not configured, the agent only asks when a command actually needs the value, injects it for that single call, and never pollutes the global environment.
+
+| Parameter      | Required For                      | Default                     |
+| :------------- | :-------------------------------- | :-------------------------- |
+| `apiKey`       | `create` · `evaluate` · `analyze` | —                           |
+| `BASE_URL`     | Custom / local LLM endpoint       | `https://api.openai.com/v1` |
+| `GITHUB_TOKEN` | Private repos / rate-limit bypass | —                           |
+
+> `search` and `download` (public repos) work without any credentials.
+
+**Recommended: pre-configure in `openclaw.json`** (save & restart gateway):
+
+```json
+{
+  "skills": {
+    "entries": {
+      "skillnet": {
+        "enabled": true,
+        "apiKey": "sk-REPLACE_ME",
+        "env": {
+          "BASE_URL": "https://api.openai.com/v1",
+          "GITHUB_TOKEN": "ghp_REPLACE_ME"
+        }
+      }
+    }
+  }
+}
+```
+
+**Common scenarios:**
+
+- **OpenAI only (minimal):** fill `apiKey` only; remove or keep `env` block with defaults.
+- **Local inference (vLLM / LM Studio / Ollama):** set `apiKey` to any placeholder (e.g. `"sk-local"`), set `BASE_URL` to `"http://127.0.0.1:8000/v1"`.
+- **Private repos / rate limits:** add a read-only `GITHUB_TOKEN` (recommended scope: `repo:read` or fine-grained read-only).
+
+**Without pre-configuration (on-demand prompting):**
+
+- First time the agent runs `create` / `evaluate` / `analyze` without a configured `apiKey` → it asks once in chat, you reply, and the key is used only for that call.
+- Accessing a private GitHub repo or hitting rate limits → the agent asks for a read-only `GITHUB_TOKEN` only when needed.
+
+</details>
+
+<details>
 <summary><b>🧪 Quick Verification</b></summary>
 
 In your OpenClaw chat, try:
+
+**No credentials needed:**
 
 ```
 Search SkillNet for a "docker" skill and summarize the top result.
 ```
 
+**Requires API key (verifies silent injection):**
+
 ```
 Create a skill from this GitHub repo: https://github.com/owner/repo (then evaluate it).
 ```
+
+> If pre-configured in `openclaw.json`, the process runs silently end-to-end. If not, the agent asks for an API key once.
+
+</details>
+
+<details>
+<summary><b>🔒 Security & Privacy</b></summary>
+
+- **API key** is only sent to the `BASE_URL` you configured (default: OpenAI). It is **never** sent to the SkillNet search service.
+- **GitHub token** is only used to call `api.github.com` for reading repository contents.
+- **Search & download** only send the query string to `https://api-skillnet.openkg.cn` — no local files or credentials are uploaded.
+
+</details>
+
+<details>
+<summary><b>🛠️ Troubleshooting</b></summary>
+
+| Symptom                                                        | Cause                                                 | Fix                                                                                  |
+| :------------------------------------------------------------- | :---------------------------------------------------- | :----------------------------------------------------------------------------------- |
+| `API_KEY environment variable is required for skill creation.` | `create`/`evaluate`/`analyze` triggered without a key | Add `apiKey` in `openclaw.json`, or provide it when the agent asks in chat           |
+| GitHub 403 / rate limit / private repo access denied           | Missing or insufficient GitHub token                  | Add a read-only `GITHUB_TOKEN` in `openclaw.json` `env`, or provide it when prompted |
 
 </details>
 
@@ -395,6 +465,8 @@ You can also [open an Issue](https://github.com/zjunlp/SkillNet/issues) to repor
 
 ---
 
-##  License
+## License
 
 This project is licensed under the [MIT License](LICENSE).
+
+写清楚批量导入功能
