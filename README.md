@@ -363,7 +363,7 @@ Install the skillnet skill from ClawHub.
 </details>
 
 <details>
-<summary><b>⚙️ Configuration (Silent Pre-Configuration)</b></summary>
+<summary><b>⚙️ Configuration</b></summary>
 
 Three parameters control how SkillNet runs inside OpenClaw. If pre-configured in `openclaw.json`, the agent uses them silently — no prompts, no interruptions. If not configured, the agent only asks when a command actually needs the value, injects it for that single call, and never pollutes the global environment.
 
@@ -423,27 +423,6 @@ Search SkillNet for a "docker" skill and summarize the top result.
 ```
 Create a skill from this GitHub repo: https://github.com/owner/repo (then evaluate it).
 ```
-
-> If pre-configured in `openclaw.json`, the process runs silently end-to-end. If not, the agent asks for an API key once.
-
-</details>
-
-<details>
-<summary><b>🔒 Security & Privacy</b></summary>
-
-- **API key** is only sent to the `BASE_URL` you configured (default: OpenAI). It is **never** sent to the SkillNet search service.
-- **GitHub token** is only used to call `api.github.com` for reading repository contents.
-- **Search & download** only send the query string to `https://api-skillnet.openkg.cn` — no local files or credentials are uploaded.
-
-</details>
-
-<details>
-<summary><b>🛠️ Troubleshooting</b></summary>
-
-| Symptom                                                        | Cause                                                 | Fix                                                                                  |
-| :------------------------------------------------------------- | :---------------------------------------------------- | :----------------------------------------------------------------------------------- |
-| `API_KEY environment variable is required for skill creation.` | `create`/`evaluate`/`analyze` triggered without a key | Add `apiKey` in `openclaw.json`, or provide it when the agent asks in chat           |
-| GitHub 403 / rate limit / private repo access denied           | Missing or insufficient GitHub token                  | Add a read-only `GITHUB_TOKEN` in `openclaw.json` `env`, or provide it when prompted |
 
 </details>
 
