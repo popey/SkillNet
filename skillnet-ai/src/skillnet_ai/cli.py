@@ -56,7 +56,7 @@ def search(
             return
 
         # Build Output Table
-        table = Table(title=f"Search Results: {q} ({len(results)} items)")
+        table = Table(title=f"Search Results: {q} ({len(results)} items)", show_lines=True)
         
         # Define Columns
         table.add_column("Name", style="cyan", no_wrap=True)
@@ -72,6 +72,9 @@ def search(
             stars = str(item.stars)
             desc = item.skill_description if item.skill_description else ""
             url = item.skill_url if item.skill_url else "N/A"
+
+            if url != "N/A":
+                url = f"[link={url}]{url}[/link]"
 
             # Truncate long descriptions for display
             short_desc = (desc[:100] + '...') if len(desc) > 100 else desc
