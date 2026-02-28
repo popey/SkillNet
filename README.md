@@ -421,6 +421,8 @@ Contributions of all kinds are welcome! Whether it's fixing a typo, adding a fea
 4. **Push** to the branch (`git push origin feat/amazing-feature`)
 5. **Open** a Pull Request
 
+📤 **[Contribute skills](http://skillnet.openkg.cn/)** (Website → Contribute → Submit via URL / Upload Local Skill / Batch Upload Skills)
+
 You can also [open an Issue](https://github.com/zjunlp/SkillNet/issues) to report bugs or suggest features.
 
 ---
