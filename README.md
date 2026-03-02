@@ -13,7 +13,7 @@ Search 150,000+ community skills · One-line install · Auto-create from repos /
 [![PyPI version](https://badge.fury.io/py/skillnet-ai.svg)](https://pypi.org/project/skillnet-ai/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![arXiv](https://img.shields.io/badge/arXiv-b5212f.svg?logo=arxiv)](https://arxiv.org/)
+[![arXiv](https://img.shields.io/badge/arXiv-b5212f.svg?logo=arxiv)](./reports/SkillNet_report.pdf)
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-FFD21E)](https://huggingface.co/blog/xzwnlp/skillnet)
 [![Website](https://img.shields.io/badge/🌐_Website-skillnet.openkg.cn-0078D4.svg)](http://skillnet.openkg.cn/)
 
@@ -29,7 +29,9 @@ Search 150,000+ community skills · One-line install · Auto-create from repos /
 
 ## 📢 News
 
-- **🤖 [2025-02] OpenClaw Integration Released!** — SkillNet is now available as a built-in skill for [OpenClaw](https://github.com/openclaw/openclaw). One command to install, zero config to use. The agent automatically searches, downloads, creates, evaluates, and analyzes skills on your behalf. [Get started →](#-openclaw-integration)
+- **📄 [2026-03] SkillNet Technical Report Released!** — We've published the comprehensive SkillNet Technical Report, covering the system architecture, automated creation pipeline, multi-dimensional evaluation methodology, and the released open-source toolkits. [View Report →](./reports/SkillNet_report.pdf)
+
+- **🤖 [2026-02] OpenClaw Integration Released!** — SkillNet is now available as a built-in skill for [OpenClaw](https://github.com/openclaw/openclaw). One command to install, zero config to use. The agent automatically searches, downloads, creates, evaluates, and analyzes skills on your behalf. [Get started →](#-openclaw-integration)
 
 ## ✨ Key Features
 
