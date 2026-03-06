@@ -13,7 +13,7 @@ Search 150,000+ community skills · One-line install · Auto-create from repos /
 [![PyPI version](https://badge.fury.io/py/skillnet-ai.svg)](https://pypi.org/project/skillnet-ai/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![arXiv](https://img.shields.io/badge/arXiv-b5212f.svg?logo=arxiv)](./reports/SkillNet_report.pdf)
+[![arXiv](https://img.shields.io/badge/arXiv-b5212f.svg?logo=arxiv)](https://arxiv.org/abs/2603.04448)
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-FFD21E)](https://huggingface.co/blog/xzwnlp/skillnet)
 [![Website](https://img.shields.io/badge/🌐_Website-skillnet.openkg.cn-0078D4.svg)](http://skillnet.openkg.cn/)
 
@@ -29,7 +29,7 @@ Search 150,000+ community skills · One-line install · Auto-create from repos /
 
 ## 📢 News
 
-- **📄 [2026-03] SkillNet Technical Report Released!** — We've published the comprehensive SkillNet Technical Report, covering the system architecture, automated creation pipeline, multi-dimensional evaluation methodology, and the released open-source toolkits. [View Report →](./reports/SkillNet_report.pdf)
+- **📄 [2026-03] SkillNet Technical Report Released!** — We've published the comprehensive SkillNet Technical Report, covering the system architecture, automated creation pipeline, multi-dimensional evaluation methodology, and the released open-source toolkits. [View Report →](https://arxiv.org/abs/2603.04448)
 
 - **🤖 [2026-02] OpenClaw Integration Released!** — SkillNet is now available as a built-in skill for [OpenClaw](https://github.com/openclaw/openclaw). One command to install, zero config to use. The agent automatically searches, downloads, creates, evaluates, and analyzes skills on your behalf. [Get started →](#-openclaw-integration)
 
@@ -429,6 +429,18 @@ You can also [open an Issue](https://github.com/zjunlp/SkillNet/issues) to repor
 
 ---
 
-## License
+## 📚 Citation
 
-This project is licensed under the [MIT License](LICENSE).
+If you find this work useful, please kindly ⭐ the repo and cite our paper!  
+
+```bibtex
+@misc{liang2026skillnetcreateevaluateconnect,
+      title={SkillNet: Create, Evaluate, and Connect AI Skills}, 
+      author={Yuan Liang and Ruobin Zhong and Haoming Xu and Chen Jiang and Yi Zhong and Runnan Fang and Jia-Chen Gu and Shumin Deng and Yunzhi Yao and Mengru Wang and Shuofei Qiao and Xin Xu and Tongtong Wu and Kun Wang and Yang Liu and Zhen Bi and Jungang Lou and Yuchen Eleanor Jiang and Hangcheng Zhu and Gang Yu and Haiwen Hong and Longtao Huang and Hui Xue and Chenxi Wang and Yijun Wang and Zifei Shan and Xi Chen and Zhaopeng Tu and Feiyu Xiong and Xin Xie and Peng Zhang and Zhengke Gui and Lei Liang and Jun Zhou and Chiyu Wu and Jin Shang and Yu Gong and Junyu Lin and Changliang Xu and Hongjie Deng and Wen Zhang and Keyan Ding and Qiang Zhang and Fei Huang and Ningyu Zhang and Jeff Z. Pan and Guilin Qi and Haofen Wang and Huajun Chen},
+      year={2026},
+      eprint={2603.04448},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2603.04448}, 
+}
+```
