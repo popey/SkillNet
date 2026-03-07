@@ -6,7 +6,7 @@
 <p><strong>Open Infrastructure for Creating, Evaluating, and Connecting AI Agent Skills</strong></p>
 
 <p>
-Search 150,000+ community skills · One-line install · Auto-create from repos / docs / logs<br/>
+Search 200,000+ community skills · One-line install · Auto-create from repos / docs / logs<br/>
 5-dimension quality scoring · Semantic relationship graph
 </p>
 
