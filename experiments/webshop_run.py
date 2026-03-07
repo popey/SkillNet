@@ -20,10 +20,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 webshop_path = os.path.join(current_dir, "webshop")
 if webshop_path not in sys.path:
     sys.path.append(webshop_path)
-# WebShop specific imports
 from webshop.web_agent_site.envs import WebAgentTextEnv
-from webshop.web_agent_site.utils import DEFAULT_FILE_PATH
-from webshop.web_agent_site.envs.web_agent_text_env import SimServer
 
 
 client = OpenAI(
@@ -175,7 +172,6 @@ def eval_single_game(game_idx, session_id, args, output_path):
 
         print(f'{Colors.RED}Processing task {game_idx} (Session {session_id}): {ob}{Colors.RESET}')
         
-        # 获取 WebShop 的任务指令 
         instruction_text = env.instruction_text
 
         # Initialize SkillModule (if enabled)
