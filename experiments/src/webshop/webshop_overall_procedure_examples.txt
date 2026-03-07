@@ -1,0 +1,158 @@
+<EXAMPLE_1>
+
+# Procedural Guidance: Purchase Specific Men's Dress Shirt
+
+## Phase 1: Search Strategy
+**Objective:** Locate products matching the complex material and style description.
+
+1.  **Formulate Search Query:** Combine the core product name with the distinct material and style descriptors provided in the instruction.
+    * **Action:** `search[machine wash men's dress shirts polyester heathers cotton heather needle sleeve classic fit]`
+2.  **Error Handling (Empty Results):** If the initial specific search returns no results, remove the generic terms ("machine wash", "needle sleeve") and retry with the material composition.
+    * **Alternative Action:** `search[men's dress shirts polyester heathers cotton heather]`
+
+
+## Phase 2: Selection & Verification
+**Objective:** Identify a candidate item under the price limit ($50.00).
+
+1.  **Scan Results for Price:** Review the search results list. You must identify an item where the displayed price is strictly less than 50.00.
+2.  **Scan for Relevance:** Verify the item title matches the core requirements (polyester heathers, men's dress shirt).
+3.  **Select Item:**
+    * **Precondition:** The item price is < 50.00.
+    * **Action:** `click[{item_title}]` (Replace `{item_title}` with the actual text of the valid item).
+
+
+## Phase 3: Product Configuration
+**Objective:** Select the specific variants required by the user on the product detail page.
+
+1.  **Select Color:** Locate the color options.
+    * **Action:** `click[kelly green]`
+2.  **Select Fit Type:** Locate the fit type options. 
+    > **Note:** Strictly follow the prompt even if "women" seems unusual for a men's shirt.
+    * **Action:** `click[women]`
+3.  **Select Size:** Locate the size options.
+    * **Action:** `click[small]`
+4.  **Error Handling (Missing Options):** If any of these specific buttons (`kelly green`, `women`, `small`) are not visible or clickable:
+    * **Action:** `click[< Prev]` (Return to search results and select a different candidate).
+
+
+## Phase 4: Finalization
+**Objective:** Complete the purchase.
+
+1.  **Verify Selections:** Ensure all selected options are highlighted.
+2.  **Execute Purchase:**
+    * **Action:** `click[Buy Now]`
+
+<EXAMPLE_1_END>
+
+--------------------------------------------------------------------------------
+
+<EXAMPLE_2>
+
+# Procedural Guidance: Purchase Specific Men's Heather Tank Top
+
+## Phase 1: Search and Initial Filtering
+**Objective:** Locate a product matching the material descriptions and price constraints.
+
+1.  **Formulate Search Query:**
+    * Combine the core product type with the most distinctive material descriptors to filter out generic tank tops.
+    * **Action:** Execute `search[machine wash men's tank tops polyester heathers cotton heather needle sleeve classic fit]`
+    * *Error Handling:* If this query returns 0 results, refine by removing the least critical adjectives (e.g., `search[men's tank tops polyester heathers cotton heather]`).
+
+2.  **Scan and Select Candidate:**
+    * Review the search results.
+    * **Precondition:** The item price must be **lower than $50.00**.
+    * **Logic:** Look for an item title that includes "Heather Grey" or the specific material blends mentioned ("polyester heathers", "needle sleeve").
+    * **Action:** Execute `click[<item_name>]` (where `<item_name>` is the specific clickable title of the best match).
+
+
+## Phase 2: Variant Configuration
+**Objective:** Select the specific attributes required (Color, Fit, Size) on the product details page.
+
+1.  **Select Color:**
+    * Locate the color options.
+    * **Action:** Execute `click[heather grey]`.
+    * *Constraint Check:* Verify the image or text updates to show the grey version.
+
+2.  **Select Fit Type:**
+    * The user specified "fit type: men". Look for this specific option selector.
+    * **Action:** Execute `click[men]`.
+    * *Note:* If "men" is not a clickable button but is in the product title, proceed to the next step.
+
+3.  **Select Size:**
+    * Locate the size options.
+    * **Action:** Execute `click[small]`.
+
+
+## Phase 3: Final Verification and Purchase
+**Objective:** Confirm constraints and finalize the transaction.
+
+1.  **Final Price Check:**
+    * **Precondition:** Verify the displayed price is still **lower than $50.00** after selecting all variants.
+
+2.  **Execute Purchase:**
+    * Once all options (heather grey, men, small) are selected and the price is verified.
+    * **Action:** Execute `click[Buy Now]`.
+
+
+## Error Handling & Recovery rules
+* **Item Unavailable/Wrong Price:** If you navigate to an item and realize the specific variant (e.g., "heather grey" in "small") is out of stock or price jumps above $50.00, execute `click[< Prev]` to return to search results and select the next candidate.
+* **Missing Options:** If the required buttons (e.g., `click[small]`) are not present in the `Available Actions` list, the item does not meet constraints. Return to search.
+
+<EXAMPLE_2_END>
+
+--------------------------------------------------------------------------------
+
+<EXAMPLE_3>
+
+# Procedural Guidance: WebShop Item Acquisition
+
+## Phase 1: Search Query Formulation & Execution
+**Goal:** Locate candidate items matching the core product, material, and color constraints.
+**Preconditions:** The agent is on the landing page or a search bar is available.
+
+1.  **Analyze Constraints:** Identify the core object ("men's tuxedo shirts"), color ("brown"), and material keywords ("polyester heathers", "heathers cotton").
+2.  **Formulate Query:** Construct a search query that combines the product, color, and primary material to narrow results.
+    * **Action:** `search[men's tuxedo shirts polyester heathers cotton brown]`
+3.  **Error Handling (Empty Results):**
+    * If the initial search yields "Your search did not match any documents" or zero relevant items, broaden the search by removing material constraints.
+    * **Recovery Action:** `search[men's tuxedo shirts brown]`
+
+
+## Phase 2: Result Evaluation & Selection
+**Goal:** Identify a specific item that meets the price (< $50.00) and title requirements.
+**Preconditions:** A list of search results is displayed with titles and prices.
+
+1.  **Scan for Price:** Iterate through the displayed results. Ignore any item where the price is $50.00 or higher.
+2.  **Verify Title Match:** Among items under $50.00, look for titles containing "tuxedo", "brown", and ideally "heather" or "cotton".
+3.  **Select Item:** Choose the best-matching candidate.
+    * **Action:** `click[<Full Name of Item>]` (e.g., `click[Men's Tuxedo Shirt Brown X-Large]`).
+
+
+## Phase 3: Attribute Configuration
+**Goal:** Select the specific product options (Size, Color, Fit) required by the instruction.
+**Preconditions:** The agent is on a specific product details page.
+
+1.  **Select Color:** Look for the specific color button requested ("brown").
+    * **Action:** `click[brown]`
+2.  **Select Size:** Look for the specific size button requested ("x-large").
+    * **Action:** `click[x-large]`
+3.  **Select Fit/Type:** Look for the specific fit button if available ("men").
+    * **Action:** `click[men]`
+4.  **Verify Configuration:** Ensure the selected options correspond to "wash cold, machine wash" descriptions in the text (if visible), but prioritize clicking the specific buttons for size and color.
+
+
+## Phase 4: Acquisition
+**Goal:** Finalize the purchase.
+**Preconditions:** The correct options (Brown, X-Large, Men) have been clicked/selected.
+
+1.  **Execute Purchase:** Locate the purchase button.
+    * **Action:** `click[Buy Now]`
+
+
+## Global Error Handling
+* **Invalid Action:** If the system returns "Invalid action", check the list of available `clickables`. If the desired option (e.g., "x-large") is not in the list, the item is out of stock or incorrect.
+    * **Recovery:** Use `click[<Back to Search>]` and select a different item from Phase 2.
+* **Price Mismatch:** If the item details page shows a price > $50.00 (e.g., due to size selection increasing price), do not buy.
+    * **Recovery:** Use `click[<Back to Search>]` and select a different item.
+
+<EXAMPLE_3_END>

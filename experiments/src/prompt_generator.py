@@ -1,0 +1,81 @@
+def retrieve_relevant_skills_prompt(metadata, task):
+    template = "You are an expert in task analysis and skills retrieval."
+    prompt = f'''
+Your task is to analyze the given task description and retrieve the most relevant skills from the provided metadata (name and description pairs).
+
+# Principles
+1.  **Contextual Understanding**: Thoroughly analyze the task description to grasp its requirements.
+2.  **Relevance Matching**: Match the task requirements with the most relevant skills based on the metadata descriptions. Only include skills that are most helpful for accomplishing the task. (No more than 5 unless necessary)
+3.  **Clarity and Precision**: Clearly list the names of the relevant skills in your output.
+4.  **Output Format**: Return the skill names as a JSON list of strings. Must strictly match names in the provided metadata.
+5.  **Allow Empty List**: If no relevant skills are found, return an empty list `[]`.
+
+# Input Data
+1.  **Metadata:** 
+{metadata}
+2.  **Task Description:**
+{task}
+
+Keep your output in the format below:
+<Analysis> your analysis here </Analysis>
+<Relevant_Skill_Names> relevant skill names list in JSON format here </Relevant_Skill_Names>
+'''
+    return [{"role": "system", "content": template}, {"role": "user", "content": prompt}]
+
+
+def generate_overall_procedure_prompt(task, overall_procedure_examples, skill_contents):
+    template = "You are a Senior Systems Architect."
+    prompt = f'''
+You are given a complex task description, relevant skill contents, and examples of well-structured procedural guidance texts.
+Your task is to create a structured "Procedural Guidance" text. This text will serve as the "brain" for an AI Agent, telling it exactly how to solve the task.
+
+# CRITICAL INSTRUCTIONS (Follow these strictly)
+1.  **Structure with Phases**: You MUST divide the task into logical phases (e.g., Phase 1: Search, Phase 2: Acquire, Phase 3: Place).
+2.  **Use Exact Syntax**: When describing actions, you MUST quote the exact syntax from the "Available Actions" (e.g., use "go to {{recep}}" instead of "walk to the desk").
+3.  **State & Preconditions**: Explicitly mention necessary preconditions (e.g., "If the drawer is closed, use 'open drawer' before taking").
+4.  **Error Handling**: Include a rule for what to do if the agent encounters an error or unexpected situation.
+
+# Input Data
+1.  **Task Description:**
+{task}
+2.  **Relevant Skill Contents:**
+{skill_contents}
+
+# Examples
+Here are some examples of well-structured Procedural Guidance texts you should emulate (focus on style, structure, and level of detail instead of content):
+{overall_procedure_examples}
+
+
+Keep your output in the format below:
+<Analysis> your analysis here </Analysis>
+<Overall_Procedure> your generated overall procedure guidance here </Overall_Procedure>
+'''
+    return [{"role": "system", "content": template}, {"role": "user", "content": prompt}]
+
+def generate_overall_procedure_code_prompt(task, overall_procedure, procedure_code_template):
+    template = "You are a Senior Software Engineer specializing in AI-driven automation and safe code generation."
+    prompt = f'''
+You are given a complex task description, overall procedural guidance, and a strict procedure code template.
+Your task is to implement a Python function `overall_procedure_code` that follows the provided procedure code template and incorporates the overall procedure guidance to help Agent solve a complex task.
+
+# Principles
+1.  **Adherence to Template**: Strictly follow the provided procedure code template. Input arguments and return types must align with the template. (Most Important)
+2.  **Inject Overall Procedural Guidance**: Help the agent accomplish the task by injecting the overall procedure guidance into the function.
+4.  **Error Handling**: Implement robust error handling for LLM calls and environment interactions.
+5.  **Function Naming**: Name the function `overall_procedure_code` as per the template.
+
+# Input Data
+1.  **Task Description:**
+{task}
+2.  **Overall Procedural Guidance:**
+{overall_procedure}
+3.  **Procedure Code Template:**
+```python
+{procedure_code_template}
+```
+
+Keep your output in the format below:
+<Analysis> your analysis here </Analysis>
+<Overall_Procedure_Code> your generated overall procedure workflow code here </Overall_Procedure_Code>
+'''
+    return [{"role": "system", "content": template}, {"role": "user", "content": prompt}]
