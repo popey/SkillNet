@@ -37,13 +37,12 @@ class SkillCreator:
             
         self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)
 
-    def _get_llm_response(self, messages: List[dict], max_tokens: int = 4096) -> str:
+    def _get_llm_response(self, messages: List[dict]) -> str:
         """Helper to call LLM and get string content."""
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
-                messages=messages,
-                max_tokens=max_tokens
+                messages=messages
             )
             return response.choices[0].message.content
         except Exception as e:
@@ -192,7 +191,7 @@ class SkillCreator:
         ]
         
         try:
-            response = self._get_llm_response(messages, max_tokens=8192)
+            response = self._get_llm_response(messages)
             created_files = self._save_github_skill_files(response, output_dir)
             
             # Extract unique skill directories
@@ -240,7 +239,7 @@ class SkillCreator:
         ]
         
         try:
-            response = self._get_llm_response(messages, max_tokens=8192)
+            response = self._get_llm_response(messages)
             created_files = self._save_github_skill_files(response, output_dir)
             
             # Extract unique skill directories
@@ -419,8 +418,7 @@ class SkillCreator:
         # Retry mechanism with content validation
         for attempt in range(max_retries + 1):
             try:
-                # Use higher max_tokens for complete response
-                response = self._get_llm_response(messages, max_tokens=16384)
+                response = self._get_llm_response(messages)
                 
                 # Validate response has required content
                 if self._validate_skill_content(response):
