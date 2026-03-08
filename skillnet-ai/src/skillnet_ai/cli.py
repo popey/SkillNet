@@ -172,7 +172,7 @@ def create(
     output_dir: Path = typer.Option(Path("./generated_skills"), "--output-dir", "-d", help="Directory to save generated skills."),
     # Model options
     model: str = typer.Option("gpt-4o", "--model", "-m", help="LLM model to use (e.g., gpt-4o, gpt-3.5-turbo)."),
-    max_files: int = typer.Option(20, "--max-files", help="Max Python files to analyze (--github only)."),
+    max_files: int = typer.Option(50, "--max-files", help="Max code files to analyze (--github only)."),
 ):
     """
     Create executable Skill packages using AI.

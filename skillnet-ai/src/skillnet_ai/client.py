@@ -123,7 +123,7 @@ class SkillNetClient:
         prompt: Optional[str] = None,
         output_dir: Union[str, Path] = "./generated_skills",
         model: str = "gpt-4o",
-        max_files: int = 20
+        max_files: int = 50
     ) -> List[str]:
         """
         Generate executable skills from various input sources.
@@ -141,7 +141,7 @@ class SkillNetClient:
             prompt: User's description for prompt-based skill creation.
             output_dir: Directory where new skills will be saved.
             model: The LLM model to use.
-            max_files: Maximum Python files to analyze (GitHub mode only).
+            max_files: Maximum code files to analyze (GitHub mode only).
 
         Returns:
             List[str]: A list of paths to the generated skill folders.
