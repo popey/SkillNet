@@ -262,7 +262,7 @@ class SkillCreator:
         github_url: str,
         output_dir: str = "./generated_skills",
         api_token: Optional[str] = None,
-        max_files: int = 20
+        max_files: int = 50
     ) -> List[str]:
         """Create a skill package from a GitHub repository."""
         logger.info(f"Creating skill from GitHub: {github_url}")
@@ -342,22 +342,22 @@ class SkillCreator:
         file_tree: List[Dict],
         max_files: int
     ) -> Dict[str, Any]:
-        """Analyze Python files to extract class and function signatures."""
-        logger.info("Analyzing Python files...")
+        """Analyze code files across supported languages to extract class and function signatures."""
+        logger.info("Analyzing code files...")
 
-        # Filter Python files
-        py_files = [
+        # Filter supported code files (Python, JS/TS, Java, Go, C/C++, Rust)
+        code_files = [
             f for f in file_tree
-            if f.get("type") == "file" and f.get("path", "").endswith(".py")
+            if f.get("type") == "file" and _CodeAnalyzer.is_supported(f.get("path", ""))
         ][:max_files]
 
         analyzed = []
-        for file_info in py_files:
+        for file_info in code_files:
             file_path = file_info.get("path", "")
             content = fetcher.fetch_file_content(owner, repo, file_path, branch)
             
             if content:
-                analysis = _PythonCodeAnalyzer.analyze(content, file_path)
+                analysis = _CodeAnalyzer.analyze(content, file_path)
                 if analysis.get("classes") or analysis.get("functions"):
                     analyzed.append({"file": file_path, **analysis})
                     logger.debug(
@@ -454,18 +454,29 @@ class SkillCreator:
     def _build_code_summary(self, code_analysis: Dict[str, Any]) -> str:
         """Build code analysis summary for LLM prompt."""
         if not code_analysis or not code_analysis.get("files"):
-            return "No Python code analysis available."
+            return "No code analysis available."
+
+        # Collect language breakdown from analyzed files
+        lang_counts = {}
+        for file_data in code_analysis.get("files", []):
+            lang = file_data.get("language", "unknown")
+            lang_counts[lang] = lang_counts.get(lang, 0) + 1
+        lang_info = ", ".join(
+            f"{lang}: {count}" for lang, count in
+            sorted(lang_counts.items(), key=lambda x: -x[1])
+        )
 
         lines = [
-            f"Analyzed {code_analysis.get('files_analyzed', 0)} Python files:",
+            f"Analyzed {code_analysis.get('files_analyzed', 0)} code files ({lang_info}):",
             f"- Total Classes: {code_analysis.get('total_classes', 0)}",
             f"- Total Functions: {code_analysis.get('total_functions', 0)}",
             "",
             "Key components found:"
         ]
 
-        # Add top classes and functions
-        for file_data in code_analysis.get("files", [])[:5]:
+        # Add classes and functions from all analyzed files
+        max_lines = 5 + len(code_analysis.get("files", [])) * 4
+        for file_data in code_analysis.get("files", []):
             file_path = file_data.get("file", "")
             classes = file_data.get("classes", [])
             functions = file_data.get("functions", [])
@@ -481,7 +492,7 @@ class SkillCreator:
                 sig = f"{func['name']}({', '.join(params)})"
                 lines.append(f"- Function `{sig}` in {file_path}")
 
-        return "\n".join(lines[:30])
+        return "\n".join(lines[:max_lines])
 
     def _format_file_tree(self, file_tree: List[Dict]) -> str:
         """Format file tree for LLM prompt."""
@@ -773,6 +784,50 @@ class _GitHubFetcher:
         return None
 
 
+class _CodeAnalyzer:
+    """Dispatcher that routes code analysis to language-specific analyzers."""
+
+    EXTENSION_MAP = {
+        '.py': 'python',
+        '.js': 'javascript', '.jsx': 'javascript', '.mjs': 'javascript',
+        '.ts': 'typescript', '.tsx': 'typescript',
+        '.java': 'java',
+        '.go': 'go',
+        '.c': 'c', '.h': 'c',
+        '.cpp': 'cpp', '.hpp': 'cpp', '.cc': 'cpp', '.cxx': 'cpp', '.hh': 'cpp',
+        '.rs': 'rust',
+    }
+
+    SUPPORTED_EXTENSIONS = set(EXTENSION_MAP.keys())
+
+    @staticmethod
+    def is_supported(file_path: str) -> bool:
+        """Check if file type is supported for code analysis."""
+        ext = os.path.splitext(file_path)[1].lower()
+        return ext in _CodeAnalyzer.SUPPORTED_EXTENSIONS
+
+    @staticmethod
+    def get_language(file_path: str) -> Optional[str]:
+        """Get language identifier from file path."""
+        ext = os.path.splitext(file_path)[1].lower()
+        return _CodeAnalyzer.EXTENSION_MAP.get(ext)
+
+    @staticmethod
+    def analyze(content: str, file_path: str) -> Dict[str, Any]:
+        """Analyze code file and extract structural information."""
+        language = _CodeAnalyzer.get_language(file_path)
+
+        if language == 'python':
+            result = _PythonCodeAnalyzer.analyze(content, file_path)
+        elif language:
+            result = _RegexCodeAnalyzer.analyze(content, file_path, language)
+        else:
+            return {"classes": [], "functions": [], "language": "unknown"}
+
+        result["language"] = language
+        return result
+
+
 class _PythonCodeAnalyzer:
     """Internal class for analyzing Python code using AST."""
 
@@ -859,6 +914,216 @@ class _PythonCodeAnalyzer:
             "is_async": isinstance(node, ast.AsyncFunctionDef),
             "decorators": decorators
         }
+
+
+class _RegexCodeAnalyzer:
+    """Regex-based code analyzer for extracting structural info from non-Python languages."""
+
+    _KEYWORDS = frozenset({
+        'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'default',
+        'catch', 'try', 'finally', 'throw', 'return', 'break', 'continue',
+        'sizeof', 'typeof', 'instanceof', 'new', 'delete', 'import', 'export',
+        'package', 'include', 'define', 'typedef', 'using', 'namespace',
+    })
+
+    _CLASS_PATTERNS = {
+        'javascript': [
+            re.compile(r'(?:export\s+)?class\s+(\w+)(?:\s+extends\s+([\w.]+))?'),
+        ],
+        'typescript': [
+            re.compile(
+                r'(?:export\s+)?(?:abstract\s+)?class\s+(\w+)'
+                r'(?:\s+extends\s+([\w.]+))?(?:\s+implements\s+([\w.,\s]+))?'
+            ),
+            re.compile(r'(?:export\s+)?interface\s+(\w+)(?:\s+extends\s+([\w.,\s]+))?'),
+        ],
+        'java': [
+            re.compile(
+                r'(?:public|protected|private)?\s*(?:abstract\s+|final\s+|static\s+)*'
+                r'class\s+(\w+)(?:\s+extends\s+(\w+))?(?:\s+implements\s+([\w,\s]+))?'
+            ),
+            re.compile(r'(?:public|protected|private)?\s*interface\s+(\w+)(?:\s+extends\s+([\w,\s]+))?'),
+            re.compile(r'(?:public|protected|private)?\s*enum\s+(\w+)'),
+        ],
+        'go': [
+            re.compile(r'type\s+(\w+)\s+struct\b'),
+            re.compile(r'type\s+(\w+)\s+interface\b'),
+        ],
+        'c': [
+            re.compile(r'(?:typedef\s+)?struct\s+(\w+)'),
+        ],
+        'cpp': [
+            re.compile(
+                r'(?:template\s*<[^>]*>\s*)?class\s+(\w+)'
+                r'(?:\s*:\s*(?:public|protected|private)\s+([\w:]+))?'
+            ),
+            re.compile(r'(?:typedef\s+)?struct\s+(\w+)'),
+        ],
+        'rust': [
+            re.compile(r'(?:pub(?:\([^)]*\))?\s+)?struct\s+(\w+)'),
+            re.compile(r'(?:pub(?:\([^)]*\))?\s+)?trait\s+(\w+)'),
+            re.compile(r'(?:pub(?:\([^)]*\))?\s+)?enum\s+(\w+)'),
+            re.compile(r'impl(?:<[^>]*>)?\s+(\w+)'),
+        ],
+    }
+
+    _FUNCTION_PATTERNS = {
+        'javascript': [
+            re.compile(r'(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)'),
+            re.compile(r'(?:export\s+)?(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?\(([^)]*)\)\s*=>'),
+        ],
+        'typescript': [
+            re.compile(
+                r'(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*(?:<[^>]*>)?\s*\(([^)]*)\)'
+                r'(?:\s*:\s*[\w<>\[\]|&\s]+)?'
+            ),
+            re.compile(
+                r'(?:export\s+)?(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?'
+                r'(?:<[^>]*>)?\s*\(([^)]*)\)\s*(?::\s*[\w<>\[\]|&\s]+)?\s*=>'
+            ),
+        ],
+        'java': [
+            re.compile(
+                r'(?:public|protected|private)\s+(?:static\s+)?(?:final\s+)?'
+                r'(?:synchronized\s+)?(?:[\w<>\[\]]+)\s+(\w+)\s*\(([^)]*)\)'
+            ),
+        ],
+        'go': [
+            re.compile(r'func\s+(\w+)\s*\(([^)]*)\)'),
+            re.compile(r'func\s+\([^)]+\)\s+(\w+)\s*\(([^)]*)\)'),
+        ],
+        'c': [
+            re.compile(r'^[\w][\w\s*]+\b(\w+)\s*\(([^)]*)\)\s*\{', re.MULTILINE),
+        ],
+        'cpp': [
+            re.compile(
+                r'^[\w][\w\s*:&<>,~]+\b(\w+)\s*\(([^)]*)\)\s*'
+                r'(?:const\s*)?(?:override\s*)?(?:noexcept\s*)?\{',
+                re.MULTILINE
+            ),
+        ],
+        'rust': [
+            re.compile(
+                r'(?:pub(?:\([^)]*\))?\s+)?(?:async\s+)?fn\s+(\w+)\s*'
+                r'(?:<[^>]*>)?\s*\(([^)]*)\)'
+            ),
+        ],
+    }
+
+    @staticmethod
+    def analyze(content: str, file_path: str, language: str) -> Dict[str, Any]:
+        """Analyze source code using regex patterns for the specified language."""
+        classes = _RegexCodeAnalyzer._extract_classes(content, language)
+        functions = _RegexCodeAnalyzer._extract_functions(content, language)
+        return {"classes": classes, "functions": functions}
+
+    @staticmethod
+    def _extract_classes(content: str, language: str) -> List[Dict[str, Any]]:
+        """Extract class, struct, interface, or trait definitions."""
+        patterns = _RegexCodeAnalyzer._CLASS_PATTERNS.get(language, [])
+        classes = []
+        seen_names = set()
+
+        for pattern in patterns:
+            for match in pattern.finditer(content):
+                name = match.group(1)
+                if name in seen_names or name in _RegexCodeAnalyzer._KEYWORDS:
+                    continue
+                seen_names.add(name)
+
+                base_classes = []
+                if match.lastindex >= 2 and match.group(2):
+                    bases = match.group(2).strip()
+                    base_classes = [b.strip() for b in bases.split(',') if b.strip()]
+
+                docstring = _RegexCodeAnalyzer._extract_nearby_comment(
+                    content, match.start()
+                )
+
+                classes.append({
+                    "name": name,
+                    "base_classes": base_classes,
+                    "docstring": docstring[:200] if docstring else None,
+                    "methods": []
+                })
+
+        return classes
+
+    @staticmethod
+    def _extract_functions(content: str, language: str) -> List[Dict[str, Any]]:
+        """Extract function and method definitions."""
+        patterns = _RegexCodeAnalyzer._FUNCTION_PATTERNS.get(language, [])
+        functions = []
+        seen_names = set()
+
+        for pattern in patterns:
+            for match in pattern.finditer(content):
+                name = match.group(1)
+                if name in seen_names or name in _RegexCodeAnalyzer._KEYWORDS:
+                    continue
+                seen_names.add(name)
+
+                params = []
+                if match.lastindex >= 2 and match.group(2):
+                    raw_params = match.group(2).strip()
+                    if raw_params:
+                        params = [p.strip() for p in raw_params.split(',') if p.strip()]
+                        params = params[:10]
+
+                return_type = None
+                if match.lastindex >= 3 and match.group(3):
+                    return_type = match.group(3).strip()
+
+                docstring = _RegexCodeAnalyzer._extract_nearby_comment(
+                    content, match.start()
+                )
+
+                # Detect async qualifier from line context
+                is_async = False
+                line_start = content.rfind('\n', 0, match.start()) + 1
+                line_prefix = content[line_start:match.start()]
+                if 'async' in line_prefix:
+                    is_async = True
+
+                functions.append({
+                    "name": name,
+                    "parameters": params,
+                    "return_type": return_type,
+                    "docstring": docstring[:200] if docstring else None,
+                    "is_async": is_async,
+                    "decorators": []
+                })
+
+        return functions
+
+    @staticmethod
+    def _extract_nearby_comment(content: str, pos: int) -> Optional[str]:
+        """Extract documentation comment immediately preceding the given position."""
+        preceding = content[max(0, pos - 500):pos].rstrip()
+
+        # JSDoc / JavaDoc / Doxygen block comment: /** ... */
+        block_match = re.search(r'/\*\*\s*(.*?)\*/', preceding, re.DOTALL)
+        if block_match:
+            comment = block_match.group(1).strip()
+            lines = [line.strip().lstrip('* ').strip() for line in comment.split('\n')]
+            return ' '.join(line for line in lines if line)[:200]
+
+        # Line comments (// or ///)
+        lines = preceding.split('\n')
+        comment_lines = []
+        for line in reversed(lines):
+            stripped = line.strip()
+            if stripped.startswith('//'):
+                comment_lines.insert(0, stripped.lstrip('/').strip())
+            elif stripped == '':
+                continue
+            else:
+                break
+
+        if comment_lines:
+            return ' '.join(comment_lines)[:200]
+
+        return None
 
 
 class _OfficeReader:

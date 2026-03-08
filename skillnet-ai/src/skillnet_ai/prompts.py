@@ -632,9 +632,16 @@ For every file, use this exact pattern:
 **Example Output Pattern:**
 ```
 ## FILE: openai-python/SKILL.md
-```yaml
+```markdown
 ---
 name: openai-python
+description: ...
+---
+
+# When to Use
+...
+
+## Installation
 ...
 ```
 
@@ -649,7 +656,8 @@ name: openai-python
 ```
 ```
 
-**IMPORTANT:** 
+**IMPORTANT:**
+- SKILL.md MUST use ```markdown as language tag and include ALL content (frontmatter + full body) inside ONE code block
 - Generate COMPLETE files, do not use "..." or "[content continues]"
 - SKILL.md should be comprehensive (at least 100+ lines)
 - scripts/: At least one RUNNABLE Python script with actual library API usage
