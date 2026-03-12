@@ -450,17 +450,41 @@ docker pull fmdogancan/skillnet-mcp:latest
 
 ### Quick Configuration (Claude Desktop)
 
-Add the following to your `claude_desktop_config.json` (adjust the path if using Source Build):
+Add the following to your `claude_desktop_config.json`:
+
+#### Option A: Docker (Recommended)
+```json
+{
+  "mcpServers": {
+    "skillnet": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "fmdogancan/skillnet-mcp:latest"],
+      "env": {
+        "API_KEY": "your_skillnet_api_key_here"
+      }
+    }
+  }
+}
+```
+
+#### Option B: Build Locally If you prefer to build the image yourself from the source:
+
+```bash
+docker build -t skillnet-mcp-local .
+```
+
+_(Then, replace `fmdogancan/skillnet-mcp:latest` with `skillnet-mcp-local` in the JSON config above)_
+
+#### Option C: Source Build
 
 ```json
 {
   "mcpServers": {
     "skillnet": {
       "command": "node",
-      "args": ["/path/to/skillnet-mcp/build/index.js"],
+      "args": ["/absolute/path/to/skillnet-mcp/build/index.js"],
       "env": {
-        "API_KEY": "your_skillnet_api_key_here",
-        "GITHUB_TOKEN": "your_github_token_here"
+        "API_KEY": "your_skillnet_api_key_here"
       }
     }
   }
@@ -468,6 +492,11 @@ Add the following to your `claude_desktop_config.json` (adjust the path if using
 ```
 
 > **Note:** `search_skills` and `download_skill` tools do not require an API key. An `API_KEY` is only required for `create`, `evaluate`, and `analyze` features.
+
+### Supported Environment Variables
+
+* `API_KEY`: SkillNet API key
+* `GITHUB_TOKEN`: GitHub token for private repositories
 
 ---
 
