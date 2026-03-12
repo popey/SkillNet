@@ -6,7 +6,7 @@
 <p><strong>Open Infrastructure for Creating, Evaluating, and Connecting AI Agent Skills</strong></p>
 
 <p>
-Search 200,000+ community skills · One-line install · Auto-create from repos / docs / logs<br/>
+Search 250,000+ community skills · One-line install · Auto-create from repos / docs / logs<br/>
 5-dimension quality scoring · Semantic relationship graph
 </p>
 
@@ -39,6 +39,8 @@ Search 200,000+ community skills · One-line install · Auto-create from repos /
 
 ## 📢 News
 
+- **🔌 [2026-03] SkillNet MCP Server Released!** — We've launched the Model Context Protocol (MCP) integration (maintained by [CycleChain](https://github.com/CycleChain), special thanks for this great contribution!). Agents like Claude Desktop, Cursor, and Windsurf can now autonomously access 250,000+ specialized skills directly within your IDE. [Learn more →](#-model-context-protocol-mcp-integration)
+
 - **📄 [2026-03] SkillNet Technical Report Released!** — We've published the comprehensive SkillNet Technical Report, covering the system architecture, automated creation pipeline, multi-dimensional evaluation methodology, and the released open-source toolkits. [View Report →](https://arxiv.org/abs/2603.04448)
 
 - **🤖 [2026-02] OpenClaw Integration Released!** — SkillNet is now available as a built-in skill for [OpenClaw](https://github.com/openclaw/openclaw). One command to install, zero config to use. The agent automatically searches, downloads, creates, evaluates, and analyzes skills on your behalf. [Get started →](#-openclaw-integration)
@@ -64,8 +66,9 @@ Search 200,000+ community skills · One-line install · Auto-create from repos /
 - [Configuration](#configuration)
 - [Example: Scientific Discovery](#-example-scientific-discovery)
 - [OpenClaw Integration](#-openclaw-integration)
+- [Model Context Protocol (MCP)](#-model-context-protocol-mcp-integration)
 - [Contributing](#-contributing)
-- [License](#-license)
+- [Citation](#-citation)
 
 ---
 
@@ -460,7 +463,7 @@ Add the following to your `claude_desktop_config.json`:
       "command": "docker",
       "args": ["run", "-i", "--rm", "fmdogancan/skillnet-mcp:latest"],
       "env": {
-        "API_KEY": "your_skillnet_api_key_here"
+        "API_KEY": "your_api_key_here"
       }
     }
   }
@@ -484,7 +487,7 @@ _(Then, replace `fmdogancan/skillnet-mcp:latest` with `skillnet-mcp-local` in th
       "command": "node",
       "args": ["/absolute/path/to/skillnet-mcp/build/index.js"],
       "env": {
-        "API_KEY": "your_skillnet_api_key_here"
+        "API_KEY": "your_api_key_here"
       }
     }
   }
@@ -495,7 +498,7 @@ _(Then, replace `fmdogancan/skillnet-mcp:latest` with `skillnet-mcp-local` in th
 
 ### Supported Environment Variables
 
-* `API_KEY`: SkillNet API key
+* `API_KEY`: Your API key
 * `GITHUB_TOKEN`: GitHub token for private repositories
 
 ---
