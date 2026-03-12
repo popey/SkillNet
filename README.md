@@ -423,6 +423,83 @@ Create a skill from this GitHub repo: https://github.com/owner/repo (then evalua
 
 ---
 
+## 🔌 Model Context Protocol (MCP) Integration
+
+The **SkillNet MCP Server** (maintained by [CycleChain](https://github.com/CycleChain)) is a high-performance bridge that enables AI agents (such as Claude Desktop, Cursor, Antigravity and Windsurf) to interact with the SkillNet ecosystem using the [Model Context Protocol](https://modelcontextprotocol.io/).
+
+It empowers agents to autonomously search, download, create, and evaluate 250,000+ specialized skills directly within your IDE or desktop environment.
+
+### Installation Options
+
+#### 1. Source Build (Node.js & Python)
+Ideal for users who want to run the server locally with existing dependencies.
+
+```bash
+git clone https://github.com/CycleChain/skillnet-mcp
+cd skillnet-mcp
+npm install && npm run build
+```
+
+#### 2. Docker (Dependency-free)
+
+The most robust way to run the server using the official image from [Docker Hub](https://hub.docker.com/r/fmdogancan/skillnet-mcp).
+
+```bash
+docker pull fmdogancan/skillnet-mcp:latest
+```
+
+### Quick Configuration (Claude Desktop)
+
+Add the following to your `claude_desktop_config.json`:
+
+#### Option A: Docker (Recommended)
+```json
+{
+  "mcpServers": {
+    "skillnet": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "fmdogancan/skillnet-mcp:latest"],
+      "env": {
+        "API_KEY": "your_skillnet_api_key_here"
+      }
+    }
+  }
+}
+```
+
+#### Option B: Build Locally If you prefer to build the image yourself from the source:
+
+```bash
+docker build -t skillnet-mcp-local .
+```
+
+_(Then, replace `fmdogancan/skillnet-mcp:latest` with `skillnet-mcp-local` in the JSON config above)_
+
+#### Option C: Source Build
+
+```json
+{
+  "mcpServers": {
+    "skillnet": {
+      "command": "node",
+      "args": ["/absolute/path/to/skillnet-mcp/build/index.js"],
+      "env": {
+        "API_KEY": "your_skillnet_api_key_here"
+      }
+    }
+  }
+}
+```
+
+> **Note:** `search_skills` and `download_skill` tools do not require an API key. An `API_KEY` is only required for `create`, `evaluate`, and `analyze` features.
+
+### Supported Environment Variables
+
+* `API_KEY`: SkillNet API key
+* `GITHUB_TOKEN`: GitHub token for private repositories
+
+---
+
 ## 🤝 Contributing
 
 Contributions of all kinds are welcome! Whether it's fixing a typo, adding a feature, or sharing a new skill — every contribution counts.
