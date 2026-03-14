@@ -83,7 +83,7 @@ def search(
             if item.evaluation and isinstance(item.evaluation, dict):
                 metrics = {
                     "safety": "Safety",
-                    "executability": "Cxecutability",
+                    "executability": "Executability",
                     "completeness": "Completeness",
                     "maintainability": "Maintainability",
                     "cost_awareness": "Cost-Awareness"

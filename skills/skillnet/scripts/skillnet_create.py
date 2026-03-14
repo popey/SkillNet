@@ -1,18 +1,12 @@
 #!/usr/bin/env python3
-"""create_skill.py — Create a new skill from various sources and auto-evaluate.
+"""skillnet_create.py — Create a new skill from various sources and optionally auto-evaluate.
 
 Usage:
-  # From GitHub repo
-  python create_skill.py --github https://github.com/owner/repo
-
-  # From a natural-language description
-  python create_skill.py --prompt "A skill for managing Docker Compose stacks"
-
-  # From an office document
-  python create_skill.py --office report.pdf
-
-  # From an execution trajectory
-  python create_skill.py --trajectory trace.txt
+  python skillnet_create.py --github https://github.com/owner/repo
+  python skillnet_create.py --prompt "A skill for managing Docker Compose stacks"
+  python skillnet_create.py --office report.pdf
+  python skillnet_create.py --trajectory trace.txt
+  python skillnet_create.py --github https://github.com/owner/repo --no-evaluate
 
 Requires: pip install skillnet-ai
           Environment variable: API_KEY
@@ -22,18 +16,24 @@ import os
 import sys
 
 DEFAULT_OUTPUT = os.path.expanduser("~/.openclaw/workspace/skills")
+EVAL_DIMENSIONS = ["safety", "completeness", "executability", "maintainability", "cost_awareness"]
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Create a skill from various sources via SkillNet.")
+    parser = argparse.ArgumentParser(
+        description="Create a skill from various sources via SkillNet, with optional auto-evaluation.",
+        epilog="Exactly one input source (--github, --prompt, --office, --trajectory) is required.",
+    )
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--github", metavar="URL", help="GitHub repository URL")
-    group.add_argument("--prompt", metavar="TEXT", help="Natural-language skill description")
-    group.add_argument("--office", metavar="FILE", help="Path to PDF/PPT/DOCX file")
-    group.add_argument("--trajectory", metavar="FILE", help="Path to execution trajectory/log file")
-    parser.add_argument("--output", default=DEFAULT_OUTPUT, help=f"Output directory (default: {DEFAULT_OUTPUT})")
-    parser.add_argument("--model", default="gpt-4o", help="LLM model to use (default: gpt-4o)")
-    parser.add_argument("--max-files", type=int, default=20, help="Max files to analyze (GitHub mode)")
+    group.add_argument("--github", "-g", metavar="URL", help="GitHub repository URL")
+    group.add_argument("--prompt", "-p", metavar="TEXT", help="Natural-language skill description")
+    group.add_argument("--office", "-o", metavar="FILE", help="Path to PDF/PPT/DOCX file")
+    group.add_argument("--trajectory", "-t", metavar="FILE", help="Path to execution trajectory/log file")
+    parser.add_argument("--output-dir", "-d", default=DEFAULT_OUTPUT,
+                        help=f"Output directory (default: {DEFAULT_OUTPUT})")
+    parser.add_argument("--model", "-m", default="gpt-4o", help="LLM model to use (default: gpt-4o)")
+    parser.add_argument("--max-files", type=int, default=20,
+                        help="Max Python files to analyze in GitHub mode (default: 20)")
     parser.add_argument("--no-evaluate", action="store_true", help="Skip auto-evaluation after creation")
     args = parser.parse_args()
 
@@ -54,10 +54,10 @@ def main():
         base_url=os.getenv("BASE_URL"),
         github_token=os.getenv("GITHUB_TOKEN"),
     )
-    os.makedirs(args.output, exist_ok=True)
+    os.makedirs(args.output_dir, exist_ok=True)
 
     # --- Determine input ---
-    create_kwargs = {"output_dir": args.output, "model": args.model}
+    create_kwargs = {"output_dir": args.output_dir, "model": args.model}
 
     if args.github:
         print(f"🔧 Creating skill from GitHub: {args.github}")
@@ -96,19 +96,18 @@ def main():
             try:
                 report = client.evaluate(target=skill_path, model=args.model)
                 print(f"\n   Evaluation for: {os.path.basename(skill_path)}")
-                dimensions = ["safety", "completeness", "executability", "maintainability", "cost_awareness"]
-                for dim in dimensions:
+                for dim in EVAL_DIMENSIONS:
                     if dim in report:
                         level = report[dim].get("level", "N/A") if isinstance(report[dim], dict) else report[dim]
                         print(f"     {dim.replace('_', ' ').title():20s}: {level}")
-                # Warn on Poor scores
-                poors = [d for d in dimensions if isinstance(report.get(d), dict) and report[d].get("level") == "Poor"]
+                poors = [d for d in EVAL_DIMENSIONS
+                         if isinstance(report.get(d), dict) and report[d].get("level") == "Poor"]
                 if poors:
                     print(f"   ⚠️  Poor scores on: {', '.join(poors)} — review before using")
             except Exception as e:
                 print(f"   ⚠️  Evaluation failed for {skill_path}: {e}")
 
-    print("\n🎉 Done. Skills are ready in:", args.output)
+    print(f"\n🎉 Done. Skills are ready in: {args.output_dir}")
 
 
 if __name__ == "__main__":

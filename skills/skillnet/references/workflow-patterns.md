@@ -42,7 +42,7 @@ Recipes for common scenarios. Each pattern shows the trigger signal, the recomme
 
 ---
 
-## Pattern 3: "Post-task knowledge capture" (Completion Hook)
+## Pattern 3: "Post-task knowledge capture"
 
 **Trigger**: You just completed a significant task **and did NOT use `skillnet create` during it**.
 
@@ -133,3 +133,57 @@ Routine tasks, minor fixes, or straightforward work → do NOT create.
 | User provides execution logs or data | **create** (trajectory)   | `skillnet create <file> -d ~/.openclaw/workspace/skills`            |
 | Unsure about a skill's quality       | **evaluate**              | `skillnet evaluate <path-or-url>`                                   |
 | Too many skills, need organization   | **analyze**               | `skillnet analyze <dir>`                                            |
+
+---
+
+## Pattern 7: Complete End-to-End Example
+
+**Scenario**: User asks "Help me set up a multi-agent system with LangGraph — one agent searches, one codes, one reviews."
+
+**Step 1 — Pre-Task Search (30s):**
+
+```bash
+skillnet search "langgraph multi agent" --limit 5
+# → 0 results
+
+skillnet search "langgraph supervisor agent" --mode vector --threshold 0.65
+# → Found: "langgraph-supervisor-template" (★3, related but generic supervisor pattern)
+```
+
+**Step 2 — Download & Selective Apply (with user confirmation):**
+
+Agent suggests: "I found a relevant skill 'langgraph-supervisor-template'. Would you like me to download it for review?"
+User approves.
+
+```bash
+skillnet download "https://github.com/.../langgraph-supervisor-template" -d ~/.openclaw/workspace/skills
+
+# Post-download review: show file listing and SKILL.md preview to user
+ls -la ~/.openclaw/workspace/skills/langgraph-supervisor-template/
+head -20 ~/.openclaw/workspace/skills/langgraph-supervisor-template/SKILL.md
+# User confirms the content looks safe → load full SKILL.md
+```
+
+**Apply selectively:** Adopt the supervisor routing pattern and state schema from the skill. Build the three specialized agents (searcher, coder, reviewer) from scratch since the skill's generic agents don't fit.
+
+**In-Task Trigger — User also provides a GitHub URL:**
+
+```bash
+# Agent informs user about data that will be sent to LLM endpoint. User approves.
+skillnet create --github https://github.com/langchain-ai/langgraph --output-dir ~/.openclaw/workspace/skills
+skillnet evaluate ~/.openclaw/workspace/skills/langgraph
+# → Now have detailed API patterns to improve the implementation
+```
+
+**Post-Task — Knowledge capture:**
+
+The "search→code→review" pipeline required non-obvious routing logic. Worth preserving.
+
+```bash
+skillnet create --prompt "Multi-agent code pipeline with LangGraph: searcher→coder→reviewer \
+  with conditional retry routing when review fails. Use when: building multi-agent code generation \
+  systems. Key: use Command for dynamic routing, separate state channels per agent." \
+  --output-dir ~/.openclaw/workspace/skills
+skillnet evaluate ~/.openclaw/workspace/skills/langgraph-code-pipeline
+# → Safety: Good, Completeness: Good, Executability: Average — acceptable
+```

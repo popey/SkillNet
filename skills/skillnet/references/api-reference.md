@@ -210,21 +210,83 @@ Returns `List[Dict[str, Any]]` — relationship edges.
 
 ## Security & Privacy
 
-### Credential Scope
+For credential scope, network endpoints, data flow details, and user confirmation policy, see `security-privacy.md`.
 
-- **API_KEY**: Used exclusively for authenticating with the LLM endpoint (`BASE_URL`). It is never sent to the SkillNet API or any other third-party service.
-- **GITHUB_TOKEN**: Sent only to `api.github.com` (read-only `repo` scope sufficient). Never forwarded elsewhere.
+---
 
-### Network Endpoints
+## Credential Strategy
 
-The CLI only contacts:
+### Just-in-Time Credential Pattern
 
-- `api-skillnet.openkg.cn` — skill search/download (read-only, no auth)
-- `api.github.com` — repo access (only with GITHUB_TOKEN)
-- Your configured `BASE_URL` — LLM processing
+Credentials follow a **"transparent — always inform the user which credentials are being used"** pattern:
 
-Set `BASE_URL` to a local endpoint (e.g., `http://127.0.0.1:8000/v1`) for air-gapped usage.
+1. **If already configured** (via `openclaw.json`, environment, or earlier in the session) → use the configured credentials and briefly inform the user (e.g., "Using your configured API_KEY").
+2. **If missing and the command needs it** → ask the user **once** using the standard ask templates below.
+3. **If the user declines** → acknowledge and continue the main task. Never block.
 
-### No Destructive Operations
+**Execution convention** — inject credentials for the current invocation only:
 
-The CLI never executes file deletion commands. Skill cleanup should be performed manually using safe methods (e.g., moving to a backup directory).
+```bash
+# One-shot injection (does not pollute the global environment)
+API_KEY="..." BASE_URL="..." skillnet create --prompt "..." --output-dir ~/.openclaw/workspace/skills
+
+# Or export for the session if multiple commands follow
+export API_KEY="<value>"
+export BASE_URL="<value>"   # only if user provided
+export GITHUB_TOKEN="<value>"  # only if needed
+```
+
+### Command ↔ Variable Requirement
+
+| Command             | `API_KEY`    | `BASE_URL` | `GITHUB_TOKEN`                |
+| ------------------- | ------------ | ---------- | ----------------------------- |
+| `skillnet search`   | —            | —          | —                             |
+| `skillnet download` | —            | —          | Private repos only            |
+| `skillnet create`   | **Required** | Optional   | `--github` private repos only |
+| `skillnet evaluate` | **Required** | Optional   | —                             |
+| `skillnet analyze`  | **Required** | Optional   | —                             |
+
+**No env vars are required for install, search, or download (public repos).**
+
+### Standard Ask Templates
+
+**API_KEY** — triggered before `create`/`evaluate`/`analyze` when not configured:
+
+> I need an OpenAI-compatible API_KEY (used only for create/evaluate/analyze in this run). Optionally provide BASE_URL and model name (default gpt-4o). May I proceed with your key?
+
+**GITHUB_TOKEN** — triggered only on private repo access or rate-limit (403):
+
+> We hit GitHub rate limits or need private repo access. Can you share a read-only Personal Access Token (`repo:read` scope)?
+
+**BASE_URL** — triggered only if user explicitly wants a custom endpoint but hasn't provided one:
+
+> Would you like to use a custom LLM BASE_URL? (default `https://api.openai.com/v1`)
+
+### OpenClaw Pre-Configuration (Silent Use)
+
+If credentials are provided in `openclaw.json`, they are injected automatically — no prompts, no interruptions:
+
+```json
+{
+  "skills": {
+    "entries": {
+      "skillnet": {
+        "enabled": true,
+        "apiKey": "sk-xxxx",
+        "env": {
+          "BASE_URL": "https://api.openai.com/v1",
+          "GITHUB_TOKEN": "ghp_xxx"
+        }
+      }
+    }
+  }
+}
+```
+
+- `apiKey` → injected as `API_KEY` (bound via `primaryEnv` in metadata).
+- `env.BASE_URL` / `env.GITHUB_TOKEN` → injected as environment variables.
+- Once configured, commands use these credentials automatically. The agent will still inform the user before executing security-sensitive operations.
+
+### Terminology Note
+
+The evaluation dimension **Maintainability** is sometimes referred to as **Modifiability** in older documentation. Both terms describe the same dimension: how easy a skill is to update, extend, or customize. The canonical name in the SDK and API is `maintainability`.
