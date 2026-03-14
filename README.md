@@ -6,7 +6,7 @@
 <p><strong>Open Infrastructure for Creating, Evaluating, and Connecting AI Agent Skills</strong></p>
 
 <p>
-Search 200,000+ community skills · One-line install · Auto-create from repos / docs / logs<br/>
+Search 250,000+ community skills · One-line install · Auto-create from repos / docs / logs<br/>
 5-dimension quality scoring · Semantic relationship graph
 </p>
 
@@ -39,6 +39,8 @@ Search 200,000+ community skills · One-line install · Auto-create from repos /
 
 ## 📢 News
 
+- **🔌 [2026-03] SkillNet MCP Server Released!** — We've launched the Model Context Protocol (MCP) integration (maintained by [CycleChain](https://github.com/CycleChain), special thanks for this great contribution!). Agents like Claude Desktop, Cursor, and Windsurf can now autonomously access 250,000+ specialized skills directly within your IDE. [Learn more →](#-model-context-protocol-mcp-integration)
+
 - **📄 [2026-03] SkillNet Technical Report Released!** — We've published the comprehensive SkillNet Technical Report, covering the system architecture, automated creation pipeline, multi-dimensional evaluation methodology, and the released open-source toolkits. [View Report →](https://arxiv.org/abs/2603.04448)
 
 - **🤖 [2026-02] OpenClaw Integration Released!** — SkillNet is now available as a built-in skill for [OpenClaw](https://github.com/openclaw/openclaw). One command to install, zero config to use. The agent automatically searches, downloads, creates, evaluates, and analyzes skills on your behalf. [Get started →](#-openclaw-integration)
@@ -64,8 +66,9 @@ Search 200,000+ community skills · One-line install · Auto-create from repos /
 - [Configuration](#configuration)
 - [Example: Scientific Discovery](#-example-scientific-discovery)
 - [OpenClaw Integration](#-openclaw-integration)
+- [Model Context Protocol (MCP)](#-model-context-protocol-mcp-integration)
 - [Contributing](#-contributing)
-- [License](#-license)
+- [Citation](#-citation)
 
 ---
 
@@ -420,6 +423,83 @@ Create a skill from this GitHub repo: https://github.com/owner/repo (then evalua
 ```
 
 > The skill source is also available at [`skills/skillnet/`](skills/skillnet/) for reference.
+
+---
+
+## 🔌 Model Context Protocol (MCP) Integration
+
+The **SkillNet MCP Server** (maintained by [CycleChain](https://github.com/CycleChain)) is a high-performance bridge that enables AI agents (such as Claude Desktop, Cursor, Antigravity and Windsurf) to interact with the SkillNet ecosystem using the [Model Context Protocol](https://modelcontextprotocol.io/).
+
+It empowers agents to autonomously search, download, create, and evaluate 250,000+ specialized skills directly within your IDE or desktop environment.
+
+### Installation Options
+
+#### 1. Source Build (Node.js & Python)
+Ideal for users who want to run the server locally with existing dependencies.
+
+```bash
+git clone https://github.com/CycleChain/skillnet-mcp
+cd skillnet-mcp
+npm install && npm run build
+```
+
+#### 2. Docker (Dependency-free)
+
+The most robust way to run the server using the official image from [Docker Hub](https://hub.docker.com/r/fmdogancan/skillnet-mcp).
+
+```bash
+docker pull fmdogancan/skillnet-mcp:latest
+```
+
+### Quick Configuration (Claude Desktop)
+
+Add the following to your `claude_desktop_config.json`:
+
+#### Option A: Docker (Recommended)
+```json
+{
+  "mcpServers": {
+    "skillnet": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "fmdogancan/skillnet-mcp:latest"],
+      "env": {
+        "API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+#### Option B: Build Locally If you prefer to build the image yourself from the source:
+
+```bash
+docker build -t skillnet-mcp-local .
+```
+
+_(Then, replace `fmdogancan/skillnet-mcp:latest` with `skillnet-mcp-local` in the JSON config above)_
+
+#### Option C: Source Build
+
+```json
+{
+  "mcpServers": {
+    "skillnet": {
+      "command": "node",
+      "args": ["/absolute/path/to/skillnet-mcp/build/index.js"],
+      "env": {
+        "API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+> **Note:** `search_skills` and `download_skill` tools do not require an API key. An `API_KEY` is only required for `create`, `evaluate`, and `analyze` features.
+
+### Supported Environment Variables
+
+* `API_KEY`: Your API key
+* `GITHUB_TOKEN`: GitHub token for private repositories
 
 ---
 
