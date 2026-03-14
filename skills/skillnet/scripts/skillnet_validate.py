@@ -12,6 +12,7 @@ import argparse
 import os
 import re
 import sys
+from typing import Dict, List, Optional
 
 REQUIRED_FRONTMATTER = {"name", "description"}
 NAME_PATTERN = re.compile(r"^[a-z][a-z0-9-]*[a-z0-9]$")
@@ -19,7 +20,7 @@ MAX_DESCRIPTION_LINES = 15
 MAX_SKILL_MD_LINES = 500
 
 
-def parse_frontmatter(text: str) -> dict | None:
+def parse_frontmatter(text: str) -> Optional[Dict[str, str]]:
     """Extract YAML-ish frontmatter from SKILL.md (between --- delimiters)."""
     if not text.startswith("---"):
         return None
@@ -48,7 +49,7 @@ def parse_frontmatter(text: str) -> dict | None:
     return result
 
 
-def validate(skill_dir: str, strict: bool = False) -> list[str]:
+def validate(skill_dir: str, strict: bool = False) -> List[str]:
     """Return list of issues found (empty = all good)."""
     issues = []
     skill_md = os.path.join(skill_dir, "SKILL.md")

@@ -9,31 +9,22 @@ description: |
   (5) User wants to evaluate skill quality or organize/analyze a local skill library.
   NOT for: single trivial operations (rename variable, fix typo), or tasks with no reusable knowledge.
 metadata:
-  {
-    "openclaw":
-      {
-        "emoji": "🧠",
-        "requires": { "anyBins": ["python3", "python"] },
-        "primaryEnv": "API_KEY",
-        "install":
-          [
-            {
-              "id": "pipx",
-              "kind": "shell",
-              "command": "pipx install skillnet-ai",
-              "bins": ["skillnet"],
-              "label": "Install skillnet-ai via pipx (recommended, isolated environment)",
-            },
-            {
-              "id": "pip",
-              "kind": "shell",
-              "command": "pip install skillnet-ai",
-              "bins": ["skillnet"],
-              "label": "Install skillnet-ai via pip",
-            },
-          ],
-      },
-  }
+  openclaw:
+    emoji: "🧠"
+    requires:
+      anyBins: ["python3", "python"]
+    primaryEnv: API_KEY
+    install:
+      - id: pipx
+        kind: shell
+        command: pipx install skillnet-ai
+        bins: ["skillnet"]
+        label: Install skillnet-ai via pipx (recommended, isolated environment)
+      - id: pip
+        kind: shell
+        command: pip install skillnet-ai
+        bins: ["skillnet"]
+        label: Install skillnet-ai via pip
 ---
 
 # SkillNet
