@@ -6,7 +6,7 @@
 <p><strong>Open Infrastructure for Creating, Evaluating, and Connecting AI Agent Skills</strong></p>
 
 <p>
-Search 250,000+ community skills · One-line install · Auto-create from repos / docs / logs<br/>
+Search 300,000+ community skills · One-line install · Auto-create from repos / docs / logs<br/>
 5-dimension quality scoring · Semantic relationship graph
 </p>
 
@@ -39,7 +39,7 @@ Search 250,000+ community skills · One-line install · Auto-create from repos /
 
 ## 📢 News
 
-- **🔌 [2026-03] SkillNet MCP Server Released!** — We've launched the Model Context Protocol (MCP) integration (maintained by [CycleChain](https://github.com/CycleChain), special thanks for this great contribution!). Agents like Claude Desktop, Cursor, and Windsurf can now autonomously access 250,000+ specialized skills directly within your IDE. [Learn more →](#-model-context-protocol-mcp-integration)
+- **🔌 [2026-03] SkillNet MCP Server Released!** — We've launched the Model Context Protocol (MCP) integration (maintained by [CycleChain](https://github.com/CycleChain), special thanks for this great contribution!). [Learn more →](#-model-context-protocol-mcp-integration)
 
 - **📄 [2026-03] SkillNet Technical Report Released!** — We've published the comprehensive SkillNet Technical Report, covering the system architecture, automated creation pipeline, multi-dimensional evaluation methodology, and the released open-source toolkits. [View Report →](https://arxiv.org/abs/2603.04448)
 
@@ -430,7 +430,7 @@ Create a skill from this GitHub repo: https://github.com/owner/repo (then evalua
 
 The **SkillNet MCP Server** (maintained by [CycleChain](https://github.com/CycleChain)) is a high-performance bridge that enables AI agents (such as Claude Desktop, Cursor, Antigravity and Windsurf) to interact with the SkillNet ecosystem using the [Model Context Protocol](https://modelcontextprotocol.io/).
 
-It empowers agents to autonomously search, download, create, and evaluate 250,000+ specialized skills directly within your IDE or desktop environment.
+It empowers agents to autonomously search, download, create, and evaluate 300,000+ specialized skills directly within your IDE or desktop environment.
 
 ### Installation Options
 
