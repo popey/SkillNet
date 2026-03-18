@@ -33,9 +33,8 @@ Search 300,000+ community skills · One-line install · Auto-create from repos /
 
 **SkillNet** is an open-source platform that treats AI agent skills as first-class, shareable packages — like npm for AI capabilities. It provides end-to-end tooling to **search**, **install**, **create**, **evaluate**, and **organize** skills, so agents can learn from the community and continuously grow.
 
-<div align="center">
-  <img src="images/graph.gif" width="100%" alt="SkillNet Knowledge Graph">
-</div>
+![graph-ezgif com-optimize](https://github.com/user-attachments/assets/1d27d046-48a1-4ab2-a6f5-58c8fa07a134)
+
 
 ## 📢 News
 
@@ -335,9 +334,8 @@ $env:BASE_URL = "https://..."  # optional
 
 A complete end-to-end demo showing how an AI Agent uses SkillNet to autonomously plan and execute a complex scientific workflow — from raw scRNA-seq data to a cancer target validation report.
 
-<div align="center">
-  <img src="images/science.gif" width="100%" alt="Scientific Discovery Workflow">
-</div>
+![science2](https://github.com/user-attachments/assets/5b65865a-312a-4dd7-ae80-ee1f968e2702)
+
 
 <table>
 <tr><td>1️⃣</td><td><b>Task</b></td><td>User provides a goal: "Analyze scRNA-seq data to find cancer targets"</td></tr>
