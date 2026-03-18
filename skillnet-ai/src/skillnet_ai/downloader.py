@@ -5,6 +5,17 @@ from typing import Optional, List, Dict, Tuple
 
 logger = logging.getLogger(__name__)
 
+class GitHubAPIError(Exception):
+    """
+    Custom exception for GitHub API errors, encapsulating the status code 
+    and the specific error message returned by GitHub.
+    """
+    def __init__(self, status_code: int, message: str):
+        self.status_code = status_code
+        self.message = message
+        super().__init__(f"GitHub API Error [{status_code}]: {message}")
+
+
 class SkillDownloader:
     """
     A class to handle downloading specific subdirectories from GitHub repositories
@@ -51,6 +62,7 @@ class SkillDownloader:
             logger.info(f"Parsing repository details: {owner}/{repo} @ {ref} -> {dir_path}")
 
             # 2. Fetch the file tree for the specific directory
+            # This may now raise a GitHubAPIError if rate limited or not found
             files_to_download = self._get_file_tree(owner, repo, ref, dir_path)
             if not files_to_download:
                 logger.warning(f"No matching files found or API error for path: {dir_path}")
@@ -88,6 +100,9 @@ class SkillDownloader:
                 
             return final_path
 
+        except GitHubAPIError:
+            # Allow the GitHub API error to bubble up to the client/CLI
+            raise
         except Exception as e:
             logger.error(f"Critical error during skill installation: {e}")
             return None
@@ -136,9 +151,16 @@ class SkillDownloader:
         
         try:
             response = self.session.get(api_url)
+            
             if response.status_code != 200:
-                logger.error(f"GitHub API Error [{response.status_code}]: {response.text}")
-                return []
+                error_msg = response.text
+                try:
+                    # Attempt to parse the exact message from GitHub's JSON response
+                    error_msg = response.json().get("message", error_msg)
+                except ValueError:
+                    pass # Retain raw text if parsing fails
+                
+                raise GitHubAPIError(response.status_code, error_msg)
 
             contents = response.json()
             
@@ -165,6 +187,9 @@ class SkillDownloader:
 
             return files_to_download
 
+        except GitHubAPIError:
+            # Allow the custom exception to bubble up through recursive calls
+            raise
         except Exception as e:
             logger.error(f"Failed to retrieve file tree for {dir_path}: {e}")
             return []

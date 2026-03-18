@@ -6,7 +6,7 @@ from rich.table import Table
 from rich.panel import Panel
 from rich.columns import Columns
 from skillnet_ai.creator import SkillCreator
-from skillnet_ai.downloader import SkillDownloader
+from skillnet_ai.downloader import SkillDownloader, GitHubAPIError
 from skillnet_ai.evaluator import SkillEvaluator, EvaluatorConfig
 from skillnet_ai.searcher import SkillNetSearcher
 from skillnet_ai.analyzer import SkillRelationshipAnalyzer
@@ -148,16 +148,24 @@ def download(
             console.print(table)
             console.print(f"\n[green]✅ {folder_name} is ready to use.[/green]")
         else:
-            # Failure (Logic handled inside class, but we catch the None return)
-            console.print("[bold red]❌ Download Failed.[/bold red]")
-            console.print("Possible reasons:")
-            console.print("1. Please check your network settings and ensure connection to GitHub is working properly.")
-            console.print("2. The URL format is incorrect (must point to a specific skill folder, not just the repo root).")
-            console.print("3. The repository is private and no token was provided.")
-            console.print("4. GitHub API rate limits exceeded (try providing a token).")
+            # Generic Failure (e.g., no files found, URL invalid)
+            console.print("[bold red]❌ Download Failed: Could not process the files.[/bold red]")
             raise typer.Exit(code=1)
 
+    except GitHubAPIError as e:
+        # 4. Handle Specific GitHub API Errors with actionable UI feedback
+        console.print(f"[bold red]❌ GitHub API Error [{e.status_code}]:[/bold red] {e.message}")
+        
+        # Provide smart hints based on the status code
+        if e.status_code == 403:
+            console.print("\n[yellow]💡 Tip: You may have hit the GitHub API rate limit. Please provide a GitHub Personal Access Token (using the --token flag).[/yellow]")
+        elif e.status_code == 404:
+            console.print("\n[yellow]💡 Tip: The path does not exist, or this is a private repository (requires a --token to access).[/yellow]")
+            
+        raise typer.Exit(code=1)
+
     except Exception as e:
+        # 5. Handle unexpected exceptions
         console.print(f"[bold red]An unexpected error occurred:[/bold red] {str(e)}")
         raise typer.Exit(code=1)
 

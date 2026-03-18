@@ -3,7 +3,7 @@ from typing import List, Optional, Dict, Any, Union
 from pathlib import Path
 
 from skillnet_ai.creator import SkillCreator
-from skillnet_ai.downloader import SkillDownloader
+from skillnet_ai.downloader import SkillDownloader, GitHubAPIError
 from skillnet_ai.evaluator import SkillEvaluator, EvaluatorConfig
 from skillnet_ai.searcher import SkillNetSearcher
 from skillnet_ai.analyzer import SkillRelationshipAnalyzer
@@ -109,9 +109,25 @@ class SkillNetClient:
         try:
             installed_path = downloader.download(folder_url=url, target_dir=target_dir)
             if not installed_path:
-                raise SkillNetError("Download returned None. Check URL validity or permissions.")
+                # Raised only when download returns None (e.g., URL parsing failed, no files)
+                raise SkillNetError("Download failed: No files were found or downloaded.")
             return os.path.abspath(installed_path)
+            
+        except GitHubAPIError as e:
+            # 1. Base error message from GitHub
+            error_detail = f"GitHub API Error [{e.status_code}]: {e.message}"
+            
+            # 2. Append actionable hints based on status code
+            if e.status_code == 403:
+                error_detail += " \n\n💡 Tip: You may have hit the GitHub API rate limit. Please provide a GitHub token to increase limits."
+            elif e.status_code == 404:
+                error_detail += " \n\n💡 Tip: Resource not found. Ensure the URL is correct and the repository is public, or provide a GitHub token for private repository access."
+            
+            # 3. Raise the final error with the hint attached
+            raise SkillNetError(error_detail) from e
+            
         except Exception as e:
+            # Fallback for other unexpected errors
             raise SkillNetError(f"Download failed: {str(e)}") from e
 
     def create(
