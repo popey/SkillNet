@@ -318,6 +318,8 @@ skillnet analyze ./my_agent_skills --model gpt-4o
 | `GITHUB_MIRROR`  | Faster downloads in restricted networks | —                      |
 
 > `search` and `download` (public repos) work without any credentials.
+>
+> **Recommended mirror:** [`https://ghfast.top/`](https://ghfast.top/) — set `GITHUB_MIRROR` or pass `--mirror` to speed up downloads in China.
 
 **Linux / macOS:**
 
