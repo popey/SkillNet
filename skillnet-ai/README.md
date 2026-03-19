@@ -195,7 +195,7 @@ skillnet download https://github.com/anthropics/skills/tree/main/skills/algorith
 skillnet download <url> -d ./my_agent/skills
 skillnet download <private_url> --token <your_github_token>
 
-# Use a mirror for faster downloads in China
+# Use a mirror for faster downloads in restricted networks
 skillnet download <url> --mirror https://ghfast.top/
 ```
 
@@ -241,7 +241,7 @@ skillnet analyze ./my_skills --model gpt-4o
 
 > `search` and `download` (public repos) require **no credentials at all**.
 >
-> **Recommended mirror:** [`https://ghfast.top/`](https://ghfast.top/) — set `GITHUB_MIRROR` or pass `--mirror` to speed up downloads in China.
+> **Recommended mirror:** [`https://ghfast.top/`](https://ghfast.top/) — set `GITHUB_MIRROR` or pass `--mirror` to speed up downloads in restricted networks.
 
 **Linux / macOS:**
 

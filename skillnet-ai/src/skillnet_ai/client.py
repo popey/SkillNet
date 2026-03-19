@@ -8,6 +8,8 @@ from skillnet_ai.evaluator import SkillEvaluator, EvaluatorConfig
 from skillnet_ai.searcher import SkillNetSearcher
 from skillnet_ai.analyzer import SkillRelationshipAnalyzer
 
+DEFAULT_MODEL = os.getenv("SKILLNET_MODEL", "gpt-4o")
+
 class SkillNetError(Exception):
     """Custom exception class for SkillNet Client errors."""
     pass
@@ -142,7 +144,7 @@ class SkillNetClient:
         office_file: Optional[str] = None,
         prompt: Optional[str] = None,
         output_dir: Union[str, Path] = "./generated_skills",
-        model: str = "gpt-4o",
+        model: str = DEFAULT_MODEL,
         max_files: int = 50
     ) -> List[str]:
         """
@@ -240,7 +242,7 @@ class SkillNetClient:
         name: Optional[str] = None,
         category: Optional[str] = None,
         description: Optional[str] = None,
-        model: str = "gpt-4o",
+        model: str = DEFAULT_MODEL,
         max_workers: int = 5,
         cache_dir: Union[str, Path] = "./evaluate_cache_dir"
     ) -> Dict[str, Any]:
@@ -301,7 +303,7 @@ class SkillNetClient:
         self,
         skills_dir: Union[str, Path],
         save_to_file: bool = True,
-        model: str = "gpt-4o"
+        model: str = DEFAULT_MODEL
     ) -> List[Dict[str, Any]]:
         """
         Analyze a local directory containing multiple skills to infer relationships between them.
