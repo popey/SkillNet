@@ -121,13 +121,14 @@ def download(
     url: str = typer.Argument(..., help="The GitHub URL of the specific skill folder (e.g., https://github.com/owner/repo/tree/main/skills/math_solver)."),
     target_dir: str = typer.Option(".", "--target-dir", "-d", help="Local directory to install the skill into."),
     token: str = typer.Option(None, "--token", "-t", envvar="GITHUB_TOKEN", help="GitHub Personal Access Token (for private repos or higher rate limits)."),
+    mirror: str = typer.Option(None, "--mirror", "-m", help="Mirror URL for fallback when GitHub is slow/unavailable (e.g. https://ghfast.top/). Also reads GITHUB_MIRROR env var."),
 ):
     """
     Download and install a specific skill directly from a GitHub repository subdirectory.
     """
     # 1. Initialize Downloader
     # Checks CLI option first, then environment variable GITHUB_TOKEN
-    downloader = SkillDownloader(api_token=token)
+    downloader = SkillDownloader(api_token=token, mirror_url=mirror)
 
     try:
         # 2. Visual Feedback

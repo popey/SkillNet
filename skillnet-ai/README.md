@@ -194,6 +194,9 @@ skillnet search "visualization" --category "Development" --sort-by stars --limit
 skillnet download https://github.com/anthropics/skills/tree/main/skills/algorithmic-art
 skillnet download <url> -d ./my_agent/skills
 skillnet download <private_url> --token <your_github_token>
+
+# Use a mirror for faster downloads in China
+skillnet download <url> --mirror https://ghfast.top/
 ```
 
 ### Create
@@ -228,11 +231,12 @@ skillnet analyze ./my_skills --model gpt-4o
 
 ### Environment Variables
 
-| Variable       | Required For                       | Default                     |
-| :------------- | :--------------------------------- | :-------------------------- |
-| `API_KEY`      | `create` · `evaluate` · `analyze`  | —                           |
-| `BASE_URL`     | Custom LLM endpoint                | `https://api.openai.com/v1` |
-| `GITHUB_TOKEN` | Private repos / higher rate limits | —                           |
+| Variable         | Required For                       | Default                     |
+| :--------------- | :--------------------------------- | :-------------------------- |
+| `API_KEY`        | `create` · `evaluate` · `analyze`  | —                           |
+| `BASE_URL`       | Custom LLM endpoint                | `https://api.openai.com/v1` |
+| `GITHUB_TOKEN`   | Private repos / higher rate limits | —                           |
+| `GITHUB_MIRROR`  | Faster downloads in restricted networks | —                      |
 
 > `search` and `download` (public repos) require **no credentials at all**.
 

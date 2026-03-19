@@ -1,4 +1,5 @@
 import os
+import time
 import logging
 import requests
 from typing import Optional, List, Dict, Tuple
@@ -20,17 +21,42 @@ class SkillDownloader:
     """
     A class to handle downloading specific subdirectories from GitHub repositories
     and installing them as local skills.
+
+    Supports configurable timeout, retry with exponential backoff, and automatic
+    fallback to a mirror when the primary GitHub source is slow or unavailable.
     """
 
-    def __init__(self, api_token: Optional[str] = None):
+    def __init__(
+        self,
+        api_token: Optional[str] = None,
+        mirror_url: Optional[str] = None,
+        timeout: int = 15,
+        max_retries: int = 3,
+    ):
         """
         Initializes the SkillDownloader.
 
         Args:
-            api_token (Optional[str]): GitHub Personal Access Token to increase 
-                                       rate limits and access private repositories.
+            api_token: GitHub Personal Access Token to increase rate limits
+                       and access private repositories.
+            mirror_url: Mirror URL for fallback when GitHub is slow/unavailable.
+                        Priority: explicit parameter > GITHUB_MIRROR env var.
+                        Not set by default; users in China can configure via
+                        GITHUB_MIRROR env var or --mirror CLI flag.
+                        Example mirrors: https://ghfast.top/, https://ghproxy.com/
+            timeout: Request timeout in seconds (default 15).
+            max_retries: Maximum retry attempts per request (default 3).
         """
         self.api_token = api_token
+        self.timeout = timeout
+        self.max_retries = max_retries
+
+        # Mirror resolution: explicit param > env var > None (no mirror)
+        if mirror_url is not None:
+            self.mirror_url = mirror_url
+        else:
+            self.mirror_url = os.getenv("GITHUB_MIRROR", "")
+
         self.session = requests.Session()
         self.session.headers.update({
             "Accept": "application/vnd.github.v3+json"
@@ -38,6 +64,9 @@ class SkillDownloader:
         
         if self.api_token:
             self.session.headers.update({"Authorization": f"token {self.api_token}"})
+
+        if self.mirror_url:
+            logger.info(f"Mirror fallback enabled: {self.mirror_url}")
 
     def download(self, folder_url: str, target_dir: str = ".") -> Optional[str]:
         """
@@ -107,6 +136,71 @@ class SkillDownloader:
             logger.error(f"Critical error during skill installation: {e}")
             return None
 
+    def _request_with_retry(
+        self,
+        url: str,
+        timeout: Optional[int] = None,
+        max_retries: Optional[int] = None,
+        base_delay: float = 1.0,
+    ) -> Optional[requests.Response]:
+        """HTTP GET with configurable timeout and exponential-backoff retry."""
+        timeout = timeout if timeout is not None else self.timeout
+        max_retries = max_retries if max_retries is not None else self.max_retries
+
+        for attempt in range(1, max_retries + 1):
+            try:
+                response = self.session.get(url, timeout=timeout)
+
+                # Handle GitHub rate-limit (403 with remaining == 0)
+                if response.status_code == 403:
+                    remaining = response.headers.get("X-RateLimit-Remaining", "?")
+                    if remaining == "0":
+                        reset_time = int(response.headers.get("X-RateLimit-Reset", 0))
+                        wait_seconds = max(0, reset_time - int(time.time()))
+                        logger.warning(f"GitHub rate limit exceeded. Resets in {wait_seconds}s")
+                        if wait_seconds < 60:
+                            time.sleep(wait_seconds + 1)
+                            continue
+
+                return response
+
+            except requests.exceptions.Timeout:
+                if attempt < max_retries:
+                    delay = base_delay * (2 ** (attempt - 1))
+                    logger.warning(f"Timeout (attempt {attempt}/{max_retries}), retry in {delay:.1f}s: {url}")
+                    time.sleep(delay)
+                else:
+                    logger.error(f"Request timed out after {max_retries} attempts: {url}")
+                    return None
+
+            except requests.exceptions.ConnectionError:
+                if attempt < max_retries:
+                    delay = base_delay * (2 ** (attempt - 1))
+                    logger.warning(f"Connection error (attempt {attempt}/{max_retries}), retry in {delay:.1f}s: {url}")
+                    time.sleep(delay)
+                else:
+                    logger.error(f"Connection failed after {max_retries} attempts: {url}")
+                    return None
+
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Request failed: {e}")
+                return None
+
+        return None
+
+    def _build_mirror_url(self, original_url: str) -> Optional[str]:
+        """
+        Build a mirror URL by prepending the configured mirror prefix.
+        Returns None if no mirror is configured or the URL is not a raw GitHub URL.
+        """
+        if not self.mirror_url:
+            return None
+        if "raw.githubusercontent.com" not in original_url:
+            return None
+
+        mirror = self.mirror_url.rstrip("/")
+        return f"{mirror}/{original_url}"
+
     def _parse_github_url(self, url: str) -> Optional[Tuple[str, str, str, str, str]]:
         """
         Parses a standard GitHub tree or blob URL into its constituent components.
@@ -150,7 +244,11 @@ class SkillDownloader:
         api_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{dir_path}?ref={ref}"
         
         try:
-            response = self.session.get(api_url)
+            response = self._request_with_retry(api_url)
+
+            if response is None:
+                logger.error(f"GitHub API request failed after retries: {api_url}")
+                raise GitHubAPIError(0, "Request failed after retries (timeout or connection error)")
             
             if response.status_code != 200:
                 error_msg = response.text
@@ -239,18 +337,17 @@ class SkillDownloader:
         
         # Ensure parent directories exist
         os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
-        
-        try:
-            response = self.session.get(raw_url)
-            
-            if response.status_code == 200:
-                with open(local_file_path, "wb") as f:
-                    f.write(response.content)
-                return True
-            else:
-                logger.warning(f"Failed to download {raw_url} - HTTP Status: {response.status_code}")
-                return False
-                
-        except Exception as e:
-            logger.error(f"Network or file system exception while processing {raw_url}: {e}")
-            return False
+
+        # If mirror is configured, use it directly; otherwise use GitHub
+        mirror_url = self._build_mirror_url(raw_url)
+        download_url = mirror_url if mirror_url else raw_url
+
+        response = self._request_with_retry(download_url)
+        if response is not None and response.status_code == 200:
+            with open(local_file_path, "wb") as f:
+                f.write(response.content)
+            return True
+
+        status = response.status_code if response else "no response"
+        logger.warning(f"Failed to download {file_path} (status: {status})")
+        return False

@@ -86,7 +86,8 @@ class SkillNetClient:
         self,
         url: str,
         target_dir: str = ".",
-        token: Optional[str] = None
+        token: Optional[str] = None,
+        mirror_url: Optional[str] = None,
     ) -> str:
         """
         Download a skill from a GitHub URL.
@@ -95,6 +96,9 @@ class SkillNetClient:
             url: The GitHub URL of the specific skill folder.
             target_dir: Local directory to install into.
             token: Optional override for GitHub token.
+            mirror_url: Mirror URL for fallback when GitHub is slow/unavailable.
+                        Configure via GITHUB_MIRROR env var or pass explicitly.
+                        Example mirrors: https://ghfast.top/, https://ghproxy.com/
 
         Returns:
             str: The absolute path to the installed skill folder.
@@ -104,7 +108,7 @@ class SkillNetClient:
         """
         # Use instance token if specific token not provided
         use_token = token if token else self.github_token
-        downloader = SkillDownloader(api_token=use_token)
+        downloader = SkillDownloader(api_token=use_token, mirror_url=mirror_url)
 
         try:
             installed_path = downloader.download(folder_url=url, target_dir=target_dir)
