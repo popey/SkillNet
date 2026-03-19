@@ -314,6 +314,7 @@ skillnet analyze ./my_agent_skills --model gpt-4o
 | `API_KEY`        | `create` · `evaluate` · `analyze`  | —                           |
 | `BASE_URL`       | Custom LLM endpoint                | `https://api.openai.com/v1` |
 | `GITHUB_TOKEN`   | Private repos / higher rate limits | —                           |
+| `SKILLNET_MODEL` | Default LLM model for all commands | `gpt-4o`                    |
 | `GITHUB_MIRROR`  | Faster downloads in restricted networks | —                      |
 
 > `search` and `download` (public repos) work without any credentials.

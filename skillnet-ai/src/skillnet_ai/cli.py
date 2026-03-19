@@ -16,6 +16,7 @@ console = Console()
 
 API_KEY = os.getenv("API_KEY")
 BASE_URL = os.getenv("BASE_URL") or "https://api.openai.com/v1"
+DEFAULT_MODEL = os.getenv("SKILLNET_MODEL", "gpt-4o")
 
 @app.command()
 def search(
@@ -180,7 +181,7 @@ def create(
     # Output options
     output_dir: Path = typer.Option(Path("./generated_skills"), "--output-dir", "-d", help="Directory to save generated skills."),
     # Model options
-    model: str = typer.Option("gpt-4o", "--model", "-m", help="LLM model to use (e.g., gpt-4o, gpt-3.5-turbo)."),
+    model: str = typer.Option(DEFAULT_MODEL, "--model", "-m", help="LLM model to use (e.g., gpt-4o, gpt-3.5-turbo)."),
     max_files: int = typer.Option(50, "--max-files", help="Max code files to analyze (--github only)."),
 ):
     """
@@ -421,7 +422,7 @@ def evaluate(
     description: str = typer.Option(None, help="Short description of what the skill does."),
     
     # Config options
-    model: str = typer.Option("gpt-4o", "--model", "-m", help="LLM model to use."),
+    model: str = typer.Option(DEFAULT_MODEL, "--model", "-m", help="LLM model to use."),
     max_workers: int = typer.Option(5, help="Concurrency for batch operations (not used for single eval)."),
 ):
     """
@@ -515,7 +516,7 @@ def _display_evaluation_report(target_name: str, data: dict):
 def analyze(
     skills_dir: Path = typer.Argument(..., exists=True, file_okay=False, help="Directory containing multiple skill folders to analyze."),
     save: bool = typer.Option(True, "--save/--no-save", help="Save the result to relationships.json in the directory."),
-    model: str = typer.Option("gpt-4o", "--model", "-m", help="LLM model to use."),
+    model: str = typer.Option(DEFAULT_MODEL, "--model", "-m", help="LLM model to use."),
 ):
     """
     Analyze and map relationships (similar_to, belong_to, compose_with, depend_on) between local skills.
