@@ -16,6 +16,7 @@ import os
 import sys
 
 DEFAULT_OUTPUT = os.path.expanduser("~/.openclaw/workspace/skills")
+DEFAULT_MODEL = os.getenv("SKILLNET_MODEL", "gpt-4o")
 EVAL_DIMENSIONS = ["safety", "completeness", "executability", "maintainability", "cost_awareness"]
 
 
@@ -31,7 +32,8 @@ def main():
     group.add_argument("--trajectory", "-t", metavar="FILE", help="Path to execution trajectory/log file")
     parser.add_argument("--output-dir", "-d", default=DEFAULT_OUTPUT,
                         help=f"Output directory (default: {DEFAULT_OUTPUT})")
-    parser.add_argument("--model", "-m", default="gpt-4o", help="LLM model to use (default: gpt-4o)")
+    parser.add_argument("--model", "-m", default=DEFAULT_MODEL,
+                        help=f"LLM model to use (default: {DEFAULT_MODEL}). Also reads SKILLNET_MODEL env var.")
     parser.add_argument("--max-files", type=int, default=20,
                         help="Max Python files to analyze in GitHub mode (default: 20)")
     parser.add_argument("--no-evaluate", action="store_true", help="Skip auto-evaluation after creation")

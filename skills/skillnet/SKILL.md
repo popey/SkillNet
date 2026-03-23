@@ -240,11 +240,13 @@ During execution, if any of these occur, suggest the action to the user and proc
 
 ## Environment Variables
 
-| Variable       | Needed for                  | Default                     |
-| -------------- | --------------------------- | --------------------------- |
-| `API_KEY`      | create, evaluate, analyze   | —                           |
-| `BASE_URL`     | custom LLM endpoint         | `https://api.openai.com/v1` |
-| `GITHUB_TOKEN` | private repos / rate limits | — (60 req/hr without)       |
+| Variable         | Needed for                             | Default                     |
+| ---------------- | -------------------------------------- | --------------------------- |
+| `API_KEY`        | create, evaluate, analyze              | —                           |
+| `BASE_URL`       | custom LLM endpoint                    | `https://api.openai.com/v1` |
+| `GITHUB_TOKEN`   | private repos / rate limits            | — (60 req/hr without)       |
+| `SKILLNET_MODEL` | default LLM model for all commands     | `gpt-4o`                    |
+| `GITHUB_MIRROR`  | faster downloads in restricted networks | —                          |
 
 **No credentials needed for install, search, or download (public repos).** For credential setup, ask templates, and OpenClaw config, see `references/api-reference.md` → "Credential Strategy".
 

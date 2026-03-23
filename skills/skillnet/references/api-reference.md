@@ -86,6 +86,8 @@ Arguments:
 Options:
   -d, --target-dir TEXT         Local install directory  [default: .]
   -t, --token TEXT              GitHub token override
+  -m, --mirror TEXT             Mirror URL for faster downloads in restricted networks
+                                (e.g. https://ghfast.top/). Also reads GITHUB_MIRROR env var.
 ```
 
 ### `skillnet create`
@@ -100,8 +102,11 @@ Options:
   TRAJECTORY                    Path to trajectory/log file (positional)
   --output-dir TEXT             Output directory  [default: ./generated_skills]
   --model TEXT                  LLM model  [default: gpt-4o]
-  --max-files INTEGER           Max files for GitHub mode  [default: 20]
+                                Also reads SKILLNET_MODEL env var.
+  --max-files INTEGER           Max files for GitHub mode  [default: 50]
 ```
+
+Model priority: `--model` flag > `SKILLNET_MODEL` env var > `gpt-4o`.
 
 Input types (auto-detected):
 
@@ -123,6 +128,7 @@ Options:
   --category TEXT               Override category
   --description TEXT            Override description
   --model TEXT                  LLM model  [default: gpt-4o]
+                                Also reads SKILLNET_MODEL env var.
   --max-workers INTEGER         Concurrency  [default: 5]
 ```
 
@@ -139,6 +145,7 @@ Arguments:
 Options:
   --no-save                     Don't write relationships.json
   --model TEXT                  LLM model  [default: gpt-4o]
+                                Also reads SKILLNET_MODEL env var.
 ```
 
 Output: `relationships.json` with edges:
@@ -182,9 +189,11 @@ Returns `List[SkillModel]`. Each object has:
 - `.category` (str)
 - `.evaluation` (dict or None)
 
-### `client.download(url, target_dir, token)`
+### `client.download(url, target_dir, token, mirror_url)`
 
 Returns `str` — absolute path to installed skill directory.
+
+- `mirror_url` — Mirror URL for faster downloads in restricted networks. Also reads `GITHUB_MIRROR` env var.
 
 ### `client.create(input_type, trajectory_content, github_url, office_file, prompt, output_dir, model, max_files)`
 
@@ -202,11 +211,13 @@ Returns `List[Dict[str, Any]]` — relationship edges.
 
 ## Environment Variables
 
-| Variable       | Purpose                         | Required                      |
-| -------------- | ------------------------------- | ----------------------------- |
-| `API_KEY`      | LLM API key (OpenAI-compatible) | For create, evaluate, analyze |
-| `BASE_URL`     | Custom LLM endpoint             | No (defaults to OpenAI)       |
-| `GITHUB_TOKEN` | GitHub PAT for private repos    | No                            |
+| Variable         | Purpose                                  | Required                      |
+| ---------------- | ---------------------------------------- | ----------------------------- |
+| `API_KEY`        | LLM API key (OpenAI-compatible)          | For create, evaluate, analyze |
+| `BASE_URL`       | Custom LLM endpoint                      | No (defaults to OpenAI)       |
+| `GITHUB_TOKEN`   | GitHub PAT for private repos             | No                            |
+| `SKILLNET_MODEL` | Default LLM model for all commands       | No (defaults to `gpt-4o`)     |
+| `GITHUB_MIRROR`  | Mirror URL for faster downloads          | No                            |
 
 ## Security & Privacy
 
@@ -238,13 +249,13 @@ export GITHUB_TOKEN="<value>"  # only if needed
 
 ### Command ↔ Variable Requirement
 
-| Command             | `API_KEY`    | `BASE_URL` | `GITHUB_TOKEN`                |
-| ------------------- | ------------ | ---------- | ----------------------------- |
-| `skillnet search`   | —            | —          | —                             |
-| `skillnet download` | —            | —          | Private repos only            |
-| `skillnet create`   | **Required** | Optional   | `--github` private repos only |
-| `skillnet evaluate` | **Required** | Optional   | —                             |
-| `skillnet analyze`  | **Required** | Optional   | —                             |
+| Command             | `API_KEY`    | `BASE_URL` | `GITHUB_TOKEN`                | `SKILLNET_MODEL` | `GITHUB_MIRROR` |
+| ------------------- | ------------ | ---------- | ----------------------------- | ----------------- | --------------- |
+| `skillnet search`   | —            | —          | —                             | —                 | —               |
+| `skillnet download` | —            | —          | Private repos only            | —                 | Optional        |
+| `skillnet create`   | **Required** | Optional   | `--github` private repos only | Optional          | —               |
+| `skillnet evaluate` | **Required** | Optional   | —                             | Optional          | —               |
+| `skillnet analyze`  | **Required** | Optional   | —                             | Optional          | —               |
 
 **No env vars are required for install, search, or download (public repos).**
 
